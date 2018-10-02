@@ -1,0 +1,17 @@
+TARGET    = flscreenie
+FLTK_CONF = fltk-config
+FLUID     = fluid -c $(TARGET).fld
+CXX       = $(shell $(FLTK_CONF) --cxx)
+DEBUG     = -g
+CXXFLAGS  = $(shell $(FLTK_CONF) --cxxflags ) -I.
+CXXFLAGS += -finline-small-functions -ffunction-sections -fdata-sections -fmerge-all-constants -fomit-frame-pointer -mno-accumulate-outgoing-args -fno-unwind-tables -fno-asynchronous-unwind-tables -O2
+LDFLAGS   = $(shell pkg-config --libs libpng) $(shell $(FLTK_CONF) --use-images --ldflags )
+LINK      = $(CXX)
+OBJS      = $(TARGET).o
+SRCS      = $(TARGET).cxx
+.SUFFIXES: .o .cxx
+$(TARGET): $(SRCS)
+	$(FLUID)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
+
+

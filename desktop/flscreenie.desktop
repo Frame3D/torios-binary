@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=Screenie
+Name[en_US]=Screenie
+Name[en_GB]=Screenie
+Name[en]=Screenie
+Comment=Take a Screenshot
+Exec=flscreenie
+Terminal=false
+Icon=accessories-camera
+Type=Application
+Categories=Graphics;
+

@@ -1,0 +1,25 @@
+FLTK_CONF  = fltk-config
+CXX        = g++
+#$(shell $(FLTK_CONF) --cxx)
+DEBUG      = -g
+DEB_LIBS   = -lapt-pkg
+INCLUDES   = -I/usr/include/apt-pkg
+FLTK_FLAGS = $(shell $(FLTK_CONF) --cxxflags)
+CXXFLAGS   = -w $(INCLUDES) -I. $(FLTK_FLAGS)
+CXXFLAGS  += -finline-small-functions -ffunction-sections -fdata-sections -fmerge-all-constants -fomit-frame-pointer -mno-accumulate-outgoing-args -fno-unwind-tables -fno-asynchronous-unwind-tables -O2 -std=c++0x
+FLTKLD     = $(shell $(FLTK_CONF) --use-images --ldflags )
+LDFLAGS    = $(FLTKLD)
+LDSTATIC   = $(shell $(FLTK_CONF) --use-images --ldstaticflags )
+LDFLAGS   += $(DEB_LIBS)
+LDSTATIC  += $(DEB_LIBS)
+LINK       = $(CXX)
+TARGET     = flapt
+OBJS       = $(TARGET).o
+SRCS       = $(TARGET).cxx
+.SUFFIXES: .o .cxx
+$(TARGET): $(SRCS)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
+
+#$(LDFLAGS)
+
+

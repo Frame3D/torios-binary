@@ -1,0 +1,1063 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0303 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include "../include/toolbar_icons.h"} {private global
+} 
+
+decl {\#include "StaticText.h"} {public local
+} 
+
+decl {\#include <stdio.h>} {private local
+} 
+
+decl {\#include "math.h"} {private local
+} 
+
+decl {//extern "C" char *strcat(const char *,char *);} {private local
+} 
+
+Function {gammaln(double xx)} {private return_type double
+} {
+  code {int j;
+double x,y,tmp,ser;
+static double cof[6] = {76.18009172947146,
+						-86.50532032941677,
+						24.01409824083091,
+						-1.231739572450155,
+						0.1208650973866179e-2,
+						-0.5395239384953e-5};
+	
+	y = x = xx;
+	tmp = x + 5.5;
+	tmp -= (x+0.5)*log(tmp);
+	ser = 1.000000000190015;
+	for (j=0;j<6;j++) ser += cof[j]/++y;
+	return -tmp+log(2.5066282746310005*ser/x);} {}
+} 
+
+Function {truncf(double x)} {private return_type double
+} {
+  code {if (x < 0.0)
+		x = -floor(-x);
+	else
+		x = floor(x);
+	return x;} {}
+} 
+
+class SciCalc {open
+} {
+  decl {enum {MaxNumBrkts=10};} {private local
+  }
+  decl {enum Operator {PLUS,MINUS,MULT,DIV,POW,INVPOW,EVAL};} {private local
+  }
+  decl {enum mode {NONE=0,DOT=-1,NORM=-2,EXP=-3};} {private local
+  }
+  declblock {/* members */} {after {/********/}
+  } {
+    decl {double value[4*(MaxNumBrkts+1)];    /* The values on the stack */} {private local
+    }
+    decl {int priority[6];   /* the priorities of each operator */} {private local
+    }
+    decl {int oper[3*(MaxNumBrkts+1)];        /* the operators between them */} {private local
+    }
+    decl {int top;                            /* the top of the stack */} {private local
+    }
+    decl {int startbrkt[(MaxNumBrkts+1)];     /* the positions of the left brackets */} {private local
+    }
+    decl {int currentbrkt;                    /* bracketing we are in */} {private local
+    }
+    decl {double mem;             /* The memory value */} {private local
+    }
+    decl {int ready;              /* Whether last number is ready.
+                           if "ready" is set, then typing another number
+                           overwrites the current number. */} {private local
+    }
+    decl {int dot;                /* Whether the dot has been typed */} {private local
+    }
+    decl {double diver;           /* The divider when behind the dot */} {private local
+    }
+    decl {int behind;             /* Number of digits behind dot */} {private local
+    }
+    decl {int inv;                /* Whether inverse key is depressed */} {private local
+    }
+    decl {int emode;              /* Whether we are entering the exponent */} {private local
+    }
+    decl {int exponent;           /* the exponent value whilst entering exponent */} {private local
+    }
+    decl {double mantissa;        /* the mantissa value whilst entering exponent */} {private local
+    }
+    decl {int base;               /* the base we are working in (2,8,10 or 16) */} {private local
+    }
+    decl {int drgmode;            /* whether we are in deg, rad or grad mode */} {private local
+    }
+  }
+  Function {SciCalc()} {open
+  } {
+    Fl_Window win {
+      label flCalc open
+      private xywh {438 97 241 497} type Double hide xclass flcalc
+    } {
+      Fl_Box leddisplay {
+        callback {o->value("0 ");}
+        private xywh {5 7 230 33} box FLAT_BOX color 207 labelfont 1 labelsize 16 labelcolor 59 align 24
+        class StaticText
+      }
+      Fl_Button but_quit {
+        label Exit
+        callback {win->hide();
+delete win;}
+        private tooltip {Quit the program} xywh {5 45 50 35} box FLAT_BOX color 80 labelfont 1 labelsize 12 labelcolor 7
+      }
+      Fl_Box box_DEGRAD {
+        callback {o->value(" ");}
+        private tooltip {Degree, Radian, Gradian} xywh {65 45 35 35} box FLAT_BOX color 39 labelsize 9 labelcolor 7 align 16
+        class StaticText
+      }
+      Fl_Box box_bracket {
+        private xywh {104 45 91 35} box FLAT_BOX color 38 labelsize 9 labelcolor 7 align 16
+        class StaticText
+      }
+      Fl_Box box_M {
+        callback {o->value("M");}
+        private tooltip Memory xywh {200 45 35 35} box FLAT_BOX color 38 labelsize 9 labelcolor 7 align 16
+        class StaticText
+      }
+      Fl_Button check_inv {
+        label inv
+        callback {if (inv) 
+{
+  inv = 0;
+  setnormlabels();
+}
+else
+{
+  inv = 1;
+  setinvlabels();
+}}
+        private xywh {5 85 35 35} type Toggle box FLAT_BOX color 51 labelsize 11 labelcolor 4
+      }
+      Fl_Group {} {open
+        private xywh {65 83 170 42} box FLAT_BOX color 36
+      } {
+        Fl_Button radio_2 {
+          label 2
+          callback {change_base(2);}
+          private tooltip {Base 2} xywh {70 86 35 35} type Radio box FLAT_BOX selection_color 40 labelfont 1 labelsize 12 labelcolor 1
+        }
+        Fl_Button radio_8 {
+          label 8
+          callback {change_base(8);}
+          private tooltip {Base 8} xywh {111 86 35 35} type Radio box FLAT_BOX selection_color 40 labelfont 1 labelsize 12 labelcolor 1
+        }
+        Fl_Button radio_10 {
+          label 10
+          callback {change_base(10);}
+          private tooltip {Base 10 (default)} xywh {153 86 35 35} type Radio box FLAT_BOX value 1 selection_color 40 labelfont 1 labelsize 12 labelcolor 1
+        }
+        Fl_Button radio_16 {
+          label 16
+          callback {change_base(16);}
+          private tooltip Base xywh {195 86 35 35} type Radio box FLAT_BOX selection_color 40 labelfont 1 labelsize 12 labelcolor 1
+        }
+      }
+      Fl_Group {} {open
+        xywh {5 125 230 135} box FLAT_BOX color 47
+      } {
+        Fl_Button but_sqrt {
+          label {√}
+          callback {if (base > 10) handle_number(10.0); 
+	else
+	if (! inv) 
+	{
+		value[top] = sqrt(value[top]);
+		set_display(value[top],NORM);
+		ready = 1;
+	}
+	else
+	{
+		value[top] = pow(value[top], 2.0);
+		set_display(value[top],NORM);
+		ready = 1;
+	}}
+          private tooltip {Square root} xywh {10 130 35 35} box FLAT_BOX color 17 labelsize 11 labelcolor 4
+        }
+        Fl_Button but_pow {
+          label {x^y}
+          callback {if (base > 10)
+		handle_number(11.0);
+	else
+		handle_operator(check_inv->value()?INVPOW:POW);}
+          private tooltip {Raises X to the power of Y} xywh {56 130 35 35} box FLAT_BOX color 17 labelsize 11 labelcolor 4
+        }
+        Fl_Button but_sin {
+          label sin
+          callback {if (base > 10) handle_number(12.0); 
+else
+	if (! inv) 
+	{
+		value[top] = sin(to_drg(value[top]));
+		set_display(value[top],NORM);
+		ready = 1;
+	}
+	else
+	{
+		value[top] = from_drg(asin(value[top]));
+		set_display(value[top],NORM);
+		ready = 1;
+	}}
+          private tooltip {Sine of an angle} xywh {102 130 35 35} box FLAT_BOX color 17 labelsize 11 labelcolor 4
+        }
+        Fl_Button but_cos {
+          label cos
+          callback {if (base > 10) handle_number(13.0);
+else
+	if (! inv) 
+	{
+		value[top] = cos(to_drg(value[top]));
+		set_display(value[top],NORM);
+		ready = 1;
+	}
+	else
+	{
+		value[top] = from_drg(acos(value[top]));
+		set_display(value[top],NORM);
+		ready = 1;
+	}}
+          private tooltip {Cosine of an angle} xywh {148 130 35 35} box FLAT_BOX color 17 labelsize 11 labelcolor 4
+        }
+        Fl_Button but_tan {
+          label tan
+          callback {if (base > 10) handle_number(14.0);
+	else
+	if (! inv)
+	{
+		value[top] = tan(to_drg(value[top]));
+		set_display(value[top],NORM);
+		ready = 1;
+	}
+	else
+	{
+		value[top] = from_drg(atan(value[top]));
+		set_display(value[top],NORM);
+		ready = 1;
+	}}
+          private tooltip {Tangent of an angle} xywh {194 130 35 35} box FLAT_BOX color 17 labelsize 11 labelcolor 4
+        }
+        Fl_Button but_log {
+          label log
+          callback {if (base > 10) handle_number(15.0);
+else
+	if (! inv)
+	{
+		value[top] = log10(value[top]);
+		set_display(value[top],NORM);
+		ready = 1;
+	}
+	else
+	{
+		value[top] = pow(10.0, value[top]);
+		set_display(value[top],NORM);
+		ready = 1;
+	}}
+          private tooltip {Common logarithm} xywh {10 175 35 35} box FLAT_BOX color 17 labelsize 11 labelcolor 4
+        }
+        Fl_Button but_ln {
+          label ln
+          callback {if (! inv)
+	{
+		value[top] = log(value[top]);
+		set_display(value[top],NORM);
+		ready = 1;
+	}
+	else
+	{
+		value[top] = exp(value[top]);
+		set_display(value[top],NORM);
+		ready = 1;
+	}}
+          private tooltip {Natural logarithm (to the base e)} xywh {56 175 35 35} box FLAT_BOX color 17 labelsize 11 labelcolor 4
+        }
+        Fl_Button but_int {
+          label int
+          callback {if (! inv)
+	{
+		value[top] = truncf(value[top]);
+		set_display(value[top],NORM);
+		ready = 1;
+	}
+	else
+	{
+		value[top] = value[top] - truncf(value[top]);
+		set_display(value[top],NORM);
+		ready = 1;
+	}}
+          private xywh {102 175 35 35} box FLAT_BOX color 17 labelsize 11 labelcolor 4
+        }
+        Fl_Button but_dr {
+          label {d->r}
+          callback {if (! inv) 
+	{
+		value[top] = M_PI*value[top]/180.0;
+		set_display(value[top],NORM);
+		ready = 1;
+	}
+	else
+	{
+		value[top] = 180.0*value[top]/M_PI;
+		set_display(value[top],NORM);
+		ready = 1;
+	}}
+          private xywh {148 175 35 35} box FLAT_BOX color 17 labelsize 10 labelcolor 4
+        }
+        Fl_Button but_drg {
+          label {d-r-g}
+          callback {drgmode++;
+	drgmode %= 3;
+	set_drgdisp();}
+          private tooltip {Change the mode of the calculator to accommodate for different measurement of angles- Radians, Degrees and Gradian(Grads)} xywh {194 175 35 35} box FLAT_BOX color 17 labelsize 9
+        }
+        Fl_Button but_leftbr {
+          label {[}
+          callback {add_left_bracket();}
+          private xywh {10 219 35 35} box FLAT_BOX shortcut 0x28 color 17 labelsize 11
+        }
+        Fl_Button but_rightbr {
+          label {]}
+          callback {add_right_bracket();}
+          private xywh {56 219 35 35} box FLAT_BOX shortcut 0x29 color 17 labelsize 11
+        }
+        Fl_Button but_exch {
+          label exch
+          callback {exchange();}
+          private xywh {102 219 35 35} box FLAT_BOX color 17 labelsize 11
+        }
+        Fl_Button but_invx {
+          label {1/x}
+          callback {value[top] = 1.0/value[top];
+	set_display(value[top],NORM);
+	ready = 1;}
+          private xywh {148 219 35 35} box FLAT_BOX color 17 labelsize 11
+        }
+        Fl_Button but_fact {
+          label {x!}
+          callback {factorial();}
+          private xywh {194 219 35 35} box FLAT_BOX color 17 labelsize 11
+        }
+      }
+      Fl_Group {} {open
+        xywh {5 265 230 45} box FLAT_BOX color 17
+      } {
+        Fl_Button but_Mplus {
+          label {M+}
+          callback {if (! inv) mem += value[top]; else mem -= value[top];
+	set_display(value[top],NORM);
+	ready = 1;
+	set_memdisp();}
+          private tooltip {Add the number on the display to the memory, and store the result in memory} xywh {10 270 35 35} box FLAT_BOX color 93 labelfont 1 labelsize 12 labelcolor 4
+        }
+        Fl_Button but_Mmult {
+          label {M*}
+          callback {if (! inv) mem *= value[top]; else mem /= value[top];
+	set_display(value[top],NORM);
+	ready = 1;
+	set_memdisp();}
+          private tooltip {Multiply the number on the display to the memory, and store the result in memory} xywh {56 269 35 35} box FLAT_BOX color 93 labelfont 1 labelsize 12 labelcolor 4
+        }
+        Fl_Button but_Mclear {
+          label MC
+          callback {if (! inv)
+	{
+		mem = 0.0;
+		set_display(value[top],NORM);
+		ready = 1;
+		set_memdisp();
+	}
+	else
+		memexch();}
+          private tooltip {Erase the memory content} xywh {102 269 35 35} box FLAT_BOX color 93 labelfont 1 labelsize 12 labelcolor 4
+        }
+        Fl_Button but_Mst {
+          label Mst
+          callback {mem = value[top];
+	set_display(value[top],NORM);
+	ready = 1;
+	set_memdisp();}
+          private tooltip {Put the number on the display into the memory to save.} xywh {148 269 35 35} box FLAT_BOX color 93 labelfont 1 labelsize 12
+        }
+        Fl_Button but_Mrc {
+          label Mrc
+          callback {value[top] = mem;
+	set_display(value[top],NORM);
+	ready = 1;}
+          private tooltip {Recall the number in memory} xywh {195 269 35 35} box FLAT_BOX color 93 labelfont 1 labelsize 12
+        }
+      }
+      Fl_Group {} {open
+        private xywh {5 314 140 176} box FLAT_BOX color 43
+      } {
+        Fl_Button but_7 {
+          label 7
+          callback {handle_number(7);}
+          private xywh {15 321 35 35} box FLAT_BOX shortcut 0x37 color 23 labelfont 1 labelsize 16
+        }
+        Fl_Button but_8 {
+          label 8
+          callback {handle_number(8);}
+          private xywh {57 321 35 35} box FLAT_BOX shortcut 0x38 color 23 labelfont 1 labelsize 16
+        }
+        Fl_Button but_9 {
+          label 9
+          callback {handle_number(9);}
+          private xywh {97 321 35 35} box FLAT_BOX shortcut 0x39 color 23 labelfont 1 labelsize 16
+        }
+        Fl_Button but_4 {
+          label 4
+          callback {handle_number(4);}
+          private xywh {15 362 35 35} box FLAT_BOX shortcut 0x34 color 23 labelfont 1 labelsize 16
+        }
+        Fl_Button but_5 {
+          label 5
+          callback {handle_number(5);}
+          private xywh {57 362 35 35} box FLAT_BOX shortcut 0x35 color 23 labelfont 1 labelsize 16
+        }
+        Fl_Button but_6 {
+          label 6
+          callback {handle_number(6);}
+          private xywh {97 362 35 35} box FLAT_BOX shortcut 0x36 color 23 labelfont 1 labelsize 16
+        }
+        Fl_Button but_1 {
+          label 1
+          callback {handle_number(1);}
+          private xywh {15 404 35 35} box FLAT_BOX shortcut 0x31 color 23 labelfont 1 labelsize 16
+        }
+        Fl_Button but_2 {
+          label 2
+          callback {handle_number(2);}
+          private xywh {57 404 35 35} box FLAT_BOX shortcut 0x32 color 23 labelfont 1 labelsize 16
+        }
+        Fl_Button but_3 {
+          label 3
+          callback {handle_number(3);}
+          private xywh {97 404 35 35} box FLAT_BOX shortcut 0x33 color 23 labelfont 1 labelsize 16
+        }
+        Fl_Button but_0 {
+          label 0
+          callback {handle_number(0);}
+          private xywh {15 446 35 35} box FLAT_BOX shortcut 0x30 color 23 labelfont 1 labelsize 16
+        }
+        Fl_Button but_dot {
+          label {.}
+          callback {handle_number(DOT);}
+          private xywh {57 446 35 35} box FLAT_BOX shortcut 0x2e color 23 labelfont 1 labelsize 16
+        }
+        Fl_Button but_sign {
+          label {+/-}
+          callback {if (! emode)
+{
+	value[top] = -value[top];
+	set_display(value[top],NORM);
+}
+else 
+{
+	exponent = -exponent;
+	value[top] = mantissa*pow(10.0, (double)exponent);
+	set_display(mantissa,EXP);
+}}
+          tooltip {Changes the mathematical sign of the displayed number to the opposite one} xywh {97 446 35 35} box FLAT_BOX color 23 labelfont 1 labelsize 16
+        }
+      }
+      Fl_Group {} {open
+        xywh {150 315 85 175} box FLAT_BOX color 47
+      } {
+        Fl_Button but_C {
+          label C
+          callback {init_value(top); 
+set_display(0.0,NORM);}
+          private tooltip {Resets the calculator without resetting the memory} xywh {155 321 35 35} box FLAT_BOX color 80 labelfont 1 labelsize 16 labelcolor 7
+        }
+        Fl_Button but_AC {
+          label AC
+          callback {init_value(0);
+set_display(0.0,NORM);
+currentbrkt = 0;
+box_bracket->value("");
+box_bracket->redraw();}
+          private tooltip {Reset the calculator and reset the memory} xywh {195 321 35 35} box FLAT_BOX color 80 labelfont 1 labelsize 16 labelcolor 7
+        }
+        Fl_Button but_X {
+          label x
+          callback {handle_operator(MULT);}
+          private tooltip Multiply xywh {155 362 35 35} box FLAT_BOX shortcut 0x2a color 190 selection_color 221 labelfont 1 labelsize 16
+        }
+        Fl_Button but_div {
+          label {/}
+          callback {handle_operator(DIV);}
+          private tooltip Divide xywh {194 362 35 35} box FLAT_BOX shortcut 0x2f color 190 selection_color 221 labelfont 1 labelsize 16
+        }
+        Fl_Button but_plus {
+          label {+}
+          callback {handle_operator(PLUS);}
+          private tooltip Add xywh {155 404 35 35} box FLAT_BOX shortcut 0x2b color 190 selection_color 221 labelfont 1 labelsize 16
+        }
+        Fl_Button but_minus {
+          label {-}
+          callback {handle_operator(MINUS);}
+          private tooltip Subtract xywh {194 404 35 35} box FLAT_BOX shortcut 0x2d color 190 selection_color 221 labelfont 1 labelsize 16
+        }
+        Fl_Button but_pi {
+          label {e/p}
+          callback {exponent_pi();}
+          private tooltip {Π} xywh {155 446 35 35} box FLAT_BOX color 190 selection_color 221 labelfont 12 labelsize 17
+        }
+        Fl_Button but_eval {
+          label {=}
+          callback {handle_operator(EVAL);}
+          private tooltip Equal xywh {194 446 35 35} box FLAT_BOX shortcut 0x3d color 190 selection_color 221 labelfont 1 labelsize 16
+        }
+      }
+      Fl_Button but_eval_hidden {
+        callback {handle_operator(EVAL);}
+        private xywh {150 483 6 7} box NO_BOX shortcut 0xff0d labelfont 1 labelsize 16
+      }
+      Fl_Button but_eval_hidden2 {
+        callback {handle_operator(EVAL);}
+        private xywh {175 488 6 7} box NO_BOX shortcut 0xff8d labelfont 1 labelsize 16
+      }
+    }
+    code {init_value(0);
+	drgmode = 1;
+	base = 10;
+	currentbrkt = 0;
+	startbrkt[0] = 0;
+
+	set_memdisp();
+	set_brktdisp();
+	radio_10->value(1);
+	set_drgdisp();
+	set_display(0.0,NONE);} {}
+  }
+  Function {~SciCalc()} {} {}
+  Function {run(int px=-1,int py=-1)} {open return_type int
+  } {
+    code {win->show();
+make_icon(win);
+return Fl::run();} {selected
+    }
+  }
+  Function {handle_number(double numb)} {open private
+  } {
+    code {int first;
+double sign;
+if (ready)
+{
+  init_value(top);
+}
+
+if (numb == -1.0)
+{
+  if (dot)
+  { 
+  /* check whether we already have a dot */
+    return;
+  }
+  else 
+  {
+    dot = 1;
+    set_display(value[top],DOT);
+    return;
+  }
+}
+
+if (emode) 
+{
+  sign = copysign(1.0, (double)exponent);
+  if (abs(exponent)*10 + numb > 999) 
+  { /* cycle if exponent has > 3 digits */
+    first = (int)floor((double)abs(exponent)/100.0);
+    exponent = abs(exponent) - 100*first;
+    exponent *= (int)sign;
+  }
+  exponent = exponent*10 + (int) (sign*numb);
+  value[top] = mantissa*pow(10.0, (double)exponent);
+  set_display(mantissa, EXP);
+}
+else if (numb < base)
+{ /* both decimal and non decimal number entry */
+  sign = copysign(1.0, value[top]);
+  if (dot && behind < 9) 
+  {
+    behind++;
+    diver = diver/(double)base;
+    value[top] += sign*diver*numb;
+  }
+  else
+  {
+    if ((! dot) && (value[top] < 1.0e10))
+    {
+      value[top] = (double)base*value[top] + sign*numb;
+    }
+  }
+  set_display(value[top],(mode)behind);
+}} {}
+  }
+  Function {handle_operator(Operator op)} {private
+  } {
+    code {int prevop, i, finished;
+
+	switch (op)
+	{
+		case PLUS:
+		case MINUS:
+		case MULT:
+		case DIV:
+		case POW:
+		case INVPOW:
+			finished = 0;
+			do 
+			{
+				if (top == startbrkt[currentbrkt]) finished = 1; /* is 1st operator */
+				if (! finished) 
+				{ /* compare priority of previous operators with current op */
+					prevop = oper[top-1];
+					if (priority[prevop] < priority[op])
+						finished = 1;
+					else 
+					{ /* last op can be calculated */
+						top--;
+    					calc(top);
+					}
+				}
+			} while (! finished);
+
+			oper[top] = op;
+			init_value(top+1);
+
+			set_display(value[top-1],NORM);
+			break;
+
+		case EVAL:
+			while (currentbrkt > 0) add_right_bracket();
+			for (i = top; i > 0; i--) calc(i-1);
+			top = 0;
+			ready = 1;
+			set_display(value[top],NORM);
+			break;
+	}} {}
+  }
+  Function {change_base(int newbase)} {open private
+  } {
+    code {int oldbase;
+
+	oldbase = base;
+	base = newbase;
+
+	set_display(value[top], NORM);
+	ready = 1;
+	if ((oldbase == 16) || (base == 16)) setnormlabels();} {}
+  }
+  Function {set_display(double val,mode behind)} {private
+  } {
+    code {int i;
+char dispstr[40], expstr[10], str2[10];
+
+	/* number or operator handled to get here so reset inv stuff */
+/*
+	if (inv) 
+	{
+		inv = 0;
+		check_inv->value(0);
+		setnormlabels();
+	}*/
+	if (behind >= 0) 
+	{ /* format with appropriate number of decimal places */
+		if (base == 10) 
+		{
+			emode = 0;
+			strcpy(str2,"%.1f");
+			str2[2] = behind + '0';
+			sprintf(dispstr,str2,val);
+		}
+		else /* non base 10 display */
+			cvttobase(val, base, behind, dispstr);
+	}
+	else 
+	if (behind == DOT) 
+	{ /* display the . at the right */
+		if (base == 10) 
+		{
+			emode = 0;
+			sprintf(dispstr,"%.1f",val);
+			dispstr[strlen(dispstr)-1] = 0;
+		}
+		else
+			cvttobase(val, base, behind, dispstr);
+	}
+	else if (behind == NORM) 
+	{ /* normal display */
+		if (base == 10) 
+		{
+			emode = 0;
+			sprintf(dispstr,"%.9g",val);
+		}
+		else /* non base 10 display */
+			cvttobase(val, base, behind, dispstr);
+	}
+	else 
+	{ /* exponent entering display */
+		sprintf(dispstr,"%.8f",val);
+		for (i = strlen(dispstr); dispstr[i-1] == '0'; i--);
+		dispstr[i] =0;
+		strcat(dispstr, "e");
+		sprintf(expstr,"%d",exponent);
+		strcat(dispstr, expstr);
+	}
+	strcat(dispstr," ");
+	dispstr[17] = 0;
+	leddisplay->value(dispstr);
+	leddisplay->redraw();} {}
+  }
+  Function {set_memdisp()} {open private
+  } {
+    code {if (mem)
+  box_M->value("M");
+else
+  box_M->value("");
+
+box_M->redraw();} {}
+  }
+  Function {set_drgdisp()} {private
+  } {
+    code {if (drgmode == 0)
+		 box_DEGRAD->value("DEG");
+	else
+	 if (drgmode == 1)
+		box_DEGRAD->value( "RAD");
+	else
+		box_DEGRAD->value( "GRAD");
+	box_DEGRAD->redraw();} {}
+  }
+  Function {set_brktdisp()} {private
+  } {
+    code {char dispstr[40];
+
+	if (currentbrkt > 0)
+	{
+		sprintf(dispstr, "%d [ max %d", currentbrkt, MaxNumBrkts);
+		box_bracket->value(dispstr);
+	}
+	else
+		box_bracket->value("");
+	box_bracket->redraw();} {}
+  }
+  Function {add_left_bracket()} {private
+  } {
+    code {if (currentbrkt < MaxNumBrkts) 
+	{
+		currentbrkt++;
+		startbrkt[currentbrkt] = top;
+		ready = 1;
+		set_brktdisp();
+	}} {}
+  }
+  Function {add_right_bracket()} {private
+  } {
+    code {int i;
+
+	if (currentbrkt > 0) 
+	{
+		for (i = top; i > startbrkt[currentbrkt]; i--) calc(i-1);
+		top = startbrkt[currentbrkt];
+		currentbrkt--;
+		ready = 1;
+	}
+	set_display(value[top],NORM);
+	set_brktdisp();} {}
+  }
+  Function {factorial()} {} {
+    code {double lg, alpha;
+
+  /* uses gamma functions to get result for non-integer values */
+
+	alpha = value[top] + 1.0;
+	if ((floor(alpha) == alpha)&&(alpha <= 0.0))
+	{
+		init_value(0);
+		leddisplay->value("Error: -ve integer ");
+		leddisplay->redraw();
+	}
+	else
+	if (alpha > 32)
+	 {
+		lg = exp(gammaln(alpha));
+    		value[top] = lg;
+   		 set_display(value[top],NORM);
+		ready = 1;
+	}
+	else
+	if (alpha > 1.0)
+	{
+		int n = (int)truncf(alpha);
+		lg = 1.0;
+		for (int i = 1; i <n; i++) lg *= i;
+		value[top] = lg;
+		set_display(value[top],NORM);
+		ready = 1;
+	}} {}
+  }
+  Function {exchange()} {} {
+    code {double temp;
+
+  /* check if we have 2 values to exchange */
+  if (top > startbrkt[currentbrkt]) {
+    temp = value[top];
+    value[top] = value[top-1];
+    value[top-1] = temp;
+
+    set_display(value[top],NORM);
+    ready = 1;
+  }} {}
+  }
+  Function {exponent_pi()} {} {
+    code {if ((value[top] == 0.0) || (ready)) {
+    value[top] = M_PI;
+    set_display(value[top],NORM);
+    ready = 1;
+  }
+  else if ((! emode) && (base == 10)) {
+    emode = 1;
+    exponent = 0;
+    mantissa = value[top];
+    set_display(mantissa,EXP);
+  }} {}
+  }
+  Function {calc(int i)} {} {
+    code {switch (oper[i])
+	 {
+		case PLUS:	value[i] += value[i+1]; break;
+		case MINUS:	value[i] -= value[i+1]; break;
+		case MULT:	value[i] *= value[i+1]; break;
+		case DIV:	value[i] /= value[i+1]; break;
+		case POW:	value[i] = pow(value[i], value[i+1]); break;
+		case INVPOW: value[i] = pow(value[i], 1.0/value[i+1]); break;
+	}} {}
+  }
+  Function {init_value(int lev)} {private
+  } {
+    code {top = lev;
+	value[top] = 0.0;
+	ready = 0;
+	emode = 0;
+	dot = 0;
+	diver = 1.0;
+	behind = 0;
+	if (inv) 
+	{
+		inv = 0;
+		check_inv->value(0);
+		setnormlabels();
+	}} {}
+  }
+  Function {cvttobase(double num,int base,mode behind,char *str)} {private
+  } {
+    code {double sign, div;
+int place, digit, i;
+char digstr[2];
+
+	sign = copysign(1.0, num);
+	num *= sign;
+	if (sign == -1.0)
+		sprintf(str, "-");
+	else
+		str[0] = 0;
+
+	if (num == 0.0) 
+	{
+		sprintf(str, "0");
+		if (behind > 0) 
+		{
+			strcat(str, ".");
+			for(i = 0; i < behind; i++) strcat(str, "0");
+		}
+		return;
+	}
+	place = (int)( log(num)/log((double)base) );
+	if (place < 0) place = 0;
+	do 
+	{
+		div = pow((double)base, (double)place);
+		digit = (int)(num/div);
+		num -= (double)digit*div;
+		if (place == -1) strcat(str, ".");
+		place--;
+		sprintf(digstr, "%x", digit);
+		strcat(str, digstr);
+		if (strlen(str) > 18) 
+		{
+			sprintf(str, "can't display");
+			return;
+		}
+	} while ((place >= 0) || ((place >= -9) && (num != 0.0)));
+
+	if ((place == -1) && ((behind == DOT) || (behind > 0)))
+		strcat(str, ".");
+	while ((behind > 0) && (behind >= -place)) 
+	{
+		strcat(str, "0");
+		place--;
+	}} {}
+  }
+  Function {setnormlabels()} {open private
+  } {
+    code {if (base <= 10)
+	{
+		but_sqrt->label("sqrt");  but_sqrt->shortcut(0);
+		but_pow->label("x^y"); but_pow->shortcut(0);
+		but_sin->label("sin");   but_sin->shortcut(0);
+		but_cos->label("cos"); but_cos->shortcut(0);
+		but_tan->label("tan");   but_tan->shortcut(0);
+		but_log->label("log");  but_log->shortcut(0);
+		but_sqrt->labelcolor(FL_BLUE);
+		but_pow->labelcolor(FL_BLUE);
+		but_sin->labelcolor(FL_BLUE);
+		but_cos->labelcolor(FL_BLUE);
+		but_tan->labelcolor(FL_BLUE);
+		but_log->labelcolor(FL_BLUE);
+	}
+	else
+	{
+		but_sqrt->label("a");  but_sqrt->shortcut('a');
+		but_pow->label("b");  but_pow->shortcut('b');
+		but_sin->label("c");   but_sin->shortcut('c');
+		but_cos->label("d");  but_cos->shortcut('d');
+		but_tan->label("e");  but_tan->shortcut('e');
+		but_log->label("f");   but_log->shortcut('f');
+		but_sqrt->labelcolor(FL_BLACK);
+		but_pow->labelcolor(FL_BLACK);
+		but_sin->labelcolor(FL_BLACK);
+		but_cos->labelcolor(FL_BLACK);
+		but_tan->labelcolor(FL_BLACK);
+		but_log->labelcolor(FL_BLACK);
+	}
+	but_ln->label("ln");
+	but_int->label("int");
+	but_dr->label("d->r");
+	but_Mplus->label("M+");
+	but_Mmult->label("M*");
+	but_Mclear->label("MC");
+	but_sqrt->redraw();
+	but_pow->redraw();
+	but_sin->redraw();
+	but_cos->redraw();
+	but_tan->redraw();
+	but_log->redraw();
+	but_ln->redraw();
+	but_int->redraw();
+	but_dr->redraw();
+	but_Mplus->redraw();
+	but_Mmult->redraw();
+	but_Mclear->redraw();} {}
+  }
+  Function {setinvlabels()} {private
+  } {
+    code {if (base <= 10)
+	{
+		but_sqrt->label("x^2");
+		but_pow->label("x^1/y");
+		but_sin->label("asin");
+		but_cos->label("acos");
+		but_tan->label("atan");
+		but_log->label("10^x");
+		but_sqrt->labelcolor(FL_BLUE);
+		but_pow->labelcolor(FL_BLUE);
+		but_sin->labelcolor(FL_BLUE);
+		but_cos->labelcolor(FL_BLUE);
+		but_tan->labelcolor(FL_BLUE);
+		but_log->labelcolor(FL_BLUE);
+	}
+	else
+	{
+		but_sqrt->label("a");
+		but_pow->label("b");
+		but_sin->label("c");
+		but_cos->label("d");
+		but_tan->label("e");
+		but_log->label("f");
+		but_sqrt->labelcolor(FL_BLACK);
+		but_pow->labelcolor(FL_BLACK);
+		but_sin->labelcolor(FL_BLACK);
+		but_cos->labelcolor(FL_BLACK);
+		but_tan->labelcolor(FL_BLACK);
+		but_log->labelcolor(FL_BLACK);
+	}
+	but_ln->label("e^x");
+	but_int->label("frac");
+	but_dr->label("r->d");
+	but_Mplus->label("M-");
+	but_Mmult->label("M/");
+	but_Mclear->label("Mex");
+	but_sqrt->redraw();
+	but_pow->redraw();
+	but_sin->redraw();
+	but_cos->redraw();
+	but_tan->redraw();
+	but_log->redraw();
+	but_ln->redraw();
+	but_int->redraw();
+	but_dr->redraw();
+	but_Mplus->redraw();
+	but_Mmult->redraw();
+	but_Mclear->redraw();} {}
+  }
+  Function {mem_exchange()} {private
+  } {
+    code {double temp;
+
+	temp = mem;
+	mem = value[top];
+	value[top] = temp;
+
+	set_display(value[top],NORM);
+	ready = 1;
+	set_memdisp();} {}
+    code {printf("Hello, World!\\n");} {}
+  }
+  Function {to_drg(double angle)} {private return_type double
+  } {
+    code {if (drgmode == 0)
+		return (M_PI*angle/180.0);
+	else 
+	if (drgmode == 2)
+		return (M_PI*angle/100.0);
+	else
+		return (angle);} {}
+  }
+  Function {from_drg(double angle)} {private return_type double
+  } {
+    code {if (drgmode == 0)
+		return (180.0*angle/M_PI);
+	else 
+	if (drgmode == 2)
+		return (100.0*angle/M_PI);
+	else
+		return (angle);} {}
+  }
+  Function {memexch()} {open
+  } {
+    code {double temp;
+
+	temp = mem;
+	mem = value[top];
+	value[top] = temp;
+	set_display(value[top],NORM);
+	ready = 1;
+	set_memdisp();} {}
+  }
+  Function {make_icon(Fl_Window *o)} {open
+  } {
+    code {Fl_Pixmap f(flcalc_xpm);
+const Fl_Pixmap * flpad_xpm_icon = &f;
+const Fl_RGB_Image *img = new Fl_RGB_Image(flpad_xpm_icon,FL_GRAY);
+o->icon(img);} {}
+  }
+} 

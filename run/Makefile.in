@@ -1,0 +1,16 @@
+TARGET    = flrun
+FLTK_CONF = fltk-config
+CXX       = $(shell $(FLTK_CONF) --cxx)
+DEBUG     = -g
+CXXFLAGS  = $(shell $(FLTK_CONF) --cxxflags --optim) -I.
+CXXFLAGS += -finline-small-functions -ffunction-sections -fdata-sections -fmerge-all-constants -fomit-frame-pointer -mno-accumulate-outgoing-args -fno-unwind-tables -fno-asynchronous-unwind-tables -O2 -std=c++11 -fexceptions
+LDFLAGS   = $(shell $(FLTK_CONF) --use-images --ldflags )
+LDSTATIC  = $(shell $(FLTK_CONF) --use-images --ldstaticflags )
+LINK      = $(CXX)
+OBJS      = $(TARGET).o
+SRCS      = $(TARGET).cxx
+.SUFFIXES: .o .cxx
+$(TARGET): $(SRCS)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
+
+

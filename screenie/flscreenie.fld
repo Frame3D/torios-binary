@@ -1,0 +1,201 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0303 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include <FL/Fl_PNG_Image.H>} {public global
+} 
+
+decl {\#include <FL/Fl_File_Chooser.H>} {public global
+} 
+
+decl {\#include <string>} {public global
+} 
+
+decl {\#include <fstream>} {public global
+} 
+
+decl {\#include <iostream>} {public global
+} 
+
+decl {\#include <FL/fl_draw.H>} {public global
+} 
+
+decl {\#include <png.h>} {public global
+} 
+
+class UI {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window screener_win {
+      label Screenie open
+      xywh {778 156 170 80} type Double hide
+    } {
+      Fl_Button {} {
+        label {Full Screen}
+        callback {screener_win->hide();
+full_screen();}
+        xywh {5 40 90 35} box FLAT_BOX color 61 selection_color 60 labelcolor 7
+      }
+      Fl_Button {} {
+        label Quit
+        callback {exit(0);}
+        xywh {100 40 65 35} box FLAT_BOX color 80 selection_color 72 labelcolor 7
+      }
+      Fl_Box {} {
+        label {Take a Screen shot}
+        xywh {5 5 155 35}
+      }
+      Fl_Button {} {
+        label Area
+        callback {screener_win->hide();
+sizer_window()->show();}
+        xywh {5 80 90 35} box FLAT_BOX color 61 selection_color 60 labelcolor 7 deactivate
+      }
+    }
+  }
+  Function {full_screen()} {open
+  } {
+    code {screenshot(Fl::w(),Fl::h());} {}
+  }
+  Function {screenshot(int w, int h,int x=0,int y=0, bool FULL = true)} {open
+  } {
+    code {Screenie *S = new Screenie(w,h,0,x,y);
+S->box(FL_NO_BOX);
+if(FULL)
+  S->fullscreen();
+S->border(0);
+S->show();} {}
+  }
+  Function {sizer_window()} {open
+  } {
+    Fl_Window s_win {open
+      xywh {495 137 255 185} type Double color 55 hide resizable
+    } {
+      Fl_Button {} {
+        label {Take Screen Shot}
+        callback {s_win->hide();
+screenshot(s_win->w(),s_win->h(),s_win->x(),s_win->y(),false);}
+        xywh {55 75 145 40} box FLAT_BOX color 62 labelcolor 7
+      }
+    }
+  }
+} 
+
+Function {main(int argc, char*argv[])} {open return_type int
+} {
+  code {UI *ui = new UI();
+ui->make_window()->show();
+return Fl::run();} {}
+} 
+
+Function {trace(std::string msg)} {open
+} {
+  code {std::cout<<msg<<std::endl;} {}
+} 
+
+class Screenie {open : {public Fl_Window}
+} {
+  decl {int X,Y;} {protected local
+  }
+  Function {Screenie(int w, int h, const char* l = 0,int x=0, int y=0):Fl_Window(w,h,l)} {open
+  } {
+    code {X=x;
+Y=y;} {}
+  }
+  Function {draw()} {open
+  } {
+    code {Fl_Window::draw();
+uchar *p = fl_read_image(0,X,Y,w(),h());
+if(p)
+{
+  save_image(p,w(),h());
+  delete[]p;
+}
+hide();} {}
+  }
+  Function {save_image(uchar *p,int w, int h)} {open
+  } {
+    code {const char* fileName="/tmp/screenie.png";
+save_png(fileName,p,w,h);
+preview_image()->show();
+previewer->size(w,h);
+Fl_Image* image = new Fl_PNG_Image(fileName);
+previewer->image(image->copy());
+previewer->show();} {selected
+    }
+  }
+  Function {save_file()} {open
+  } {
+    code {const char* fileName="/tmp/screenie.png";
+const char* home=getenv("HOME");
+if(home==NULL)
+  home="/tmp";
+char *newfile = fl_file_chooser("Save File?", "*", home);
+if (newfile != NULL)
+{
+  std::ifstream source(fileName, std::ios::binary);
+  std::ofstream dest(newfile, std::ios::binary);
+  dest << source.rdbuf();
+  source.close();
+  dest.close();
+}
+exit(0);} {}
+  }
+  Function {preview_image()} {open
+  } {
+    Fl_Window previewer_win {
+      label Preview open
+      xywh {116 97 445 390} type Double hide resizable
+    } {
+      Fl_Scroll {} {open
+        xywh {-10 -15 455 350} resizable
+      } {
+        Fl_Box previewer {
+          xywh {5 5 440 330} box FLAT_BOX color 23 resizable
+        }
+      }
+      Fl_Button saver {
+        label Save
+        callback {save_file();}
+        xywh {290 340 70 35} box FLAT_BOX color 61 selection_color 60 labelcolor 7
+      }
+      Fl_Button {} {
+        label Quit
+        callback {exit(0);}
+        xywh {370 340 70 35} box FLAT_BOX color 80 selection_color 72 labelcolor 7
+      }
+    }
+  }
+  Function {save_png(const char *file,unsigned char* p,int w,int h)} {return_type int
+  } {
+    code {/*
+Taken from stack overflow
+https://stackoverflow.com/questions/46596654/fltk-desktop-screenshot-issue
+*/
+FILE *fp;
+fp = fl_fopen(file, "wb");
+if (fp == NULL)
+  return 1;
+png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
+if (png == NULL)
+{
+  fclose (fp);
+  return 2;
+}
+png_infop info = png_create_info_struct(png);
+png_bytep ptr = (png_bytep)p;
+png_init_io(png, fp);
+png_set_IHDR(png, info, w, h, 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+png_write_info(png, info);
+for (int i = h; i>0; i--, ptr += w * 3)
+{
+  png_write_row(png,ptr);
+}
+png_write_end(png,info);
+png_destroy_write_struct(&png, &info);
+fclose(fp);
+return 0;} {}
+  }
+} 

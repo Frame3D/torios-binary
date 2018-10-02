@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Name=Image Viewer
+Comment=Display image files
+Comment[fr]=Affiche des fichiers images
+Comment[pt]=Exiba arquivos de imagem
+Exec=flimage %f
+Terminal=false
+Icon=image-viewer
+Type=Application
+Categories=Graphics;
+MimeType=image/x-ms-bmp;image/gif;image/jpeg;image/pjpeg;image/x-portable-bitmap;image/pcd;image/x-portable-graymap;image/png;image/x-portable-anymap;image/x-portable-pixmap;image/x-rgb;image/rgba;image/x-xbitmap;image/x-xpixmap;image/svg+xml;image/svg+xml-compressed;

@@ -1,0 +1,45 @@
+#!/bin/sh
+prefix=/usr/local
+debugsym=true
+for arg in "$@"
+do
+  case "$arg" in
+    --prefix=*)
+      prefix=$(echo "$arg" | sed 's/--prefix=//')
+      ;;
+    --enable-debug)
+      debugsym=true
+      ;;
+    --disable-debug)
+      debugsym=false
+      ;;
+    --help)
+      echo 'usage: ./configure [options]'
+      echo 'options:'
+      echo '  --prefix=<path>: installation prefix'
+      echo '  --enable-debug: include debug symbols'
+      echo '  --disable-debug: do not include debug symbols'
+      echo 'all invalid options are silently ignored'
+      exit 0
+      ;;
+  esac
+done
+echo 'Generating Makefiles ...'
+for File in "$PWD" about askpass pm-dialogs run apt text screenie image calc welcome fm
+do
+  if [ -f "${File}/Makefile.in" ]
+  then
+    File="${File}/Makefile"
+    echo "Making ${File}"
+    echo "PREFIX    = $prefix" >"$File"
+    cat "${File}.in" >> "$File"
+    
+    if $debugsym
+    then
+      echo '
+dbg = -g' >>"$File"
+    fi
+  fi
+done
+echo 'Configuration complete.'
+echo 'Type make to build.'

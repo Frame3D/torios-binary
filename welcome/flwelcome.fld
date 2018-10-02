@@ -1,0 +1,640 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0303 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include <FL/Fl_Text_Buffer.H>} {public global
+} 
+
+decl {\#include <FL/Fl_Text_Display.H>} {public global
+} 
+
+decl {\#include <FL/fl_ask.H>} {public global
+} 
+
+decl {\#include <FL/filename.H>} {public global
+} 
+
+decl {\#include <FL/Fl_Browser.H>} {public global
+} 
+
+decl {\#include <string>} {public global
+} 
+
+decl {\#include <iostream>} {public global
+} 
+
+decl {\#include <sys/stat.h>
+\#include <sys/types.h>
+\#include <algorithm>
+\#include <dirent.h> //dir
+\#include <fstream> //ifstream
+\#include <fcntl.h> //readlink
+\#include <unistd.h> //readlink} {public global
+} 
+
+decl {\#include <vector>} {public global
+} 
+
+class Terminal {open : {public Fl_Text_Display}
+} {
+  decl {Fl_Text_Buffer *terminalbuffer;} {public local
+  }
+  Function {Terminal(int X,int Y,int W,int H,const char* L=0) : Fl_Text_Display(X,Y,W,H,L)} {open
+  } {
+    code {terminalbuffer = new Fl_Text_Buffer();
+buffer(terminalbuffer);
+textfont(FL_COURIER);
+textsize(12);
+box(FL_FLAT_BOX);
+color((Fl_Color)38);
+textcolor(FL_WHITE);
+//parent()->resizable(this);} {}
+  }
+  Function {append(char* p)} {open
+  } {
+    code {terminalbuffer->append(p);
+insert_position(buffer()->length());
+scroll(count_lines(0, buffer()->length(), 1), 0);
+parent()->redraw();} {}
+  }
+  Function {terminal_output(std::string terminal_Command_You_Want_Output_From)} {open return_type int
+  } {
+    code {if(terminal_Command_You_Want_Output_From.compare("")==0){return 1;}
+/** set a locale so this works well */
+const char* LANG=getenv("LANG");
+terminalbuffer->text("");
+std::string LOCALE;
+if(LANG==NULL)
+{
+  LANG=getenv("LANGUAGE");
+  if(LANG!=NULL){
+  std::string tmp=LANG;
+  unsigned int find=tmp.find(".UTF-8");
+  if(find>tmp.length()){tmp+=".UTF-8";}
+  LOCALE=tmp;
+  }
+}
+else
+{
+  LOCALE=LANG;
+}
+if(LOCALE.compare("")!=0){setlocale(LC_ALL, LOCALE.c_str());}
+const int max_buffer = 1024;
+char buffer[max_buffer];
+FILE *command_p = popen(terminal_Command_You_Want_Output_From.c_str(), "r");
+if (command_p)
+{
+  while( fgets(buffer, sizeof(buffer)-1, command_p) !=NULL)
+  {
+    append(buffer);
+    //std::cout<<buffer<<"::"<<std::endl;
+    Fl::flush();
+  }
+  pclose(command_p);
+  return 0;
+}
+else{ return -1;}
+return 2; //this shouldn't be possible} {}
+  }
+} 
+
+decl {Terminal *terminal} {public global
+} 
+
+class UI {open
+} {
+  decl {int DIST;} {private local
+  }
+  Function {current_path(int whichPath)} {return_type {std::string}
+  } {
+    code {unsigned int lastPath = 0;
+std::string result;
+if (whichPath >=1){lastPath = whichPath - 1;}
+else {lastPath = 0;}
+const char* path =getenv("PATH");
+std::string stringPATH;
+if(path == NULL){stringPATH = "/usr/bin";}
+else{stringPATH = path;}
+std::string::size_type firstPosition = stringPATH.find(':');
+if(firstPosition>stringPATH.length()){return stringPATH.c_str();}   
+std::string::size_type position = firstPosition;
+for (int i=1;i<=whichPath;i++){position = stringPATH.find(':',position+1);}
+for (unsigned int j=1;j<=lastPath;j++){firstPosition = stringPATH.find(':',firstPosition+1);}
+result = stringPATH.substr (firstPosition+1,((position-firstPosition)-1));
+return result;} {}
+  }
+  Function {file_to_string(std::string filename)} {return_type {std::string}
+  } {
+    code {if(filename.compare("")==0){return "";}
+/** make sure it is actually a file */
+if(!test_file(filename))
+{
+  return "";
+  trace("No file sent in: "+filename);
+}
+std::string thisLine;
+std::string fullString;
+std::ifstream inputFileStream(filename.c_str(), std::ifstream::in);
+if(inputFileStream.is_open())
+{
+  while (getline(inputFileStream,thisLine))
+  {
+    if(fullString.compare("")==0){fullString=thisLine;}
+    else{fullString=fullString+"\\n"+thisLine;}
+  }
+}
+return fullString;} {}
+  }
+  Function {get_directory_from_filename(std::string filename)} {return_type {std::string}
+  } {
+    code {unsigned int finder=filename.rfind("/");
+if(finder<filename.length())
+{
+  filename=filename.erase(finder,std::string::npos);
+}
+else{return "";} /**return empty if there is no directory*/
+return filename;} {}
+  }
+  Function {get_shell_for_C()} {return_type {std::string}
+  } {
+    code {std::string shell=term_out("which bash");
+if(shell.compare("")==0){
+  if(!test_exec(shell)){
+  shell=term_out("which sh");
+  if(!test_exec(shell)){return "";}
+  //TODO make this work for others
+  }
+}
+shell=shell+" -c '";
+return shell;} {}
+  }
+  Function {get_symlinkpath(std::string symlink)} {return_type {std::string}
+  } {
+    code {struct stat statinfo;
+if((lstat(symlink.c_str(), &statinfo)>0)){return symlink;}
+if ((!S_ISLNK (statinfo.st_mode) && statinfo.st_nlink > 1)||(S_ISLNK (statinfo.st_mode)))
+{
+  std::vector<char> buf(400);
+  size_t len;
+  do
+  {
+    buf.resize(buf.size() + 100);
+    len = ::readlink(symlink.c_str(), &(buf[0]), buf.size());
+  }
+  while(buf.size() == len);
+  if (len > 0)
+  {
+    buf[len] = '\\0';
+    return (std::string(&(buf[0])));
+  }
+}
+else
+{
+  return symlink;
+}
+return symlink;} {}
+  }
+  Function {install(std::string pkg)} {open
+  } {
+    code {//TODO make actual installer
+unsigned int HTTP = pkg.find("http");
+if(HTTP==0)
+{
+  open_website(pkg);
+  return;
+}
+trace("Install: "+pkg);
+std::string cmd = "sudo -A torios-packagetool -y install ";
+if(!test_exec("torios-packagetool"))
+  cmd="sudo -A apt install";
+cmd+=pkg;
+terminal->terminal_output(cmd);
+cmd="jwm-menu --reload";
+run(cmd);} {}
+  }
+  Function {info(std::string pkg)} {} {
+    code {//TODO
+trace("Looking up: "+pkg);
+std::string command = "torios-packagetool show "+pkg;
+std::string MSG=term_out(command);
+info_window(MSG)->show();} {}
+  }
+  Function {install_list_window()} {open
+  } {
+    Fl_Window install_win {
+      label Install open
+      xywh {131 143 270 295} type Double hide
+    } {
+      Fl_Browser install_list {
+        xywh {5 5 265 250} type Hold box FLAT_BOX selection_color 80
+      }
+      Fl_Button {} {
+        label Close
+        callback {install_win->hide();}
+        xywh {130 260 65 30} box FLAT_BOX color 80 selection_color 72 labelcolor 7
+      }
+      Fl_Button {} {
+        label Install
+        callback {int val = install_list->value();
+if( (install_list->size()>0) && (val>0) )
+{
+  const char* t = install_list->text(val);
+  if(t != NULL)
+  {
+    term_win->show();
+    term_win->wait_for_expose();
+    Fl::flush();
+    std::string p=t;  
+    install(p);
+  }
+}}
+        xywh {200 260 65 30} box FLAT_BOX color 61 selection_color 60 labelcolor 7
+      }
+      Fl_Button {} {
+        label Information
+        callback {int val = install_list->value();
+if( (install_list->size()>0) && (val>0) )
+{
+  const char* t = install_list->text(val);
+  if(t != NULL)
+  {
+    std::string p=t;
+    info(p);
+  }
+}}
+        xywh {5 260 95 30} box FLAT_BOX color 180 selection_color 137 labelcolor 7
+      }
+    }
+  }
+  Function {items_in_path()} {return_type {unsigned int}
+  } {
+    code {const char* path =getenv("PATH");
+std::string::size_type pathPosition =0;
+if(path==NULL){return 1;}
+std::string stringPATH = path;
+unsigned int howmany;
+for(howmany=1;(pathPosition!=std::string::npos);howmany++)
+{
+  pathPosition=stringPATH.find(':', pathPosition+1);
+}
+return howmany;} {}
+  }
+  Function {make_window()} {open
+  } {
+    Fl_Window about {
+      label Welcome open
+      xywh {820 73 345 345} type Double
+      code0 {DIST=0;}
+      code1 {make_terminal()->show();term_win->hide();} visible
+    } {
+      Fl_Button {} {
+        label Exit
+        callback {exit(0);}
+        xywh {265 300 65 30} box FLAT_BOX color 80 selection_color 72 labelcolor 7
+      }
+      Fl_Group {} {
+        label Install open
+        xywh {5 30 255 125} box FLAT_BOX color 46 labelsize 20
+      } {
+        Fl_Button {} {
+          label {Web Browser}
+          callback {std::string LIST="midori\\nqupzilla\\nhttps://www.google.com/chrome/index.html\\nhttp://www.opera.com/\\nhttp://linux.palemoon.org/";
+if(isDebian())
+  LIST="firefox-esr\\nchromium\\n"+LIST;
+else
+   LIST="firefox\\nchromium-browser\\n"+LIST;
+make_install_list(LIST);}
+          tooltip {Install many popular web browsers} xywh {10 35 120 35} box FLAT_BOX color 23
+        }
+        Fl_Button {} {
+          label {Office Programs}
+          callback {make_install_list("libreoffice\\nabiword gnumeric");}
+          tooltip {Write documents easily} xywh {135 35 120 35} box FLAT_BOX color 23
+        }
+        Fl_Button {} {
+          label {Music Player}
+          callback {std::string PLAYERS="audacious\\namarok\\nbanshee\\nclementine\\ndeadbeef\\ngnome-music\\nlxmusic\\nmpv\\nrhythmbox";
+make_install_list(PLAYERS);}
+          tooltip {Install a music player} xywh {10 75 120 35} box FLAT_BOX color 23
+        }
+        Fl_Button {} {
+          label {Video Player}
+          callback {std::string PLAYERS="vlc\\nparole\\ntotem";
+if(DIST<=1)
+  PLAYERS+="\\nhandbrake";
+make_install_list(PLAYERS);}
+          tooltip {Install a video player} xywh {10 115 120 35} box FLAT_BOX color 23
+        }
+        Fl_Button {} {
+          label {Media Codecs}
+          callback {std::string DEBS="gstreamer0.10-bad gstreamer0.10-bad-plugins gstreamer0.10-ugly-plugins gst-libav  unrar lib32-flashplugin flashplugin libdvdread libdvdcss gst-plugins-bad gst-plugins-ugly";
+//DEBS="gstreamer0.10-plugins-bad libavcodec-extra  gstreamer1.0-plugins-ugly gstreamer0.10-fluendo-mp3 gstreamer0.10-plugins-bad gstreamer0.10-plugins-ugly gstreamer1.0-fluendo-mp3 gstreamer1.0-libav gstreamer1.0-plugins-bad  ttf-mscorefonts-installer unrar flashplugin-nonfree pepperflashplugin-nonfree libdvdread4"
+switch(DIST)
+{
+  case 0:
+    DEBS+=" gvfs gvfs-fuse mtp-tools gvfs-backends gstreamer0.10-plugins-base";
+    break;
+  case 1:
+    DEBS+=" gvfs-mtp gst-plugins-base gst-plugins-base-libs gvfs-gphoto2";
+    break;
+  default:
+    break;
+}
+install(DEBS);}
+          tooltip {Install programs needed to play certain media} xywh {135 75 120 35} box FLAT_BOX color 23
+        }
+        Fl_Button {} {
+          label Games
+          callback {std::string DEBS="ace-of-penguins\\naisleriot\\nfltk1.3-games\\nfrogatto\\ngcompris\\nscratch\\nsupertux\\nteeworlds\\npopen-invaders\\nwesnoth-1.12-core\\nxboard\\nxbomb\\nxjig\\nxjump\\nzsnes";
+switch(DIST)
+{
+  case 0:
+    break;
+  case 1:
+    break;
+  default:
+    break;
+}
+make_install_list(DEBS);}
+          tooltip {Many games to choose from} xywh {135 115 120 35} box FLAT_BOX color 23
+        }
+      }
+      Fl_Group {} {
+        label Update open
+        xywh {5 180 255 45} box FLAT_BOX color 46 labelsize 20
+      } {
+        Fl_Button {} {
+          label System
+          callback {if(test_exec("torios-packagetool"))
+  show_command("torios-packagetool upgrade");
+else
+  show_command("sudo -A apt -y full-upgrade");}
+          tooltip {Keep your system up to date} xywh {10 185 120 35} box FLAT_BOX color 23
+        }
+        Fl_Button {} {
+          label Bootloader
+          callback {std::string COMMAND="sudo -A grub-mkconfig -o /boot/grub/grub.cfg";
+switch(DIST)
+{
+  case 0:
+    COMMAND="sudo -A update-grub";
+    break;
+  default:
+    break;
+}
+show_command(COMMAND);}
+          tooltip {Update your computers boot loader} xywh {135 185 120 35} box FLAT_BOX color 23
+        }
+      }
+      Fl_Group {} {
+        label System open
+        xywh {5 250 255 85} box FLAT_BOX color 46 labelsize 20
+      } {
+        Fl_Button {} {
+          label Appearance
+          callback {//TODO check things
+run("jwm-settings-manager");}
+          tooltip {Configure your desktop} xywh {10 255 120 35} box FLAT_BOX color 23
+        }
+        Fl_Button {} {
+          label Login
+          callback {run("fltk-lightdm");}
+          tooltip {Modify user logins easily} xywh {135 255 120 35} box FLAT_BOX color 23
+          code0 {if(!test_exec("fltk-lightdm"))o->deactivate();}
+        }
+        Fl_Button {} {
+          label Information
+          tooltip {Get information on your computer} xywh {10 295 120 35} box FLAT_BOX color 23 deactivate
+        }
+        Fl_Button {} {
+          label Language
+          tooltip {Modify language settings} xywh {135 295 120 35} box FLAT_BOX color 23 deactivate
+        }
+      }
+      Fl_Button {} {
+        label {ToriOS Website}
+        callback {open_website("http://www.torios.top");}
+        tooltip {See our website} xywh {265 35 65 40} box FLAT_BOX color 61 selection_color 60 labelcolor 7 align 128
+      }
+      Fl_Button {} {
+        label {ToriOS Code}
+        callback {open_website("https://launchpad.net/~torios");}
+        tooltip {Code with us!} xywh {265 80 65 40} box FLAT_BOX color 95 selection_color 94 align 128
+      }
+      Fl_Button {} {
+        label {ToriOS Twitter}
+        callback {open_website("https://twitter.com/ToriOS_Official");}
+        tooltip {Tweet us!} xywh {265 125 65 40} box FLAT_BOX color 222 selection_color 178 align 128
+      }
+    }
+  }
+  Function {populateBrowserWithString(Fl_Browser *o, std::string STRING)} {} {
+    code {if(STRING.compare("")==0)return;
+std::string sep="\\n";
+unsigned int finder=STRING.find(sep);
+unsigned int length=STRING.length();
+/** If no '\\n' is found just add the string and return*/
+if(finder>length){
+  //("No Newline found");
+  o->add(STRING.c_str());
+  return;
+}
+/** while there is a new line keep adding*/
+while(finder<length)
+{
+  finder=STRING.find(sep);
+  length=STRING.length();
+  std::string tmp1=STRING;
+  /** make sure if no newline is at the end it wont crash*/
+  if(finder<length+1)
+  {
+    std::string tmp2=tmp1.erase(finder,std::string::npos);
+    o->add(tmp2.c_str());
+    tmp1=STRING;
+    finder=tmp1.find(sep);
+    STRING=tmp1.substr(finder+1,std::string::npos);
+  }
+}
+if(STRING.length()>0)
+  o->add(STRING.c_str());} {}
+  }
+  Function {run(std::string program)} {open return_type int
+  } {
+    code {std::string shell=get_shell_for_C();
+if(shell.compare("")!=0)
+{
+  shell+=program;
+  shell+="' &";
+}
+else{shell=program;}
+//trace("run_program::"+shell);
+return system(shell.c_str());} {}
+  }
+  Function {test_exec(std::string execToTest)} {return_type bool
+  } {
+    code {if(execToTest.compare("")==0){return false;}
+/** the list of directories it might check*/
+/** /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games*/
+std::string stringEXEC;
+std:: string testPATH, testExec;
+bool result = false;
+unsigned int numofpaths = items_in_path();
+for (unsigned int i = 1; i <= numofpaths; i++)
+{
+  stringEXEC = execToTest;
+  testPATH = current_path(i);
+  stringEXEC = testPATH + "/" + stringEXEC;
+  if(test_file(stringEXEC.c_str())){return true;}
+}
+return result;} {}
+  }
+  Function {test_file(std::string fileWithFullPATH)} {return_type bool
+  } {
+    code {if(fileWithFullPATH.compare("")==0){return false;}
+std::string dir=get_directory_from_filename(fileWithFullPATH);
+if(dir.compare("")==0){return false;}
+DIR *mydir=NULL;
+struct dirent *entryPointer=NULL;
+mydir=opendir(dir.c_str());
+if(mydir!=NULL)
+{
+  while ((entryPointer=readdir(mydir))!=NULL)
+  {
+    if(entryPointer->d_type == DT_REG)
+    {
+      std::string fullpath=entryPointer->d_name;
+      if(dir.rfind('/')!=dir.length()-1){dir+="/";}
+      fullpath=dir+fullpath;
+      if(fullpath.compare(fileWithFullPATH)==0)
+      {
+        closedir(mydir);
+        return true;
+      }
+    }
+  }
+  closedir(mydir);
+}
+else{trace("could not open directory to search for "+fileWithFullPATH);}
+return false;} {}
+  }
+  Function {toriosversion()} {return_type {std::string}
+  } {
+    code {return file_to_string("/usr/share/torios/version");} {}
+  }
+  Function {make_install_list(std::string LIST)} {} {
+    code {install_list_window()->show();
+populateBrowserWithString(install_list,LIST);} {}
+  }
+  Function {isDebian()} {return_type bool
+  } {
+    code {std::string deb=term_out("uname -v");
+unsigned int D = deb.find("Debian");
+if(D<deb.length())
+  return true;
+
+return false;} {}
+  }
+  Function {open_website(std::string site)} {} {
+    code {char errmsg[512];
+if ( !fl_open_uri(site.c_str(),errmsg, sizeof(errmsg)) )
+{
+  char warnmsg[768];
+  sprintf(warnmsg, "Error: %s", errmsg);
+  fl_alert(warnmsg); 
+}} {}
+  }
+  Function {info_window(std::string MSG)} {} {
+    Fl_Window {} {open
+      xywh {998 234 270 260} type Double hide resizable
+    } {
+      Fl_Text_Display text_info {
+        xywh {5 5 260 215} box FLAT_BOX resizable
+        code0 {Fl_Text_Buffer *a = new Fl_Text_Buffer();o->buffer(a);a->text(MSG.c_str());}
+      }
+      Fl_Button {} {
+        label Close
+        callback {o->parent()->hide();}
+        xywh {200 225 65 30} box FLAT_BOX color 80 selection_color 72 labelcolor 7
+      }
+    }
+  }
+  Function {make_terminal()} {open
+  } {
+    Fl_Window term_win {
+      label {Terminal Output} open selected
+      xywh {364 412 320 275} type Double
+      code0 {terminal = new Terminal(5, 5, 310, 225);} visible
+    } {
+      Fl_Button {} {
+        label Close
+        callback {o->parent()->hide();}
+        xywh {240 235 65 30} box FLAT_BOX color 80 selection_color 72 labelcolor 7
+      }
+    }
+  }
+  Function {term_out(std::string terminal_Command_You_Want_Output_From)} {open return_type {std::string}
+  } {
+    code {if(terminal_Command_You_Want_Output_From.compare("")==0){return "";}
+/** set a locale so this works well */
+const char* LANG=getenv("LANG");
+std::string LOCALE;
+if(LANG==NULL)
+{
+  LANG=getenv("LANGUAGE");
+  if(LANG!=NULL){
+  std::string tmp=LANG;
+  unsigned int find=tmp.find(".UTF-8");
+  if(find>tmp.length()){tmp+=".UTF-8";}
+  LOCALE=tmp;
+  }
+}
+else
+{
+  LOCALE=LANG;
+}
+if(LOCALE.compare("")!=0){setlocale(LC_ALL, LOCALE.c_str());}
+std::string result="";
+const int max_buffer = 1024;
+char buffer[max_buffer];
+FILE *command_p = popen(terminal_Command_You_Want_Output_From.c_str(), "r");
+if (command_p)
+{
+  while( fgets(buffer, sizeof(buffer), command_p) !=NULL)
+  {
+    result.append(buffer);
+  }
+  pclose(command_p);
+}
+else{ return "";}
+if (result.compare("")==0){return "";}
+int end = result.length();
+if((end-1) == 0){return "";}
+if((end) == 0){return "";}
+return result.erase(end-1,1);} {}
+  }
+  Function {show_command(std::string command)} {open
+  } {
+    code {term_win->show();
+term_win->wait_for_expose();
+Fl::flush();
+terminal->terminal_output(command);} {}
+  }
+} 
+
+Function {main(int argc, char*argv[])} {open return_type int
+} {
+  code {std::string current_exec_name = argv[0];
+std::string first_arge;
+if (argc > 1)
+{
+  first_arge = argv[1];
+}
+UI *ui = new UI();
+ui->make_window()->show();
+return Fl::run();} {}
+} 
+
+Function {trace(std::string msg)} {open
+} {
+  code {std::cout<<msg<<std::endl;} {}
+} 

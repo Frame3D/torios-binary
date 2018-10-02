@@ -1,0 +1,52 @@
+torios-binary (0.2.0ubuntu1) UNRELEASED; urgency=medium
+  * flpad
+    - light/dark theme
+    - right click context menu (copy/find/etc...)
+    - proper documents list window
+    - proper tooltip/window title based on filename
+  * flfm
+    - mostly works to browse files
+
+ -- Israel Dahl <israeldahl@gmail.com>  Mon, 01 Oct 2018 18:13:12 -0500
+
+torios-binary (0.1.0ubuntu1) UNRELEASED; urgency=medium
+  * flimage
+    - movable zoom (using mouse) browse directory with < >
+    - added nice toolbar icons
+  * flcalc
+    - fully rethemed and included icon
+  * flpower uses sytemd for logout (still just system calls)
+  * flpad
+    - syntax highlighting mostly working
+    - toolbar icons (themable flat OR color)
+    - added window icon
+    - made most every thing work completely!
+
+ -- Israel Dahl <israeldahl@gmail.com>  Thu, 13 Sep 2018 14:30:12 -0500
+
+torios-binary (0.1.0ubuntu1) UNRELEASED; urgency=medium
+  * flaskpass
+    - finished
+  * flabout
+    - finished
+  * flrun
+    - finished
+  * flpower
+    - finished, uses system calls rather than systemd/dbus interface
+  * flpad
+    - working, except for syntax highlighting
+  * flscreenie
+    - finished (png ONLY)
+  * flapt
+    - long TODO list here... just lists packages
+  * flimage
+    - initial commit
+
+ -- Israel Dahl <israeldahl@gmail.com>  Mon, 13 Aug 2018 08:14:12 -0500
+ 
+torios-binary (0.0.1ubuntu1) UNRELEASED; urgency=medium
+  * flaskpass
+    - initial commit
+
+
+ -- Israel Dahl <israeldahl@gmail.com>  Thu, 02 Aug 2018 07:36:12 -0500

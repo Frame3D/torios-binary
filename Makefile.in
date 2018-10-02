@@ -1,0 +1,58 @@
+obj      = $(askpass:.c=.o) $(about:.c=.o)
+TARGET   = torios-binary
+$(TARGET):
+	$(MAKE) -C askpass/
+	$(MAKE) -C about/
+	$(MAKE) -C pm-dialogs/
+	$(MAKE) -C run/
+	$(MAKE) -C apt/
+	$(MAKE) -C text/
+	$(MAKE) -C screenie/
+	$(MAKE) -C image/
+	$(MAKE) -C calc/
+	$(MAKE) -C welcome/
+
+.PHONY: clean
+clean:
+	rm -f $(obj) askpass/flaskpass about/flabout  pm-dialogs/flpower Makefile askpass/Makefile pm-dialogs/Makefile about/Makefile run/flrun run/Makefile apt/Makefile apt/flapt text/flpad text/Makefile screenie/Makefile screenie/flscreenie image/flimage image/Makefile calc/Makefile calc/flcalc welcome/Makefile welcome/flwelcome
+
+.PHONY: install
+install: $(TARGET)
+#BINARIES
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	cp askpass/flaskpass $(DESTDIR)$(PREFIX)/bin/flaskpass
+	cp about/flabout $(DESTDIR)$(PREFIX)/bin/flabout
+	cp pm-dialogs/flpower $(DESTDIR)$(PREFIX)/bin/flpower
+	cp run/flrun $(DESTDIR)$(PREFIX)/bin/flrun
+	cp apt/flapt $(DESTDIR)$(PREFIX)/bin/flapt
+	cp text/flpad $(DESTDIR)$(PREFIX)/bin/flpad
+	cp screenie/flscreenie $(DESTDIR)$(PREFIX)/bin/flscreenie
+	cp image/flimage $(DESTDIR)$(PREFIX)/bin/flimage
+	cp calc/flcalc $(DESTDIR)$(PREFIX)/bin/flcalc
+	cp welcome/flwelcome $(DESTDIR)$(PREFIX)/bin/flwelcome
+
+#DESKTOP FILES
+	mkdir -p $(DESTDIR)$(PREFIX)/share/applications
+	cp desktop/flimage.desktop $(DESTDIR)$(PREFIX)/share/applications/flimage.desktop
+	cp desktop/flpad.desktop $(DESTDIR)$(PREFIX)/share/applications/flpad.desktop
+	cp desktop/flscreenie.desktop $(DESTDIR)$(PREFIX)/share/applications/flscreenie.desktop
+	cp desktop/flcalc.desktop $(DESTDIR)$(PREFIX)/share/applications/flcalc.desktop
+	cp desktop/flwelcome.desktop $(DESTDIR)$(PREFIX)/share/applications/flwelcome.desktop
+
+.PHONY: uninstall
+uninstall:
+	rm -f $(DESTDIR)$(PREFIX)/bin/flaskpass
+	rm -f $(DESTDIR)$(PREFIX)/bin/flabout
+	rm -f $(DESTDIR)$(PREFIX)/bin/flpower
+	rm -f $(DESTDIR)$(PREFIX)/bin/flrun
+	rm -f $(DESTDIR)$(PREFIX)/bin/flapt
+	rm -f $(DESTDIR)$(PREFIX)/bin/flpad
+	rm -f $(DESTDIR)$(PREFIX)/bin/flscreenie
+	rm -f $(DESTDIR)$(PREFIX)/bin/flimage
+	rm -f $(DESTDIR)$(PREFIX)/bin/flcalc
+	rm -f $(DESTDIR)$(PREFIX)/bin/flwelcome
+	rm -f $(DESTDIR)$(PREFIX)/share/applications/flcalc.desktop
+	rm -f $(DESTDIR)$(PREFIX)/share/applications/flscreenie.desktop
+	rm -f $(DESTDIR)$(PREFIX)/share/applications/flimage.desktop
+	rm -f $(DESTDIR)$(PREFIX)/share/applications/flpad.desktop
+	rm -f $(DESTDIR)$(PREFIX)/share/applications/flwelcome.desktop

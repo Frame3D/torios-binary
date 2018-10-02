@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=Welcome
+Name[en_US]=Welcome
+Name[en_GB]=Welcome
+Name[en]=Welcome
+Comment=Quick installation of common programs
+Exec=flwelcome
+Terminal=false
+Icon=system-help
+Type=Application
+Categories=System;
+

@@ -1,0 +1,232 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0303 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include <stdexcept>
+\#include <string>
+\#include <iostream>
+\#include <fstream>
+\#include <vector>
+\#include <sys/stat.h>
+\#include <sys/types.h>
+\#include <fcntl.h>
+\#include <sys/sendfile.h>  // sendfile
+\#include <algorithm>
+\#include <float.h>
+\#include <sstream>
+\#include <float.h>
+\#include <dirent.h>
+\#include <sys/stat.h>
+\#include <langinfo.h>
+\#include <stdlib.h>
+\#include <stdio.h>
+\#include <cstdlib>
+\#include <fstream>
+\#include <sstream>
+\#include <errno.h>
+\#include <locale.h>
+\#include <unistd.h>
+\#include <signal.h>} {public global
+} 
+
+class UI {open
+} {
+  Function {current_path(int whichPath)} {return_type {std::string}
+  } {
+    code {unsigned int lastPath = 0;
+std::string result;
+if (whichPath >=1){lastPath = whichPath - 1;}
+else {lastPath = 0;}
+const char* path =getenv("PATH");
+std::string stringPATH;
+if(path == NULL){stringPATH = "/usr/bin";}
+else{stringPATH = path;}
+std::string::size_type firstPosition = stringPATH.find(':');
+if(firstPosition>stringPATH.length()){return stringPATH.c_str();}   
+std::string::size_type position = firstPosition;
+for (int i=1;i<=whichPath;i++){position = stringPATH.find(':',position+1);}
+for (unsigned int j=1;j<=lastPath;j++){firstPosition = stringPATH.find(':',firstPosition+1);}
+result = stringPATH.substr (firstPosition+1,((position-firstPosition)-1));
+return result;} {}
+  }
+  Function {get_directory_from_filename(std::string filename)} {return_type {std::string}
+  } {
+    code {unsigned int finder=filename.rfind("/");
+if(finder<filename.length())
+{
+  filename=filename.erase(finder,std::string::npos);
+}
+else{return "";} /**return empty if there is no directory*/
+return filename;} {}
+  }
+  Function {get_shell_for_C()} {return_type {std::string}
+  } {
+    code {std::string shell=term_out("which bash");
+if(shell.compare("")==0){
+  if(!test_exec(shell)){
+  shell=term_out("which sh");
+  if(!test_exec(shell)){return "";}
+  //TODO make this work for others
+  }
+}
+shell=shell+" -c '";
+return shell;} {}
+  }
+  Function {items_in_path()} {return_type {unsigned int}
+  } {
+    code {const char* path =getenv("PATH");
+std::string::size_type pathPosition =0;
+if(path==NULL){return 1;}
+std::string stringPATH = path;
+unsigned int howmany;
+for(howmany=1;(pathPosition!=std::string::npos);howmany++)
+{
+  pathPosition=stringPATH.find(':', pathPosition+1);
+}
+return howmany;} {}
+  }
+  Function {make_window()} {open
+  } {
+    Fl_Window {} {
+      label Run open
+      xywh {175 283 290 35} type Double hide
+    } {
+      Fl_Input run_input {
+        label Run
+        callback {const char* tmp =run_input->value();
+if(tmp==NULL)
+  return;
+run(tmp);
+exit(0);}
+        xywh {35 5 160 25} box FLAT_BOX selection_color 72 when 8
+      }
+      Fl_Button {} {
+        label OK
+        callback {const char* tmp =run_input->value();
+if(tmp==NULL)
+  return;
+run(tmp);
+exit(0);}
+        xywh {200 5 70 25} box FLAT_BOX color 62 labelcolor 7
+      }
+    }
+  }
+  Function {run(std::string program)} {return_type int
+  } {
+    code {std::string shell=get_shell_for_C();
+if(shell.compare("")!=0)
+{
+  shell+=program;
+  shell+="' &";
+}
+else{shell=program;}
+trace("run_program::"+shell);
+return system(shell.c_str());} {}
+  }
+  Function {term_out(std::string terminal_Command_You_Want_Output_From)} {return_type {std::string}
+  } {
+    code {if(terminal_Command_You_Want_Output_From.compare("")==0){return "";}
+/** set a locale so this works well */
+const char* LANG=getenv("LANG");
+std::string LOCALE;
+if(LANG==NULL)
+{
+  LANG=getenv("LANGUAGE");
+  if(LANG!=NULL){
+  std::string tmp=LANG;
+  unsigned int find=tmp.find(".UTF-8");
+  if(find>tmp.length()){tmp+=".UTF-8";}
+  LOCALE=tmp;
+  }
+}
+else
+{
+  LOCALE=LANG;
+}
+if(LOCALE.compare("")!=0){setlocale(LC_ALL, LOCALE.c_str());}
+std::string result="";
+const int max_buffer = 1024;
+char buffer[max_buffer];
+FILE *command_p = popen(terminal_Command_You_Want_Output_From.c_str(), "r");
+if (command_p)
+{
+  while( fgets(buffer, sizeof(buffer), command_p) !=NULL){result.append(buffer);}
+  pclose(command_p);
+}
+else{ return "";}
+if (result.compare("")==0){return "";}
+int end = result.length();
+if((end-1) == 0){return "";}
+if((end) == 0){return "";}
+return result.erase(end-1,1);} {}
+  }
+  Function {test_exec(std::string execToTest)} {return_type bool
+  } {
+    code {if(execToTest.compare("")==0){return false;}
+/** the list of directories it might check*/
+/** /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games*/
+std::string stringEXEC;
+std:: string testPATH, testExec;
+bool result = false;
+unsigned int numofpaths = items_in_path();
+for (unsigned int i = 1; i <= numofpaths; i++)
+{
+  stringEXEC = execToTest;
+  testPATH = current_path(i);
+  stringEXEC = testPATH + "/" + stringEXEC;
+  if(test_file(stringEXEC.c_str())){return true;}
+}
+return result;} {}
+  }
+  Function {test_file(std::string fileWithFullPATH)} {return_type bool
+  } {
+    code {if(fileWithFullPATH.compare("")==0){return false;}
+std::string dir=get_directory_from_filename(fileWithFullPATH);
+if(dir.compare("")==0){return false;}
+DIR *mydir=NULL;
+struct dirent *entryPointer=NULL;
+mydir=opendir(dir.c_str());
+if(mydir!=NULL)
+{
+  while ((entryPointer=readdir(mydir))!=NULL)
+  {
+    if(entryPointer->d_type == DT_REG)
+    {
+      std::string fullpath=entryPointer->d_name;
+      if(dir.rfind('/')!=dir.length()-1){dir+="/";}
+      fullpath=dir+fullpath;
+      if(fullpath.compare(fileWithFullPATH)==0)
+      {
+        closedir(mydir);
+        return true;
+      }
+    }
+  }
+  closedir(mydir);
+}
+else{trace("could not open directory to search for "+fileWithFullPATH);}
+return false;} {}
+  }
+} 
+
+Function {main(int argc, char *argv[])} {open return_type int
+} {
+  code {std::string command;
+UI *ui = new UI();
+ui->make_window()->show();
+return Fl::run();} {}
+} 
+
+Function {trace(std::string msg)} {open
+} {
+  code {//std::cout<<msg<<std::endl;} {}
+} 
+
+Function {usage(char* name)} {open return_type int
+} {
+  code {std::cout<<name<<std::endl<<
+"USAGE:"<<std::endl<<
+"No Options"<<std::endl;
+return 0;} {selected
+  }
+} 

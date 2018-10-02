@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Text Editor
+Name[en_US]=Text Editor
+Name[en_GB]=Text Editor
+Name[en]=Text Editor
+GenericName=Text Editor
+Comment=Light and fast text editor
+Icon=text-editor
+Exec=flpad %f
+Terminal=false
+Type=Application
+Categories=Utility;

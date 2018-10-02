@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Name=flCalc
+Name[en_US]=flCalc
+Name[en_GB]=flCalc
+Name[en]=flCalc
+GenericName=Calculator
+Comment=Scientific Calculator
+Exec=flcalc
+Terminal=false
+Icon=calc
+Type=Application
+Categories=Utility;
+

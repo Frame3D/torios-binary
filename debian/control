@@ -1,0 +1,39 @@
+Source: torios-binary
+Section: misc
+Priority: optional
+Maintainer: Israel Dahl <israeldahl@gmail.com>
+Build-Depends:
+ debhelper (>= 9.0.0),
+ gcc-multilib [amd64],
+ g++-multilib [amd64],
+ gcc-multilib [amd64],
+ g++-multilib [amd64],
+ libc6,
+ libxcursor-dev,
+ libfltk-images1.3,
+ libfltk1.3,
+ libfltk1.3-dev,
+ libfltk1.3-compat-headers,
+ libgcc1,
+ libstdc++6,
+ libx11-dev,
+ libxpm-dev,
+ libxinerama-dev,
+ libxft-dev,
+ libcairo2-dev,
+ libjpeg-dev,
+ libxext-dev,
+ libpng-dev,
+ libxfixes-dev,
+ libapt-pkg-dev,
+ fluid,
+Standards-Version: 3.9.7
+Homepage: http://www.torios.top/
+
+Package: torios-binary
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Suggests: fltk-indicator
+Description: ToriOS basic programs, all binary
+  Simple small programs to do most common things.
+  This includes flabout (show an about dialog, with a default to the ToriOS information), flaskpass (a password program for sudo -A)
