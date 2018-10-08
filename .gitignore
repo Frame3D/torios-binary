@@ -19,5 +19,7 @@ calc/flcalc
 calc/Makefile
 welcome/Makefile
 welcome/flwelcome
+flfm/Makefile
+flfm/flfm
 .bzr/
 .bzrignore

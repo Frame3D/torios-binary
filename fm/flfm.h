@@ -17,27 +17,32 @@
 #include <FL/Fl_XPM_Image.H>
 #include <FL/Fl_GIF_Image.H>
 #include <stdexcept>
+#include <errno.h>
+
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <vector>
+#include <algorithm>
+
+
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <fcntl.h>
 #include <sys/sendfile.h>  // sendfile
-#include <algorithm>
+
+#include <fcntl.h>
 #include <float.h>
-#include <sstream>
-#include <float.h>
+
 #include <dirent.h>
-#include <sys/stat.h>
+#include <pwd.h>
+#include <time.h>
+#include <grp.h>
 #include <langinfo.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <cstdlib>
-#include <fstream>
-#include <sstream>
-#include <errno.h>
 #include <locale.h>
 #include <unistd.h>
 #include <signal.h>
@@ -94,15 +99,6 @@ public:
   std::string sed_i(std::string input, std::string remove, std::string replace);
 };
 
-class ContextMenu : public Fl_Menu_Window {
-  Fl_Menu_Item *Menu; 
-  std::string _filename; 
-public:
-  ContextMenu(std::string Filename, int X, int Y, int W, int H, const char* L=0);
-  static void open_cb_i(Fl_Widget* o,void*);
-  void open_cb();
-};
-
 class Item : public Icon {
 public:
   std::string Filename; 
@@ -111,6 +107,13 @@ public:
   Item(std::string filename, int X=5, int Y=5, int W=80, int H=80, const char *L=0,std::string icon="") ;
   int handle(int e);
   void open();
+private:
+  struct stat statbuf;
+  struct passwd *pwd;
+  struct tm *tm;
+public:
+  std::string properties(int type);
+  std::string get_mod_time();
 };
 
 class Grid : public Fl_Scroll {
@@ -126,6 +129,7 @@ public:
   Grid(std::string directory, int X=165, int Y=95, int W=375, int H=350) ;
   void populate();
   void load(std::string directory);
+  void open();
 };
 
 class File_List_Browser : public Fl_File_Browser {
@@ -133,6 +137,7 @@ public:
   void (*Picker)(Fl_Widget*); 
   int handle(int e);
   File_List_Browser(int X, int Y, int W, int H, const char *L=0) ;
+  void open();
 };
 
 class Tab : public Fl_Group {
@@ -167,12 +172,7 @@ public:
   void pick_place();
   void pick_selected();
   void up();
-};
-
-class ImageBox : public Fl_Box {
-public:
-  int handle(int e);
-  ImageBox(Fl_Boxtype b=FL_FLAT_BOX, int X=0, int Y=55, int W=385, int H=320, const char *l=NULL);
+  int change_mode(std::string file, mode_t mode);
 };
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Button.H>
@@ -184,12 +184,10 @@ public:
 #include <FL/Fl_Check_Button.H>
 
 class UserInterface {
-protected:
-  ImageBox *viewer; 
 public:
   std::vector <std::string> PLACES_LIST; 
-protected:
   std::string CURRENT_DIR; 
+protected:
   std::string CURRENT_FILE; 
 public:
   UserInterface();
@@ -202,6 +200,7 @@ public:
   void about_text(Fl_Widget* o);
   void add_tab(std::string dir="");
   void button_style(int style=0);
+  void change_dir(std::string dir);
   void changeWidgetImage(std::string icon_file, Fl_Widget * widget);
   std::vector<std::string> comma_vector(std::string LINE,std::vector<std::string> Vector);
   std::string convert_num_to_string(int num);
@@ -232,14 +231,12 @@ public:
   Fl_Menu_Bar *menu;
   static Fl_Menu_Item menu_menu[];
 private:
-  inline void cb_Open_i(Fl_Menu_*, void*);
-  static void cb_Open(Fl_Menu_*, void*);
   inline void cb_Exit_i(Fl_Menu_*, void*);
   static void cb_Exit(Fl_Menu_*, void*);
   inline void cb_Preferences_i(Fl_Menu_*, void*);
   static void cb_Preferences(Fl_Menu_*, void*);
-  inline void cb_Open1_i(Fl_Menu_*, void*);
-  static void cb_Open1(Fl_Menu_*, void*);
+  inline void cb_Open_i(Fl_Menu_*, void*);
+  static void cb_Open(Fl_Menu_*, void*);
   inline void cb_About_i(Fl_Menu_*, void*);
   static void cb_About(Fl_Menu_*, void*);
 public:
@@ -283,12 +280,7 @@ public:
   bool test_exec(std::string execToTest);
   std::string test_file_in_vector_path(std::string fileWithNOPATH,std::vector<std::string> directories_to_check);
   std::string term_out(std::string terminal_Command_You_Want_Output_From);
-  void resizeImage(Fl_Widget * widget);
-  void open_cb();
-  bool right_cb();
-  bool left_cb();
-  bool view_image(std::string filename);
-  void zoom(bool out=false);
+  static void open_cb(Fl_Widget *o, void *);
   void update(Fl_Input *o);
   bool test_dir(std::string dirToTest);
   void open_in_terminal();
@@ -301,7 +293,8 @@ public:
   Fl_Button *desktop_image;
   Fl_Button *desktop_color;
   Fl_Check_Button *desktop_icons;
-  void change_dir(std::string dir);
+  void make_popup(Fl_Widget *o);
+  static void handle_menu(Fl_Widget *w, void *v);
 };
 
 class Desktop {
@@ -323,4 +316,5 @@ bool has_file_extention_at_end(std::string filename,std::string extention);
 bool test_file(std::string fileWithFullPATH);
 void theme_scrollbars(Fl_Browser* o);
 void theme_scrollbars(Fl_Scroll* o);
+void process_errno();
 #endif

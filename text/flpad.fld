@@ -1,5 +1,8 @@
 # data file for the Fltk User Interface Designer (fluid)
 version 1.0303 
+i18n_type 1 
+i18n_include <libintl.h> 
+i18n_function gettext 
 header_name {.h} 
 code_name {.cxx}
 comment {copyright 2018 Israel Dahl
@@ -701,12 +704,12 @@ return;} {}
   } {
     Fl_Window win {
       label {FLTK Pad} open
-      xywh {111 136 520 545} type Double color 47
+      xywh {348 120 520 545} type Double color 47
       code0 {//Fl::event_dispatch(handle);}
       code1 {o->size_range(o->w(), o->h(), 0, 0);}
       code2 {make_icon(o);} xclass flpad visible
     } {
-      Fl_Menu_Bar menu {open selected
+      Fl_Menu_Bar menu {open
         xywh {0 0 520 25} box FLAT_BOX down_box FLAT_BOX color 39 selection_color 80 labelsize 16 labelcolor 7 align 260 textsize 16 textcolor 7
       } {
         Submenu {} {
@@ -1750,7 +1753,8 @@ textor->filename="";
 buff->select(0, buff->length());
 buff->remove_selection();
 textor->changed = 0;
-buff->call_modify_callbacks();} {}
+buff->call_modify_callbacks();} {selected
+    }
   }
   Function {open_cb()} {open
   } {

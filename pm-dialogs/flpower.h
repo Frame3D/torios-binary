@@ -3,6 +3,7 @@
 #ifndef flpower_h
 #define flpower_h
 #include <FL/Fl.H>
+#include "../include/toolbar_icons.h"
 #include <FL/Fl_JPEG_Image.H>
 #include <FL/Fl_PNG_Image.H>
 #include <FL/Fl_XBM_Image.H>
@@ -38,15 +39,15 @@
 #include <FL/Fl_Box.H>
 
 class UI {
-  std::string OLD_ICON; 
 protected:
-  std::vector<std::string> m_themesVector; 
-private:
-  std::string m_gtk_theme; 
-protected:
-  std::vector<std::string> m_ICON_PATHS; 
   unsigned int type; 
+  std::string SHUTDOWN_TEXT; 
+  std::string REBOOT_TEXT; 
+  std::string SUSPEND_TEXT; 
+  std::string HIBERNATE_TEXT; 
+  std::string LOGOUT_TEXT; 
 public:
+  UI();
   Fl_Double_Window* make_window();
   Fl_Double_Window *win;
 private:
@@ -57,49 +58,22 @@ private:
 public:
   Fl_Box *icon;
   Fl_Box *label;
-  void changeWidgetIcon(std::string icon_file, Fl_Widget * widget,bool save=true);
-  std::vector<std::string> comma_vector(std::string LINE,std::vector<std::string> Vector);
-  std::string convert_num_to_string(int num);
-  unsigned int convert_string_to_number(std::string num);
-  std::string current_path(int whichPath);
-  std::vector<std::string> delimiter_vector_from_string(std::string string_to_become_vector,std::string delimiter);
   void decide();
-  std::vector<std::string> desktop_dirs();
-  std::string file_to_string(std::string filename);
-  std::string find_xdg_data_dir_subdir(std::string subdir);
   std::string get_directory_from_filename(std::string filename);
-  std::string get_equal_value(std::string INTERNAL_LINE);
-  std::vector<std::string> get_file_vector(std::string DIRECTORY,std::string file);
-  std::string get_gtk_icon_theme();
-  std::string get_line_with_delim(std::string filename, std::string line,std::string delim);
-  std::string get_line_with_equal(std::string filename, std::string line);
   std::string get_shell_for_C();
-  std::string get_symlinkpath(std::string symlink);
-  bool has_file_extention_at_end(std::string filename,std::string extention);
   int hibernate();
   unsigned int items_in_path();
-  std::vector<std::string> IconPaths(int size_to_use=32);
-  std::vector<std::string> IconPathsForTheme(std::string theme,int size_to_use=32);
-  std::vector<std::string> icon_themefiles_vector();
-  std::vector<std::string> join_string_vectors(std::vector<std::string> vectorA,std::vector<std::string> vectorB);
   int leave();
-  std::vector<std::string> list_icon_dirs_in_themefile(std::string themefile,int size_to_use);
-  std::string look_for_icon_file(std::string fileWITHOUTpath);
-  std::string look_for_file_in_subdirs(std::string fileWITHOUTpath,std::string dir);
-  std::string look_for_first_file_in_subdirs(std::string fileWITHOUTpath,std::string dir);
-  bool look_for_string_in_vector(std::vector<std::string> vector_to_check,std::string item_to_find);
-  std::string remove_cruft(std::string StringInput, std::string CruftToRemove);
   int run(std::string program);
-  std::string sed_i(std::string input, std::string remove, std::string replace);
   void setup(int TYPE,bool YES);
   int shutdown();
-  std::vector<std::string> sort_array(std::vector<std::string> vector_to_sort);
+  int restart();
   int suspend();
   bool test_dir(std::string dirToTest);
   bool test_exec(std::string execToTest);
   bool test_file(std::string fileWithFullPATH);
-  std::string test_file_in_vector_path(std::string fileWithNOPATH,std::vector<std::string> directories_to_check);
   std::string term_out(std::string terminal_Command_You_Want_Output_From);
+  std::string current_path(int iter);
 };
 int main(int argc, char *argv[]);
 void trace(std::string msg);

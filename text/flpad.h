@@ -125,6 +125,7 @@ public:
   Fl_Double_Window* make_window();
   Fl_Double_Window *win;
   Fl_Menu_Bar *menu;
+  static unsigned char menu_menu_i18n_done;
   static Fl_Menu_Item menu_menu[];
 private:
   inline void cb_New_i(Fl_Menu_*, void*);
@@ -320,6 +321,7 @@ private:
   static void cb_Cancel1(Fl_Button*, void*);
   inline void cb_SAVE1_i(Fl_Button*, void*);
   static void cb_SAVE1(Fl_Button*, void*);
+  static unsigned char menu_Theme_i18n_done;
   static Fl_Menu_Item menu_Theme[];
   inline void cb_Light_i(Fl_Menu_*, void*);
   static void cb_Light(Fl_Menu_*, void*);

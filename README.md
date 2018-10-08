@@ -1,5 +1,7 @@
 # torios-binary
-A group of small fltk programs the internal icons are located in the header [include/toolbar_icons.h](https://github.com/Israel-D/torios-binary/blob/master/include/toolbar_icons.h)
+A group of small fltk programs for many uses!
+
+the internal icons are located in the header [include/toolbar_icons.h](https://github.com/Israel-D/torios-binary/blob/master/include/toolbar_icons.h)
 
 current Debian/Ubuntu Build-Depends:
 

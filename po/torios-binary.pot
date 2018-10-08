@@ -1,0 +1,508 @@
+# A group of small fltk programs.
+# Copyright (C) 2018 "Israel Dahl"
+# This file is distributed under the same license as the "torios-binary" package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: \"torios-binary\" \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-10-08 08:33-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+#
+# File: about/flabout.cxx, line: 118
+# File: text/flpad.cxx, line: 981
+# File: image/flimage.cxx, line: 117
+msgid "About"
+msgstr ""
+#
+#. Fl_Button* o
+# File: about/flabout.cxx, line: 120
+# File: askpass/flaskpass.cxx, line: 38
+msgid "Ok"
+msgstr ""
+#
+# File: askpass/flaskpass.cxx, line: 23
+msgid "ToriOS Askpass"
+msgstr ""
+#
+# File: askpass/flaskpass.cxx, line: 25
+msgid "Password"
+msgstr ""
+#
+#. Fl_Input* password
+#. Fl_Input* replace_with
+#. Fl_Button* o
+#. Fl_Button* numbers
+# File: askpass/flaskpass.cxx, line: 31
+# File: pm-dialogs/flpower.cxx, line: 37
+# File: text/flpad.cxx, line: 1033
+# File: text/flpad.cxx, line: 1318
+# File: text/flpad.cxx, line: 1387
+msgid "Cancel"
+msgstr ""
+#
+#. Fl_Box* icon
+# File: pm-dialogs/flpower.cxx, line: 26
+# File: pm-dialogs/flpower.cxx, line: 53
+msgid "Shutdown"
+msgstr ""
+#
+# File: pm-dialogs/flpower.cxx, line: 27
+msgid "Reboot"
+msgstr ""
+#
+# File: pm-dialogs/flpower.cxx, line: 28
+msgid "Suspend"
+msgstr ""
+#
+# File: pm-dialogs/flpower.cxx, line: 29
+msgid "Hibernate"
+msgstr ""
+#
+# File: pm-dialogs/flpower.cxx, line: 30
+msgid "Log Out"
+msgstr ""
+#
+# File: pm-dialogs/flpower.cxx, line: 35
+msgid "Power"
+msgstr ""
+#
+#. Fl_Button* o
+#. Fl_Input* run_input
+# File: pm-dialogs/flpower.cxx, line: 44
+# File: run/flrun.cxx, line: 93
+msgid "OK"
+msgstr ""
+#
+# File: run/flrun.cxx, line: 84
+# File: run/flrun.cxx, line: 87
+msgid "Run"
+msgstr ""
+#
+#. Fl_Browser* install_list
+#. Fl_Text_Display* text_info
+# File: text/flpad.cxx, line: 983
+# File: image/flimage.cxx, line: 119
+# File: welcome/flwelcome.cxx, line: 385
+# File: welcome/flwelcome.cxx, line: 685
+# File: welcome/flwelcome.cxx, line: 700
+msgid "Close"
+msgstr ""
+#
+#. Fl_Button* o
+# File: text/flpad.cxx, line: 989
+msgid ""
+"Designed in FLUID, based on the FLTK tutorial\n"
+"Copyright 1998-2005 by Bill Spitzak and others.\n"
+"\n"
+"This version was built for ToriOS\n"
+"copyright 2018 Israel Dahl"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1024
+msgid "Find and Replace"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1026
+# File: text/flpad.cxx, line: 1167
+msgid "Find"
+msgstr ""
+#
+#. Fl_Input* replace_find
+# File: text/flpad.cxx, line: 1030
+# File: text/flpad.cxx, line: 1174
+msgid "Replace"
+msgstr ""
+#
+#. Fl_Button* replace_cancel
+# File: text/flpad.cxx, line: 1039
+msgid "Replace All"
+msgstr ""
+#
+#. Fl_Button* replace_all
+# File: text/flpad.cxx, line: 1044
+msgid "Replace Next"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1057
+msgid "FLTK Pad"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1123
+msgid "@+"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1124
+msgid "Add a Tab"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1130
+msgid "Remove current Tab"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1139
+msgid "Open"
+msgstr ""
+#
+#. Fl_Scroll* o
+# File: text/flpad.cxx, line: 1146
+# File: screenie/flscreenie.cxx, line: 177
+msgid "Save"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1153
+msgid "New"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1160
+msgid "Undo"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1181
+msgid "Copy current selection"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1188
+# File: text/flpad.cxx, line: 1202
+msgid "Paste current clipboard"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1195
+msgid "Settings"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1229
+msgid "Preferences"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1232
+msgid "Font"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1249
+msgid "Font Numeric for use in config file"
+msgstr ""
+#
+#. Fl_Value_Output* font_save
+# File: text/flpad.cxx, line: 1255
+msgid "Toolbar Button Color"
+msgstr ""
+#
+#. Fl_Check_Button* tool_color
+# File: text/flpad.cxx, line: 1263
+msgid "Color"
+msgstr ""
+#
+#. Fl_Button* tExt
+# File: text/flpad.cxx, line: 1270
+msgid "Font Size"
+msgstr ""
+#
+#. Fl_Value_Input* fsout
+# File: text/flpad.cxx, line: 1288
+msgid "Line Number Size"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1289
+msgid "0 hides line numbers"
+msgstr ""
+#
+#. Fl_Value_Input* lsout
+# File: text/flpad.cxx, line: 1306
+msgid "Background Color"
+msgstr ""
+#
+#. Fl_Button* bg
+# File: text/flpad.cxx, line: 1313
+msgid "Syntax"
+msgstr ""
+#
+#. Fl_Button* o
+# File: text/flpad.cxx, line: 1324
+# File: text/flpad.cxx, line: 1393
+msgid "SAVE"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1337
+msgid "Syntax Colors"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1339
+msgid "Comments"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1340
+msgid "The color of comments"
+msgstr ""
+#
+#. Fl_Button* cm
+# File: text/flpad.cxx, line: 1347
+msgid "Strings"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1348
+msgid "The color of strings"
+msgstr ""
+#
+#. Fl_Button* str
+# File: text/flpad.cxx, line: 1355
+msgid "Directives"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1356
+msgid "The color of directives"
+msgstr ""
+#
+#. Fl_Button* directives
+# File: text/flpad.cxx, line: 1363
+msgid "Types"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1364
+msgid "The color of types"
+msgstr ""
+#
+#. Fl_Button* typezz
+# File: text/flpad.cxx, line: 1371
+msgid "Keywords"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1372
+msgid "The color of keywords"
+msgstr ""
+#
+#. Fl_Button* keywordz
+# File: text/flpad.cxx, line: 1379
+msgid "Numbers"
+msgstr ""
+#
+# File: text/flpad.cxx, line: 1380
+msgid "The color of numbers"
+msgstr ""
+#
+#. Fl_Button* o
+# File: text/flpad.cxx, line: 1399
+msgid "Theme"
+msgstr ""
+#
+# File: screenie/flscreenie.cxx, line: 38
+msgid "Screenie"
+msgstr ""
+#
+# File: screenie/flscreenie.cxx, line: 40
+msgid "Full Screen"
+msgstr ""
+#
+#. Fl_Button* o
+#. Fl_Button* saver
+# File: screenie/flscreenie.cxx, line: 47
+# File: screenie/flscreenie.cxx, line: 184
+msgid "Quit"
+msgstr ""
+#
+#. Fl_Button* o
+# File: screenie/flscreenie.cxx, line: 54
+msgid "Take a Screen shot"
+msgstr ""
+#
+#. Fl_Box* o
+# File: screenie/flscreenie.cxx, line: 56
+msgid "Area"
+msgstr ""
+#
+# File: screenie/flscreenie.cxx, line: 86
+msgid "Take Screen Shot"
+msgstr ""
+#
+# File: screenie/flscreenie.cxx, line: 166
+msgid "Preview"
+msgstr ""
+#
+# File: image/flimage.cxx, line: 865
+msgid "Image Viewer"
+msgstr ""
+#
+#. Fl_Menu_Bar* o
+# File: image/flimage.cxx, line: 883
+msgid "@<"
+msgstr ""
+#
+# File: image/flimage.cxx, line: 884
+msgid "Press ',' to use this"
+msgstr ""
+#
+#. Fl_Button* o
+# File: image/flimage.cxx, line: 890
+msgid "@>"
+msgstr ""
+#
+# File: image/flimage.cxx, line: 891
+msgid "Press '.' to use this"
+msgstr ""
+#
+#. Fl_Button* o
+# File: welcome/flwelcome.cxx, line: 378
+# File: welcome/flwelcome.cxx, line: 392
+# File: welcome/flwelcome.cxx, line: 434
+msgid "Install"
+msgstr ""
+#
+#. Fl_Button* o
+# File: welcome/flwelcome.cxx, line: 399
+# File: welcome/flwelcome.cxx, line: 511
+msgid "Information"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 425
+msgid "Welcome"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 427
+msgid "Exit"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 438
+msgid "Web Browser"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 439
+msgid "Install many popular web browsers"
+msgstr ""
+#
+#. Fl_Button* o
+# File: welcome/flwelcome.cxx, line: 444
+msgid "Office Programs"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 445
+msgid "Write documents easily"
+msgstr ""
+#
+#. Fl_Button* o
+# File: welcome/flwelcome.cxx, line: 450
+msgid "Music Player"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 451
+msgid "Install a music player"
+msgstr ""
+#
+#. Fl_Button* o
+# File: welcome/flwelcome.cxx, line: 456
+msgid "Video Player"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 457
+msgid "Install a video player"
+msgstr ""
+#
+#. Fl_Button* o
+# File: welcome/flwelcome.cxx, line: 462
+msgid "Media Codecs"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 463
+msgid "Install programs needed to play certain media"
+msgstr ""
+#
+#. Fl_Button* o
+# File: welcome/flwelcome.cxx, line: 468
+msgid "Games"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 469
+msgid "Many games to choose from"
+msgstr ""
+#
+#. Fl_Group* o
+# File: welcome/flwelcome.cxx, line: 476
+msgid "Update"
+msgstr ""
+#
+#. Fl_Group* o
+# File: welcome/flwelcome.cxx, line: 480
+# File: welcome/flwelcome.cxx, line: 494
+msgid "System"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 481
+msgid "Keep your system up to date"
+msgstr ""
+#
+#. Fl_Button* o
+# File: welcome/flwelcome.cxx, line: 486
+msgid "Bootloader"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 487
+msgid "Update your computers boot loader"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 498
+msgid "Appearance"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 499
+msgid "Configure your desktop"
+msgstr ""
+#
+#. Fl_Button* o
+# File: welcome/flwelcome.cxx, line: 504
+msgid "Login"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 505
+msgid "Modify user logins easily"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 512
+msgid "Get information on your computer"
+msgstr ""
+#
+#. Fl_Button* o
+# File: welcome/flwelcome.cxx, line: 517
+msgid "Language"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 518
+msgid "Modify language settings"
+msgstr ""
+#
+#. Fl_Group* o
+# File: welcome/flwelcome.cxx, line: 525
+msgid "ToriOS Website"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 526
+msgid "See our website"
+msgstr ""
+#
+#. Fl_Button* o
+# File: welcome/flwelcome.cxx, line: 534
+msgid "ToriOS Code"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 535
+msgid "Code with us!"
+msgstr ""
+#
+#. Fl_Button* o
+# File: welcome/flwelcome.cxx, line: 542
+msgid "ToriOS Twitter"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 543
+msgid "Tweet us!"
+msgstr ""
+#
+# File: welcome/flwelcome.cxx, line: 698
+msgid "Terminal Output"
+msgstr ""

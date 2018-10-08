@@ -37,27 +37,32 @@ decl {\#include <FL/Fl_JPEG_Image.H>
 } 
 
 decl {\#include <stdexcept>
+\#include <errno.h>
+
 \#include <string>
 \#include <iostream>
+\#include <sstream>
 \#include <fstream>
 \#include <vector>
+\#include <algorithm>
+
+
 \#include <sys/stat.h>
 \#include <sys/types.h>
-\#include <fcntl.h>
 \#include <sys/sendfile.h>  // sendfile
-\#include <algorithm>
+
+\#include <fcntl.h>
 \#include <float.h>
-\#include <sstream>
-\#include <float.h>
+
 \#include <dirent.h>
-\#include <sys/stat.h>
+\#include <pwd.h>
+\#include <time.h>
+\#include <grp.h>
 \#include <langinfo.h>
+\#include <stdint.h>
 \#include <stdlib.h>
 \#include <stdio.h>
 \#include <cstdlib>
-\#include <fstream>
-\#include <sstream>
-\#include <errno.h>
 \#include <locale.h>
 \#include <unistd.h>
 \#include <signal.h>} {public global
@@ -1342,48 +1347,7 @@ return modinput;} {}
   }
 } 
 
-class ContextMenu {: {public Fl_Menu_Window}
-} {
-  decl {Fl_Menu_Item *Menu;} {private local
-  }
-  decl {std::string _filename;} {private local
-  }
-  Function {ContextMenu(std::string Filename, int X, int Y, int W, int H, const char* L=0):Fl_Menu_Window(X,Y,W,H,L)} {open
-  } {
-    code {_filename=Filename;
-const char* ext = fl_filename_ext(Filename.c_str());
-std::string EXT;
-if(ext!=NULL)
-  EXT=ext;
-/*
-TODO build  a real full menu dependant on whatever it is...
-*/
-//Menu->add(""&Open",0,open_cb);
-std::transform(EXT.begin(), EXT.end(), EXT.begin(), ::tolower);
-if(extension(EXT,"txt"))
-{}
-else if(extension(EXT,"tar","gz","gzip","bz","bzip","xz","7zip"))
-{}
-else if(extension(EXT,"gif","bmp","ico","tiff","tga","psd","png","jpg","jpeg","xpm","xbm"))
-{}
-else if(extension(EXT,"ogg","mp3","wav","mp2","flac","aac","aiff","m4a","midi","xi"))
-{}
-else if(extension(EXT,"mp4","wmv","ogm","asf","webm","vivo","m4v","vob","divx","flv","avi","ogv","mpeg","mov"))
-{}
-else
-{}} {}
-  }
-  Function {open_cb_i(Fl_Widget* o,void*)} {open return_type {static void}
-  } {
-    code {((ContextMenu*)o)->open_cb();} {}
-  }
-  Function {open_cb()} {open
-  } {
-    code {((Tab *) (parent()->parent()->user_data()))->change_dir(_filename);} {}
-  }
-} 
-
-class Item {: {public Icon}
+class Item {open : {public Icon}
 } {
   decl {std::string Filename;} {public local
   }
@@ -1403,6 +1367,10 @@ int Wx= 0, Hx=0;
 measure_label(Wx,Hx);
 size(Wx,h());
 tooltip(Filename.c_str());
+
+if(stat(Filename.c_str(), &statbuf) == -1)
+  process_errno();
+
 if(fl_filename_isdir (Filename.c_str()))
 {
   //changeWidgetIcon("folder",true);
@@ -1446,20 +1414,23 @@ else
   Function {handle(int e)} {open return_type int
   } {
     code {int ret = Fl_Button::handle(e);
+UserInterface* ui = ((UserInterface*)(this->parent()->user_data()));
 switch ( e )
 {
   case FL_PUSH:
-    switch(Fl::event_buttons())
+    switch(Fl::event_button())
     {
-      case FL_BUTTON1:
+      case FL_LEFT_MOUSE:
         if(Fl::event_clicks())
         {
         trace("button 1!");
           open();
-          ret=1;
+          return 1;
         }
-      case FL_BUTTON2:
-        //Menu(this);
+        else
+          break;
+      case FL_RIGHT_MOUSE:
+        ui->make_popup(this->parent());
         ret = 1;
         break;
     }
@@ -1469,7 +1440,66 @@ return ret;} {}
   }
   Function {open()} {open
   } {
-    code {((Tab *) (parent()->parent()->user_data()))->change_dir(Filename);} {}
+    code {((Tab *) (user_data()))->change_dir(Filename);} {}
+  }
+  decl {struct stat statbuf;} {private local
+  }
+  decl {struct passwd *pwd;} {private local
+  }
+  decl {struct tm *tm;} {private local
+  }
+  Function {properties(int type)} {open return_type {std::string}
+  } {
+    code {std::string res;
+std::stringstream out;
+struct tm *tmt;
+char datestring[256];
+switch(type)
+{
+  case 0: // device ID
+    out << statbuf.st_dev;
+    break;
+  case 1: // File serial number
+    out << statbuf.st_ino;
+    break;
+  case 2: // mode
+    out << statbuf.st_mode;
+    break;
+  case 3: // user ID
+    out << statbuf.st_uid;
+    break;
+  case 4: //Group ID
+    out << statbuf.st_gid;
+    break;
+  case 5:  //size
+    out << statbuf.st_size;
+    break;
+  case 6: // Number of blocks allocated for this object.
+    out << statbuf.st_blocks;
+    break;
+  case 7: // Time of last access.
+    tmt = localtime(&statbuf.st_atime);
+    strftime(datestring, sizeof(datestring), nl_langinfo(D_T_FMT), tmt);
+    out << datestring;
+    break;
+  case 8: // Time of last data modification.
+    tmt = localtime(&statbuf.st_mtime);
+    strftime(datestring, sizeof(datestring), nl_langinfo(D_T_FMT), tmt);
+    out << datestring;
+    break;
+  case 9: // Time of last status change.
+    tmt = localtime(&statbuf.st_ctime);
+    strftime(datestring, sizeof(datestring), nl_langinfo(D_T_FMT), tmt);
+    out << datestring;
+    break;
+}
+res=out.str();
+return res;} {selected
+    }
+  }
+  Function {get_mod_time()} {open return_type {std::string}
+  } {
+    code {return properties(8);} {}
   }
 } 
 
@@ -1526,6 +1556,7 @@ if(mydir!=NULL)
     {
       std::string fullpath=Directory+name;
       Item *i = new Item(fullpath,_x,_y,_w,_h,name.c_str(),default_folder);
+      i->user_data(this->parent());
       W=i->w();
       i->show();
       if(i->default_folder.compare("")!=0)
@@ -1563,6 +1594,10 @@ parent()->redraw();} {}
 clear();
 populate();} {}
   }
+  Function {open()} {open
+  } {
+    code {trace("Open");} {}
+  }
 } 
 
 class File_List_Browser {open : {public Fl_File_Browser}
@@ -1572,21 +1607,24 @@ class File_List_Browser {open : {public Fl_File_Browser}
   Function {handle(int e)} {open return_type int
   } {
     code {int ret = Fl_File_Browser::handle(e);
+UserInterface * ui = ((UserInterface *)(user_data()));
 switch ( e )
 {
   case FL_PUSH:
-    switch(Fl::event_buttons())
+    switch(Fl::event_button())
     {
-      case FL_BUTTON1:
+      case FL_LEFT_MOUSE:
         if(Fl::event_clicks())
         {
         trace("button 1!");
           Picker(this);
-          ret=1;
+          return 1;
         }
-      case FL_BUTTON2:
-        ret = 1;
-        break;
+        else
+          break;
+      case FL_RIGHT_MOUSE:
+        ui->make_popup(this);
+        return 1;
     }
     break;
 } 
@@ -1605,9 +1643,13 @@ Fl_File_Icon(,Fl_File_Icon::ANY);
 scrollbar.slider(FL_FLAT_BOX);
 hscrollbar.slider(FL_FLAT_BOX);} {}
   }
+  Function {open()} {open
+  } {
+    code {Picker(this);} {}
+  }
 } 
 
-class Tab {: {public Fl_Group}
+class Tab {open : {public Fl_Group}
 } {
   decl {Fl_Browser* Places;} {public local
   }
@@ -1670,11 +1712,13 @@ if(TYPE==0)
   FileBrowser->selection_color((Fl_Color)80);
   FileBrowser->type(2);
   FileBrowser->Picker=f_cb;
+  FileBrowser->user_data(v);
   Fl_Group::current()->resizable(FileBrowser);
 }
 else
 {
   FileGrid = new Grid(directory,165, 95, 375, 350);
+  FileGrid->user_data(v);
   Fl_Group::current()->resizable(FileGrid);
 }
 
@@ -1903,6 +1947,9 @@ dir=Out;
 
 char out[FL_PATH_MAX];
 std::string tmpDIR=dir;
+
+UserInterface * ui = (UserInterface *) user_data();
+
 if(fl_filename_absolute(out, sizeof(out), dir.c_str() ) )
   tmpDIR=out;
 if(fl_filename_isdir(tmpDIR.c_str()))
@@ -1915,10 +1962,8 @@ if(fl_filename_isdir(tmpDIR.c_str()))
   else
     FileGrid->load(CurrentDirectory.c_str());
   copy_label(CurrentDirectory.c_str());
-  UserInterface * ui = (UserInterface *) user_data();
   ui->barinput->value(CurrentDirectory.c_str());
-  //redraw();
-
+  ui->CURRENT_DIR=CurrentDirectory;
 }
 else
 {
@@ -1930,7 +1975,8 @@ else
     trace(msg);
     fl_alert("%s",msg);
   }
-}} {}
+}
+ui->TABS->redraw();} {}
   }
   Function {b_cb(Fl_Widget * o, void* v)} {open return_type {static void}
   } {
@@ -2089,55 +2135,53 @@ unsigned int found = T.rfind('/',(T.length()-2));
 T=T.erase(found,std::string::npos);
 change_dir(T);} {}
   }
-} 
-
-class ImageBox {: {public Fl_Box}
-} {
-  Function {handle(int e)} {open return_type int
+  Function {change_mode(std::string file, mode_t mode)} {open return_type int
   } {
-    code {static int offset[2] = { 0, 0 };
-int ret = Fl_Box::handle(e);
-switch ( e )
+    code {/*
+example:
+chmod("home/cnd/mod1", S_IRWXU|S_IRWXG|S_IROTH|S_IWOTH);
+S_IRWXU Read, write, execute/search by owner.
+ S_IRUSR Read permission, owner.
+ S_IWUSR Write permission, owner.
+ S_IXUSR Execute/search permission, owner.
+
+S_IRWXG Read, write, execute/search by group.
+ S_IRGRP Read permission, group.
+ S_IWGRP Write permission, group.
+ S_IXGRP Execute/search permission, group.
+
+S_IRWXO Read, write, execute/search by others.
+ S_IROTH Read permission, others.
+ S_IWOTH Write permission, others.
+ S_IXOTH Execute/search permission, others.
+*/
+errno=0;
+int ret = 0;
+try
 {
-  case FL_PUSH:
-    offset[0] = x() - Fl::event_x();    // save where user clicked for dragging
-    offset[1] = y() - Fl::event_y();
-    return(1);
-  case FL_RELEASE:
-    return(1);
-  case FL_DRAG:
-    position(offset[0]+Fl::event_x(), offset[1]+Fl::event_y());
-    this->parent()->parent()->redraw();
-    return(1);
-  case FL_MOUSEWHEEL:
-    UserInterface *ui = (UserInterface*)this->parent()->parent()->user_data();
-    if(Fl::event_dy( )>0)
-    {
-      //DOWN aka zoom out
-      ui->zoom(true);
-    }
-    else if (Fl::event_dy( )<0)
-    {
-      ui->zoom();
-    }
-    
-}
-return(ret);} {}
+  ret = chmod(file.c_str(),mode);
+  if(ret!=0)
+  {
+    //print errno's error to stdout
+    process_errno();
   }
-  Function {ImageBox(Fl_Boxtype b=FL_FLAT_BOX, int X=0, int Y=55, int W=385, int H=320, const char *l=NULL):Fl_Box(b,X,Y,W,H,l)} {open
-  } {
-    code {box(FL_FLAT_BOX);
-color(FL_DARK3);} {}
+}
+catch (const std::exception& e){
+  std::cerr << "Unhandled exception:\\n" << e.what() << std::endl;
+  return EXIT_FAILURE;
+}
+catch (...){
+  std::cerr << "Unknown exception!" << std::endl;
+  return EXIT_FAILURE;
+}
+return ret;} {}
   }
 } 
 
-class UserInterface {open
-} {
-  decl {ImageBox *viewer;} {protected local
-  }
+class UserInterface {} {
   decl {std::vector <std::string> PLACES_LIST;} {public local
   }
-  decl {std::string CURRENT_DIR;} {protected local
+  decl {std::string CURRENT_DIR;} {public local
   }
   decl {std::string CURRENT_FILE;} {protected local
   }
@@ -2175,7 +2219,8 @@ t->PLACES_LIST=PLACES_LIST;
 t->make_places();
 TABS->add(t);
 TABS->redraw();
-TABS->value(t);} {}
+TABS->value(t);
+CURRENT_DIR=t->CurrentDirectory;} {}
   }
   Function {button_style(int style=0)} {} {
     code {if(style==0)
@@ -2222,6 +2267,15 @@ up_button->labelcolor((Fl_Color)179);
 //cp_button->redraw();
 //p_button->redraw();
 home_button->redraw();} {}
+  }
+  Function {change_dir(std::string dir)} {open
+  } {
+    code {Tab *tab = (Tab*)(TABS->value());
+std::string C = tab->CurrentDirectory;
+CURRENT_DIR = C;
+tab->copy_label(dir.c_str());
+tab->change_dir(dir.c_str());
+barinput->value(dir.c_str());} {}
   }
   Function {changeWidgetImage(std::string icon_file, Fl_Widget * widget)} {return_type void
   } {
@@ -2876,10 +2930,10 @@ o->icon(img);} {}
   } {
     Fl_Window win {
       label flfm open
-      xywh {139 214 540 450} type Double when 3 resizable
-      code0 {make_icon(o);} xclass flfm visible
+      xywh {139 214 540 450} type Double when 3 hide resizable
+      code0 {make_icon(o);} xclass flfm
     } {
-      Fl_Menu_Bar menu {
+      Fl_Menu_Bar menu {open
         xywh {0 0 555 25} box FLAT_BOX color 38 selection_color 80 labelcolor 7 textcolor 7
       } {
         Submenu {} {
@@ -2888,7 +2942,6 @@ o->icon(img);} {}
         } {
           MenuItem {} {
             label {&Open}
-            callback {open_cb();}
             xywh {0 0 100 20} shortcut 0x4006f
           }
           MenuItem {} {
@@ -2913,7 +2966,7 @@ o->icon(img);} {}
         } {
           MenuItem {} {
             label {&Open in Terminal}
-            callback {open_in_terminal()}
+            callback {open_in_terminal();}
             xywh {0 0 100 20} shortcut 0xffc1
           }
         }
@@ -2930,7 +2983,7 @@ o->icon(img);} {}
       }
       Fl_Button tab_button {
         label {@+}
-        callback {add_tab();}
+        callback {add_tab(CURRENT_DIR);}
         tooltip {New Tab} xywh {5 27 25 25} box NO_BOX shortcut 0x2b color 23
       }
       Fl_Button home_button {
@@ -2959,7 +3012,7 @@ tab->up();}
         callback {Tab *tab = (Tab*)(o->value());
 std::string C = tab->CurrentDirectory;
 barinput->value(C.c_str());
-barinput->redraw();} open selected
+barinput->redraw();} open
         xywh {0 60 540 390} box BORDER_BOX color 46 selection_color 51
         code0 {add_tab();}
         code1 {button_style(1);}
@@ -3159,243 +3212,9 @@ if((end-1) == 0){return "";}
 if((end) == 0){return "";}
 return result.erase(end-1,1);} {}
   }
-  Function {resizeImage(Fl_Widget * widget)} {return_type void
+  Function {open_cb(Fl_Widget *o, void *)} {open return_type {static void}
   } {
-    code {std::string icon_file=CURRENT_DIR+CURRENT_FILE;
-if(icon_file.compare("")==0)
-{
-  trace("changeWidgetImage::Image file is empty");
-  return;
-}
-widget->align(FL_ALIGN_CENTER);
-widget->copy_label("");
-widget->image(NULL);
-widget->redraw();
-widget->label(0L);
-int w=widget->w();
-int h=widget->h();
-if(!test_file(icon_file))
-{
-  trace("changeWidgetImage:: "+icon_file+" is not an Image");
-  return;
-}
-if(icon_file.compare("")==0)
-{
-  trace("changeWidgetImage::Image file is empty");
-  return;
-}
-
-Fl_Image* image2=widget->image();//new Fl_Image(w,h,4);
-
-if(has_file_extention_at_end(icon_file,".png"))
-{
-  Fl_Image* image = new Fl_PNG_Image(icon_file.c_str());
-  image2 = image->copy(w,h);
-  delete(image);
-}
-else if(has_file_extention_at_end(icon_file,".xpm"))
-{
-  Fl_Image* image = new Fl_XPM_Image(icon_file.c_str());
-  image2 = image->copy(w,h);
-  delete(image);
-}
-else if(has_file_extention_at_end(icon_file,".xbm"))
-{
-  Fl_Image* image = new Fl_XBM_Image(icon_file.c_str());
-  image2 = image->copy(w,h);
-  delete(image);
-}
-else if(has_file_extention_at_end(icon_file,".svg"))
-{
-  NSVGimage *svg_image = NULL;
-  NSVGrasterizer *rast = NULL;
-  unsigned char* img_data = NULL;
-  int width;
-  int height;
-  const int depth = 4;
-  svg_image = nsvgParseFromFile(icon_file.c_str(), "px", 96);
-  if (svg_image == NULL)
-  {
-    trace("changeWidgetImage::Could not open SVG image:"+icon_file);
-    return;
-  }
-  width = (int)svg_image->width;
-  height = (int)svg_image->height;
-  rast = nsvgCreateRasterizer();
-  if (rast == NULL)
-  {
-    trace("changeWidgetImage::Could not init rasterizer.");
-    return;
-  }
-  img_data = (unsigned char*)malloc(width * height * depth);
-  if (img_data == NULL)
-  {
-    trace("changeWidgetImage::Could not alloc image buffer.\\n");
-    return;
-  }
-  nsvgRasterize(rast, svg_image, 0, 0, 1, img_data, width, height, (width * depth));
-  Fl_Image* image  = new Fl_RGB_Image(img_data, width, height, 4);
-  image2 = image->copy(w,h);
-  delete(image);
-  nsvgDeleteRasterizer(rast);
-  nsvgDelete(svg_image);
-}
-else if((has_file_extention_at_end(icon_file,".jpg"))||
-(has_file_extention_at_end(icon_file,".jpeg"))||
-(has_file_extention_at_end(icon_file,".face")))
-{
-  Fl_Image* image = new Fl_JPEG_Image(icon_file.c_str());
-  image2 = image->copy(w,h);
-  delete(image);
-}
-else if(has_file_extention_at_end(icon_file,".gif"))
-{
-  Fl_Image* image = new Fl_GIF_Image(icon_file.c_str());
-  image2 = image->copy(w,h);
-  delete(image);
-}
-else{return;}
-widget->size(image2->w(),image2->h());
-widget->image(image2);
-widget->show();
-win->redraw();} {}
-  }
-  Function {open_cb()} {open
-  } {
-    code {const char* home=getenv("HOME");
-std::string DIR=home;
-if(home==NULL)
-{
-  DIR="/tmp";
-}
-else
-{
-  std::string tmp = DIR;
-  tmp+="/Pictures";
-  if(test_dir(tmp))
-    DIR=tmp;
-}
-char *newfile = fl_file_chooser("Open", "*.{jpg,jpeg,png,gif,bmp,svg,xbm,xpm}", DIR.c_str(),0);
-if (newfile != NULL)
-{
-  std::string tmp = newfile;
-  view_image(tmp);  
-}} {}
-  }
-  Function {right_cb()} {return_type bool
-  } {
-    code {if(CURRENT_DIR.compare("")==0)
-  return false;
-if(CURRENT_FILE.compare("")==0)
-  return false;
-
-bool NEXT=false;
-DIR *mydir=NULL;
-struct dirent *entryPointer=NULL;
-mydir=opendir(CURRENT_DIR.c_str());
-if(mydir!=NULL)
-{
-  while ((entryPointer=readdir(mydir))!=NULL)
-  {
-    if(entryPointer->d_type == DT_REG)
-    {
-      std::string fullpath=entryPointer->d_name;
-      fullpath=CURRENT_DIR+fullpath;
-      if(NEXT)
-      {
-        return view_image(fullpath);
-      }
-      if(fullpath.compare(CURRENT_FILE)==0)
-      {
-        NEXT=true;
-      }
-      else
-      {
-        std::string tmp = CURRENT_DIR + CURRENT_FILE;
-        if(fullpath.compare(tmp)==0)
-        {
-          NEXT=true;
-        }
-
-      }
-    }
-  }
-}
-return false;} {}
-  }
-  Function {left_cb()} {return_type bool
-  } {
-    code {if(CURRENT_DIR.compare("")==0)
-  return false;
-if(CURRENT_FILE.compare("")==0)
-  return false;
-
-std::string previous;
-DIR *mydir=NULL;
-struct dirent *entryPointer=NULL;
-mydir=opendir(CURRENT_DIR.c_str());
-if(mydir!=NULL)
-{
-  while ((entryPointer=readdir(mydir))!=NULL)
-  {
-    if(entryPointer->d_type == DT_REG)
-    {
-      std::string fullpath=entryPointer->d_name;
-      fullpath=CURRENT_DIR+fullpath;
-      if(fullpath.compare(CURRENT_FILE)==0)
-      {
-        return view_image(previous);
-      }
-      else
-      {
-        std::string tmp = CURRENT_DIR + CURRENT_FILE;
-        if(fullpath.compare(tmp)==0)
-        {
-           return view_image(previous);
-        }
-      }
-
-      previous=fullpath;
-    }
-  }
-}
-return false;} {}
-  }
-  Function {view_image(std::string filename)} {return_type bool
-  } {
-    code {if(filename.compare("")==0)
-  return false;
-CURRENT_FILE=filename;
-CURRENT_DIR=get_directory_from_filename(filename);
-viewer->position(0, 55);
-changeWidgetImage(CURRENT_FILE,viewer);
-unsigned int finder=filename.rfind("/");
-if(finder<filename.length())
-{
-  filename=CURRENT_FILE.erase(0,finder+1);
-}
-win->label(filename.c_str());
-return true;} {}
-  }
-  Function {zoom(bool out=false)} {} {
-    code {if(CURRENT_FILE.compare("")==0)
-  return;
-int w = viewer->w();
-int h = viewer->h();
-int scaleW = w * 0.10;
-int scaleH = h * 0.10;
-if(out)
-{
-  w = w - scaleW;
-  h = h - scaleH; 
-}
-else
-{
-  w = w + scaleW;
-  h = h + scaleH;
-}
-viewer->size(w,h);
-resizeImage(viewer);} {}
+    code {} {}
   }
   Function {update(Fl_Input *o)} {open
   } {
@@ -3439,10 +3258,9 @@ for(int i = 0;i<5;i++)
   }
 }} {}
   }
-  Function {pref_window()} {open
-  } {
+  Function {pref_window()} {} {
     Fl_Window {} {open
-      xywh {852 201 370 340} type Double visible
+      xywh {852 201 370 340} type Double hide
     } {
       Fl_Tabs {} {open
         xywh {-5 0 375 340} box FLAT_BOX color 46 selection_color 51
@@ -3497,7 +3315,7 @@ else
         }
         Fl_Group {} {
           label Places open
-          xywh {0 25 370 315} color 51 selection_color 46 hide
+          xywh {0 25 370 315} color 51 selection_color 46
         } {
           Fl_Check_Button {} {
             label Home
@@ -3518,7 +3336,7 @@ else
         }
         Fl_Group {} {
           label {Removable Media} open
-          xywh {0 25 370 315} color 51 selection_color 46
+          xywh {0 25 370 315} color 51 selection_color 46 hide
         } {
           Fl_Check_Button {} {
             label {Automatically show new devices}
@@ -3528,18 +3346,61 @@ else
       }
     }
   }
-  Function {change_dir(std::string dir)} {open
+  Function {make_popup(Fl_Widget *o)} {open
   } {
-    code {Tab *tab = (Tab*)(TABS->value());
-std::string C = tab->CurrentDirectory;
-tab->copy_label(dir.c_str());
-tab->change_dir(dir.c_str());
-barinput->value(dir.c_str());} {}
+    code {Fl_Menu_Item rclick_menu[] = {
+  { "&Open",  0, handle_menu, (void*)1 },
+  { "Open &With",  0, handle_menu, (void*)2 },
+  { "&Copy",  0, handle_menu, (void*)3 },
+  { "&Paste",  0, handle_menu, (void*)4 },
+  { "Move to &Trash",  0, handle_menu, (void*)5 },
+  { "&Rename",  0, handle_menu, (void*)6 },
+  { "Properties",  0, handle_menu, (void*)7 },
+  { 0 }
+};
+
+UserInterface* ui = ((UserInterface*)o->user_data());
+
+const Fl_Menu_Item *m = rclick_menu->popup(Fl::event_x(), Fl::event_y(), 0, 0, ui->menu);
+if ( m )
+{  
+  m->do_callback(o, m->user_data());
+}
+return;} {}
+  }
+  Function {handle_menu(Fl_Widget *w, void *v)} {open return_type {static void}
+  } {
+    code {if(!w || !v)
+  return;
+UserInterface* ui = ((UserInterface*)w->user_data());
+switch(static_cast<int>(reinterpret_cast<long>(v)))
+{
+  case 1: //Open
+    //ui->open_cb(w);
+    break;
+  case 2://Open With
+    //ui->cut_cb();
+    break;
+  case 3://Copy
+    //ui->copy_cb();
+    break;
+  case 4: //PASTE
+    //ui->copy_cb(out);
+    break;
+  case 5: //Move to Trash
+    //ui->move_cb(in,out);
+    break;
+  case 6: //Rename
+    //ui->move_cb(in,out);
+    break;
+  case 7: //Properties
+    
+    break;
+}} {}
   }
 } 
 
-class Desktop {open
-} {
+class Desktop {} {
   decl {std::string Background;} {protected local
   }
   decl {int Type;} {protected local
@@ -3554,9 +3415,9 @@ make_desktop()->show();} {}
   Function {make_desktop()} {open
   } {
     Fl_Window DESKTOP {
-      xywh {594 185 100 100} type Double
+      xywh {594 185 100 100} type Double hide
       code0 {o->resize(0,0,Fl::w(),Fl::h());}
-      code1 {configure();} visible
+      code1 {configure();}
     } {}
   }
   Function {configure()} {open
@@ -3727,7 +3588,7 @@ va_end(args);
 return false;} {}
 } 
 
-Function {get_directory_from_filename(std::string input)} {open return_type {std::string}
+Function {get_directory_from_filename(std::string input)} {return_type {std::string}
 } {
   code {std::string filename = input;
 unsigned int finder=filename.rfind("/");
@@ -3739,7 +3600,7 @@ else{return "";} /**return empty if there is no directory*/
 return filename;} {}
 } 
 
-Function {has_file_extention_at_end(std::string filename,std::string extention)} {open return_type bool
+Function {has_file_extention_at_end(std::string filename,std::string extention)} {return_type bool
 } {
   code {std::string extention_check;
 std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
@@ -3757,7 +3618,7 @@ if(found<file_len)
 return false;} {}
 } 
 
-Function {test_file(std::string fileWithFullPATH)} {open return_type bool
+Function {test_file(std::string fileWithFullPATH)} {return_type bool
 } {
   code {if(fileWithFullPATH.compare("")==0){return false;}
 std::string dir=get_directory_from_filename(fileWithFullPATH);
@@ -3787,8 +3648,7 @@ else{trace("could not open directory to search for "+fileWithFullPATH);}
 return false;} {}
 } 
 
-Function {theme_scrollbars(Fl_Browser* o)} {open
-} {
+Function {theme_scrollbars(Fl_Browser* o)} {} {
   code {trace("theme browser scroll bars");
 o->box(FL_BORDER_BOX);
 o->scrollbar.slider(FL_BORDER_BOX);
@@ -3803,8 +3663,7 @@ o->scrollbar.color(BACKGROUND_COLOR);
 o->scrollbar.selection_color(FOREGROUND_COLOR);} {}
 } 
 
-Function {theme_scrollbars(Fl_Scroll* o)} {open
-} {
+Function {theme_scrollbars(Fl_Scroll* o)} {} {
   code {trace("theme Scroll scroll bars");
 o->box(FL_BORDER_BOX);
 o->scrollbar.slider(FL_BORDER_BOX);
@@ -3817,4 +3676,43 @@ o->hscrollbar.selection_color(FOREGROUND_COLOR);
 o->scrollbar.labelcolor(BACKGROUND_COLOR);
 o->scrollbar.color(BACKGROUND_COLOR);
 o->scrollbar.selection_color(FOREGROUND_COLOR);} {}
+} 
+
+Function {process_errno()} {} {
+  code {switch(errno)
+{
+  case EACCES:
+    trace("Search permission is denied on a component of the path prefix.");
+    break;
+  case ELOOP:
+    trace("A loop exists in symbolic links encountered during resolution of the path argument./nOR.. More than {SYMLOOP_MAX} symbolic links were encountered during resolution of the path argument.");
+    break;
+  case ENAMETOOLONG:
+    trace("The length of the path argument exceeds {PATH_MAX} or a pathname component is longer than {NAME_MAX}.\\nOR As a result of encountering a symbolic link in resolution of the path argument, the length of the substituted pathname strings exceeded {PATH_MAX}.");
+    break;
+  case ENOTDIR:
+    trace("A component of the path prefix is not a directory.");
+    break;
+  case ENOENT:
+    trace("A component of path does not name an existing file or path is an empty string.");
+    break;
+  case EPERM:
+    trace("The effective user ID does not match the owner of the file and the process does not have appropriate privileges.");
+    break;
+  case EROFS:
+    trace("The named file resides on a read-only file system.");
+    break;
+  case EINTR:
+    trace("A signal was caught during execution of the function.");
+    break;
+  case EINVAL:
+    trace("The value of the mode argument is invalid.");
+    break;
+  case EIO:
+    trace("An error occurred while reading from the file system.");
+    break;
+  case EOVERFLOW:
+    trace("The file size in bytes or the number of blocks allocated to the file or the file serial number cannot be represented correctly in the structure pointed to by buf.");
+    break;
+}} {}
 } 

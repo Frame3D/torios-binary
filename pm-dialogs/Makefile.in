@@ -1,5 +1,6 @@
 TARGET    = flpower
 FLTK_CONF = fltk-config
+FLUID     = fluid -c $(TARGET).fld
 CXX       = $(shell $(FLTK_CONF) --cxx)
 DEBUG     = -g
 CXXFLAGS  = $(shell $(FLTK_CONF) --cxxflags ) -I.
@@ -11,6 +12,7 @@ OBJS      = $(TARGET).o
 SRCS      = $(TARGET).cxx
 .SUFFIXES: .o .cxx
 $(TARGET): $(SRCS)
+	$(FLUID)
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
 
 

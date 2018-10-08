@@ -100,6 +100,7 @@ public:
   void make_icon(Fl_Window *o);
   Fl_Double_Window* make_window();
   Fl_Double_Window *win;
+  static unsigned char menu__i18n_done;
   static Fl_Menu_Item menu_[];
 private:
   inline void cb_Open_i(Fl_Menu_*, void*);

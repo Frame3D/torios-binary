@@ -1,5 +1,8 @@
 # data file for the Fltk User Interface Designer (fluid)
 version 1.0303 
+i18n_type 1 
+i18n_include <libintl.h> 
+i18n_function gettext 
 header_name {.h} 
 code_name {.cxx}
 decl {\#include <FL/Fl_Text_Buffer.H>} {public global
@@ -283,9 +286,9 @@ return howmany;} {}
   } {
     Fl_Window about {
       label Welcome open
-      xywh {820 73 345 345} type Double
+      xywh {820 73 345 345} type Double hide
       code0 {DIST=0;}
-      code1 {make_terminal()->show();term_win->hide();} visible
+      code1 {make_terminal()->show();term_win->hide();}
     } {
       Fl_Button {} {
         label Exit
@@ -562,8 +565,8 @@ if ( !fl_open_uri(site.c_str(),errmsg, sizeof(errmsg)) )
   } {
     Fl_Window term_win {
       label {Terminal Output} open selected
-      xywh {364 412 320 275} type Double
-      code0 {terminal = new Terminal(5, 5, 310, 225);} visible
+      xywh {364 412 320 275} type Double hide
+      code0 {terminal = new Terminal(5, 5, 310, 225);}
     } {
       Fl_Button {} {
         label Close
