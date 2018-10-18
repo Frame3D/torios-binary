@@ -1,5 +1,5 @@
 /* XPM */
-static const char * system_suspend[] = {
+static const char * system_suspend_xpm[] = {
 "32 32 3 1",
 " 	c None",
 ".	c #FFBC2E",

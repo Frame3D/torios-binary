@@ -1,5 +1,5 @@
 /* XPM */
-static const char * system_hibernate[] = {
+static const char * system_hibernate_xpm[] = {
 "32 32 3 1",
 " 	c None",
 ".	c #645137",

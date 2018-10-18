@@ -1,5 +1,5 @@
 /* XPM */
-static const char * system_logout[] = {
+static const char * system_logout_xpm[] = {
 "32 32 3 1",
 " 	c None",
 ".	c #859900",
