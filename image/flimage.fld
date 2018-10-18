@@ -66,24 +66,45 @@ decl {\#include <vector>} {public global
 
 class ImageBox {open : {public Fl_Box}
 } {
+  decl {bool RELEASE;} {private local
+  }
   Function {handle(int e)} {open return_type int
   } {
     code {static int offset[2] = { 0, 0 };
-int ret = Fl_Box::handle(e);
+UserInterface* ui = ((UserInterface*)(this->user_data()));
+//    UserInterface *ui = (UserInterface*)this->parent()->parent()->user_data();
 switch ( e )
 {
+  case FL_DND_DRAG:
+  trace("draaaaaag....");
+    break;
+  case FL_DND_LEAVE:
+    break;
+  case FL_DND_RELEASE:
+    trace("dnd release");
+    RELEASE=true;
+    break;
+  case FL_PASTE:
+    trace("droppppppp'd");
+    if(RELEASE)
+    {
+      RELEASE=false;
+      ui->dnd_file(Fl::event_text());
+      return 1;
+    }
+    break;
   case FL_PUSH:
     offset[0] = x() - Fl::event_x();    // save where user clicked for dragging
     offset[1] = y() - Fl::event_y();
     return(1);
   case FL_RELEASE:
-    return(1);
+    return 1;
   case FL_DRAG:
     position(offset[0]+Fl::event_x(), offset[1]+Fl::event_y());
     this->parent()->parent()->redraw();
-    return(1);
+    return 1;
   case FL_MOUSEWHEEL:
-    UserInterface *ui = (UserInterface*)this->parent()->parent()->user_data();
+
     if(Fl::event_dy( )>0)
     {
       //DOWN aka zoom out
@@ -93,12 +114,16 @@ switch ( e )
     {
       ui->zoom();
     }
-    
+    break;
 }
-return(ret);} {}
+int ret = Fl_Box::handle(e);
+return(ret);} {selected
+    }
   }
-  Function {ImageBox(Fl_Boxtype b=FL_FLAT_BOX, int X=0, int Y=55, int W=385, int H=320, const char *l=NULL):Fl_Box(b,X,Y,W,H,l)} {} {
-    code {box(FL_FLAT_BOX);
+  Function {ImageBox(Fl_Boxtype b=FL_FLAT_BOX, int X=0, int Y=55, int W=385, int H=320, const char *l=NULL):Fl_Box(b,X,Y,W,H,l)} {open
+  } {
+    code {RELEASE=false;
+box(FL_FLAT_BOX);
 color(FL_DARK3);} {}
   }
 } 
@@ -111,7 +136,8 @@ class UserInterface {open
   }
   decl {std::string CURRENT_FILE;} {protected local
   }
-  Function {UserInterface()} {} {
+  Function {UserInterface()} {open
+  } {
     code {} {}
   }
   Function {about_window()} {} {
@@ -173,7 +199,7 @@ zoom_out_button->redraw();
 //p_button->redraw();
 //cut_button->redraw();} {}
   }
-  Function {changeWidgetImage(std::string icon_file, Fl_Widget * widget)} {open return_type void
+  Function {changeWidgetImage(std::string icon_file, Fl_Widget * widget)} {return_type void
   } {
     code {if(icon_file.compare("")==0)
 {
@@ -278,8 +304,7 @@ widget->size(newW2,newH2);
 widget->image(image2->copy());
 delete(image2);
 win->redraw();
-//resizeImage(widget);} {selected
-    }
+//resizeImage(widget);} {}
   }
   Function {comma_vector(std::string LINE,std::vector<std::string> Vector)} {return_type {std::vector<std::string>}
   } {
@@ -846,15 +871,13 @@ it!=vector_to_check.end();
 }
 return false;} {}
   }
-  Function {make_icon(Fl_Window *o)} {open
-  } {
+  Function {make_icon(Fl_Window *o)} {} {
     code {Fl_Pixmap f(flimage_xpm);
 const Fl_Pixmap * flpad_xpm_icon = &f;
 const Fl_RGB_Image *img = new Fl_RGB_Image(flpad_xpm_icon,FL_GRAY);
 o->icon(img);} {}
   }
-  Function {make_window()} {open
-  } {
+  Function {make_window()} {} {
     Fl_Window win {
       label {Image Viewer} open
       xywh {772 138 385 375} type Double when 3 hide resizable
@@ -910,7 +933,8 @@ o->icon(img);} {}
       }
       Fl_Scroll {} {open
         xywh {0 55 385 320} resizable
-        code0 {viewer = new ImageBox();//FL_FLAT_BOX,0, 55, 385, 320);}
+        code0 {viewer = new ImageBox();}
+        code1 {viewer->user_data(win->user_data());}
       } {}
     }
   }
@@ -1148,7 +1172,7 @@ if((end-1) == 0){return "";}
 if((end) == 0){return "";}
 return result.erase(end-1,1);} {}
   }
-  Function {resizeImage(Fl_Widget * widget)} {open return_type void
+  Function {resizeImage(Fl_Widget * widget)} {return_type void
   } {
     code {std::string icon_file=CURRENT_DIR+CURRENT_FILE;
 if(icon_file.compare("")==0)
@@ -1401,6 +1425,19 @@ else
 viewer->size(w,h);
 resizeImage(viewer);} {}
   }
+  Function {dnd_file(std::string file)} {open
+  } {
+    code {std::string fname = file;
+char * tmp = const_cast<char*>(fname.c_str());
+fl_decode_uri(tmp);
+fname = tmp;
+unsigned int URI  = fname.find("file:///");
+if(URI==0)
+{
+  fname = fname.substr(URI+7,std::string::npos);
+}
+view_image(fname);} {}
+  }
 } 
 
 Function {main(int argc, char *argv[])} {open return_type int
@@ -1436,7 +1473,6 @@ catch (...){
 }} {}
 } 
 
-Function {trace(std::string msg)} {open
-} {
+Function {trace(std::string msg)} {} {
   code {std::cout<<msg<<std::endl;} {}
 } 

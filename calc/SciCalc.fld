@@ -1,5 +1,8 @@
 # data file for the Fltk User Interface Designer (fluid)
 version 1.0303 
+i18n_type 1 
+i18n_include <libintl.h> 
+i18n_function gettext 
 header_name {.h} 
 code_name {.cxx}
 decl {\#include "../include/toolbar_icons.h"} {private global
@@ -96,7 +99,7 @@ class SciCalc {open
   } {
     Fl_Window win {
       label flCalc open
-      private xywh {438 97 241 497} type Double hide xclass flcalc
+      private xywh {438 97 241 497} type Double xclass flcalc visible
     } {
       Fl_Box leddisplay {
         callback {o->value("0 ");}
@@ -165,7 +168,6 @@ else
         xywh {5 125 230 135} box FLAT_BOX color 47
       } {
         Fl_Button but_sqrt {
-          label {√}
           callback {if (base > 10) handle_number(10.0); 
 	else
 	if (! inv) 
@@ -181,6 +183,7 @@ else
 		ready = 1;
 	}}
           private tooltip {Square root} xywh {10 130 35 35} box FLAT_BOX color 17 labelsize 11 labelcolor 4
+          code0 {o->copy_label("√");//avoid localization}
         }
         Fl_Button but_pow {
           label {x^y}
@@ -506,9 +509,9 @@ box_bracket->redraw();}
           private tooltip Subtract xywh {194 404 35 35} box FLAT_BOX shortcut 0x2d color 190 selection_color 221 labelfont 1 labelsize 16
         }
         Fl_Button but_pi {
-          label {e/p}
-          callback {exponent_pi();}
-          private tooltip {Π} xywh {155 446 35 35} box FLAT_BOX color 190 selection_color 221 labelfont 12 labelsize 17
+          callback {exponent_pi();} selected
+          private tooltip Pi xywh {155 446 35 35} box FLAT_BOX color 190 selection_color 221 labelfont 12 labelsize 17
+          code0 {o->copy_label("e/Π");//avoid localization}
         }
         Fl_Button but_eval {
           label {=}
@@ -542,8 +545,7 @@ box_bracket->redraw();}
   } {
     code {win->show();
 make_icon(win);
-return Fl::run();} {selected
-    }
+return Fl::run();} {}
   }
   Function {handle_number(double numb)} {open private
   } {

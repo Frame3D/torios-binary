@@ -1,6 +1,6 @@
 flpad
 make syntax highlighting more robust
-add recent documents and make it work.
+add recent documents and make it work better.
 
 flrun
 make command history, perhaps drop down box...
@@ -10,8 +10,6 @@ flapt
 basically everything you can think of :) except listing installed packages :P
 
 Programs left:
-
-firstrun  - use some sort of apt interface eventually
 
 torios-calendar - we have some sort of basics we could use..
 

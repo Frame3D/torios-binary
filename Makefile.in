@@ -1,4 +1,4 @@
-obj      = $(askpass:.c=.o) $(about:.c=.o)
+obj      = $(askpass:.c=.o) $(about:.c=.o) $(pm_dialogs:.c=.o)
 TARGET   = torios-binary
 $(TARGET):
 	$(MAKE) -C askpass/

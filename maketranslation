@@ -11,7 +11,7 @@ packagename="$defaultdomain"
 comments="//"
 pofile="${packagename}.pot"
 
-xgettext -c --copyright-holder="\"$ME\"" -p "$outputdir" --strict --default-domain="$defaultdomain" --package-name="\"$packagename\"" --output "${outputdir}/${pofile}" --c++ --package-version=$verno about/*.cxx askpass/*.cxx pm-dialogs/*.cxx run/*.cxx apt/*.cxx text/*.cxx screenie/*.cxx image/*.cxx calc/*.cxx welcome/*.cxx fm/*.cxx
+xgettext -c --copyright-holder="\"$ME\"" -p "$outputdir" --strict --default-domain="$defaultdomain" --package-name="\"$packagename\"" --output "${outputdir}/${pofile}" --c++ --package-version=$verno about/*.cxx askpass/*.cxx pm-dialogs/*.cxx run/*.cxx apt/*.cxx text/*.cxx screenie/*.cxx image/*.cxx calc/*.cxx welcome/*.cxx
 sed -i 's/CHARSET/UTF-8/' "${outputdir}/${pofile}"
 
 cd "${basedir}"

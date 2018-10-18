@@ -46,6 +46,7 @@
 #include <vector>
 
 class ImageBox : public Fl_Box {
+  bool RELEASE; 
 public:
   int handle(int e);
   ImageBox(Fl_Boxtype b=FL_FLAT_BOX, int X=0, int Y=55, int W=385, int H=320, const char *l=NULL);
@@ -146,6 +147,7 @@ public:
   bool view_image(std::string filename);
   int handle(int e);
   void zoom(bool out=false);
+  void dnd_file(std::string file);
 };
 int main(int argc, char *argv[]);
 void trace(std::string msg);

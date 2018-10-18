@@ -1,5 +1,5 @@
-# A group of small fltk programs.
-# Copyright (C) 2018 "Israel Dahl"
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR "Israel Dahl"
 # This file is distributed under the same license as the "torios-binary" package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \"torios-binary\" \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-10-08 08:33-0500\n"
+"POT-Creation-Date: 2018-10-18 16:19-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,7 +19,7 @@ msgstr ""
 #
 # File: about/flabout.cxx, line: 118
 # File: text/flpad.cxx, line: 981
-# File: image/flimage.cxx, line: 117
+# File: image/flimage.cxx, line: 138
 msgid "About"
 msgstr ""
 #
@@ -90,7 +90,7 @@ msgstr ""
 #. Fl_Browser* install_list
 #. Fl_Text_Display* text_info
 # File: text/flpad.cxx, line: 983
-# File: image/flimage.cxx, line: 119
+# File: image/flimage.cxx, line: 140
 # File: welcome/flwelcome.cxx, line: 385
 # File: welcome/flwelcome.cxx, line: 685
 # File: welcome/flwelcome.cxx, line: 700
@@ -326,26 +326,365 @@ msgstr ""
 msgid "Preview"
 msgstr ""
 #
-# File: image/flimage.cxx, line: 865
+# File: image/flimage.cxx, line: 886
 msgid "Image Viewer"
 msgstr ""
 #
 #. Fl_Menu_Bar* o
-# File: image/flimage.cxx, line: 883
+# File: image/flimage.cxx, line: 904
 msgid "@<"
 msgstr ""
 #
-# File: image/flimage.cxx, line: 884
+# File: image/flimage.cxx, line: 905
 msgid "Press ',' to use this"
 msgstr ""
 #
 #. Fl_Button* o
-# File: image/flimage.cxx, line: 890
+# File: image/flimage.cxx, line: 911
 msgid "@>"
 msgstr ""
 #
-# File: image/flimage.cxx, line: 891
+# File: image/flimage.cxx, line: 912
 msgid "Press '.' to use this"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 545
+msgid "flCalc"
+msgstr ""
+#
+#. StaticText* leddisplay
+# File: calc/SciCalc.cxx, line: 559
+# File: welcome/flwelcome.cxx, line: 427
+msgid "Exit"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 560
+msgid "Quit the program"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 569
+msgid "Degree, Radian, Gradian"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 593
+msgid "Memory"
+msgstr ""
+#
+#. StaticText* box_M
+# File: calc/SciCalc.cxx, line: 605
+msgid "inv"
+msgstr ""
+#
+#. Fl_Button* but_1
+# File: calc/SciCalc.cxx, line: 616
+# File: calc/SciCalc.cxx, line: 883
+msgid "2"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 617
+msgid "Base 2"
+msgstr ""
+#
+#. Fl_Button* radio_2
+#. Fl_Button* but_7
+# File: calc/SciCalc.cxx, line: 626
+# File: calc/SciCalc.cxx, line: 835
+msgid "8"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 627
+msgid "Base 8"
+msgstr ""
+#
+#. Fl_Button* radio_8
+# File: calc/SciCalc.cxx, line: 636
+msgid "10"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 637
+msgid "Base 10 (default)"
+msgstr ""
+#
+#. Fl_Button* radio_10
+# File: calc/SciCalc.cxx, line: 647
+msgid "16"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 648
+msgid "Base"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 663
+msgid "Square root"
+msgstr ""
+#
+#. avoid localization
+#. Fl_Button* but_sqrt
+# File: calc/SciCalc.cxx, line: 671
+msgid "x^y"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 672
+msgid "Raises X to the power of Y"
+msgstr ""
+#
+#. Fl_Button* but_pow
+# File: calc/SciCalc.cxx, line: 679
+msgid "sin"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 680
+msgid "Sine of an angle"
+msgstr ""
+#
+#. Fl_Button* but_sin
+# File: calc/SciCalc.cxx, line: 687
+msgid "cos"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 688
+msgid "Cosine of an angle"
+msgstr ""
+#
+#. Fl_Button* but_cos
+# File: calc/SciCalc.cxx, line: 695
+msgid "tan"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 696
+msgid "Tangent of an angle"
+msgstr ""
+#
+#. Fl_Button* but_tan
+# File: calc/SciCalc.cxx, line: 703
+msgid "log"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 704
+msgid "Common logarithm"
+msgstr ""
+#
+#. Fl_Button* but_log
+# File: calc/SciCalc.cxx, line: 711
+msgid "ln"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 712
+msgid "Natural logarithm (to the base e)"
+msgstr ""
+#
+#. Fl_Button* but_ln
+# File: calc/SciCalc.cxx, line: 719
+msgid "int"
+msgstr ""
+#
+#. Fl_Button* but_int
+# File: calc/SciCalc.cxx, line: 726
+msgid "d->r"
+msgstr ""
+#
+#. Fl_Button* but_dr
+# File: calc/SciCalc.cxx, line: 733
+msgid "d-r-g"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 734
+msgid ""
+"Change the mode of the calculator to accommodate for different measurement "
+"of angles- Radians, Degrees and Gradian(Grads)"
+msgstr ""
+#
+#. Fl_Button* but_drg
+# File: calc/SciCalc.cxx, line: 741
+msgid "["
+msgstr ""
+#
+#. Fl_Button* but_leftbr
+# File: calc/SciCalc.cxx, line: 748
+msgid "]"
+msgstr ""
+#
+#. Fl_Button* but_rightbr
+# File: calc/SciCalc.cxx, line: 755
+msgid "exch"
+msgstr ""
+#
+#. Fl_Button* but_exch
+# File: calc/SciCalc.cxx, line: 761
+msgid "1/x"
+msgstr ""
+#
+#. Fl_Button* but_invx
+# File: calc/SciCalc.cxx, line: 767
+msgid "x!"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 778
+msgid "M+"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 779
+msgid ""
+"Add the number on the display to the memory, and store the result in memory"
+msgstr ""
+#
+#. Fl_Button* but_Mplus
+# File: calc/SciCalc.cxx, line: 787
+msgid "M*"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 788
+msgid ""
+"Multiply the number on the display to the memory, and store the result in "
+"memory"
+msgstr ""
+#
+#. Fl_Button* but_Mmult
+# File: calc/SciCalc.cxx, line: 797
+msgid "MC"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 798
+msgid "Erase the memory content"
+msgstr ""
+#
+#. Fl_Button* but_Mclear
+# File: calc/SciCalc.cxx, line: 806
+msgid "Mst"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 807
+msgid "Put the number on the display into the memory to save."
+msgstr ""
+#
+#. Fl_Button* but_Mst
+# File: calc/SciCalc.cxx, line: 814
+msgid "Mrc"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 815
+msgid "Recall the number in memory"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 827
+msgid "7"
+msgstr ""
+#
+#. Fl_Button* but_8
+# File: calc/SciCalc.cxx, line: 843
+msgid "9"
+msgstr ""
+#
+#. Fl_Button* but_9
+# File: calc/SciCalc.cxx, line: 851
+msgid "4"
+msgstr ""
+#
+#. Fl_Button* but_4
+# File: calc/SciCalc.cxx, line: 859
+msgid "5"
+msgstr ""
+#
+#. Fl_Button* but_5
+# File: calc/SciCalc.cxx, line: 867
+msgid "6"
+msgstr ""
+#
+#. Fl_Button* but_6
+# File: calc/SciCalc.cxx, line: 875
+msgid "1"
+msgstr ""
+#
+#. Fl_Button* but_2
+# File: calc/SciCalc.cxx, line: 891
+msgid "3"
+msgstr ""
+#
+#. Fl_Button* but_3
+# File: calc/SciCalc.cxx, line: 899
+msgid "0"
+msgstr ""
+#
+#. Fl_Button* but_0
+# File: calc/SciCalc.cxx, line: 907
+msgid "."
+msgstr ""
+#
+#. Fl_Button* but_dot
+# File: calc/SciCalc.cxx, line: 915
+msgid "+/-"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 916
+msgid ""
+"Changes the mathematical sign of the displayed number to the opposite one"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 928
+msgid "C"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 929
+msgid "Resets the calculator without resetting the memory"
+msgstr ""
+#
+#. Fl_Button* but_C
+# File: calc/SciCalc.cxx, line: 937
+msgid "AC"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 938
+msgid "Reset the calculator and reset the memory"
+msgstr ""
+#
+#. Fl_Button* but_AC
+# File: calc/SciCalc.cxx, line: 946
+msgid "x"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 947
+msgid "Multiply"
+msgstr ""
+#
+#. Fl_Button* but_X
+# File: calc/SciCalc.cxx, line: 956
+msgid "/"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 957
+msgid "Divide"
+msgstr ""
+#
+#. Fl_Button* but_div
+# File: calc/SciCalc.cxx, line: 966
+msgid "+"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 967
+msgid "Add"
+msgstr ""
+#
+#. Fl_Button* but_plus
+# File: calc/SciCalc.cxx, line: 976
+msgid "-"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 977
+msgid "Subtract"
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 987
+msgid "Pi"
+msgstr ""
+#
+#. avoid localization
+#. Fl_Button* but_pi
+# File: calc/SciCalc.cxx, line: 996
+msgid "="
+msgstr ""
+#
+# File: calc/SciCalc.cxx, line: 997
+msgid "Equal"
 msgstr ""
 #
 #. Fl_Button* o
@@ -363,10 +702,6 @@ msgstr ""
 #
 # File: welcome/flwelcome.cxx, line: 425
 msgid "Welcome"
-msgstr ""
-#
-# File: welcome/flwelcome.cxx, line: 427
-msgid "Exit"
 msgstr ""
 #
 # File: welcome/flwelcome.cxx, line: 438

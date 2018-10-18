@@ -25,7 +25,7 @@ do
   esac
 done
 echo 'Generating Makefiles ...'
-for File in "$PWD" about askpass pm-dialogs run apt text screenie image calc welcome fm
+for File in "$PWD" about askpass pm-dialogs run apt text screenie image calc welcome
 do
   if [ -f "${File}/Makefile.in" ]
   then

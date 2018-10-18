@@ -5,21 +5,40 @@
 
 int ImageBox::handle(int e) {
   static int offset[2] = { 0, 0 };
-  int ret = Fl_Box::handle(e);
+  UserInterface* ui = ((UserInterface*)(this->user_data()));
+  //    UserInterface *ui = (UserInterface*)this->parent()->parent()->user_data();
   switch ( e )
   {
+    case FL_DND_DRAG:
+    trace("draaaaaag....");
+      break;
+    case FL_DND_LEAVE:
+      break;
+    case FL_DND_RELEASE:
+      trace("dnd release");
+      RELEASE=true;
+      break;
+    case FL_PASTE:
+      trace("droppppppp'd");
+      if(RELEASE)
+      {
+        RELEASE=false;
+        ui->dnd_file(Fl::event_text());
+        return 1;
+      }
+      break;
     case FL_PUSH:
       offset[0] = x() - Fl::event_x();    // save where user clicked for dragging
       offset[1] = y() - Fl::event_y();
       return(1);
     case FL_RELEASE:
-      return(1);
+      return 1;
     case FL_DRAG:
       position(offset[0]+Fl::event_x(), offset[1]+Fl::event_y());
       this->parent()->parent()->redraw();
-      return(1);
+      return 1;
     case FL_MOUSEWHEEL:
-      UserInterface *ui = (UserInterface*)this->parent()->parent()->user_data();
+  
       if(Fl::event_dy( )>0)
       {
         //DOWN aka zoom out
@@ -29,12 +48,14 @@ int ImageBox::handle(int e) {
       {
         ui->zoom();
       }
-      
+      break;
   }
+  int ret = Fl_Box::handle(e);
   return(ret);
 }
 
 ImageBox::ImageBox(Fl_Boxtype b, int X, int Y, int W, int H, const char *l):Fl_Box(b,X,Y,W,H,l) {
+  RELEASE=false;
   box(FL_FLAT_BOX);
   color(FL_DARK3);
 }
@@ -915,7 +936,8 @@ Fl_Double_Window* UserInterface::make_window() {
       button_style(1);
     } // Fl_Button* zoom_out_button
     { Fl_Scroll* o = new Fl_Scroll(0, 55, 385, 320);
-      viewer = new ImageBox();//FL_FLAT_BOX,0, 55, 385, 320);
+      viewer = new ImageBox();
+      viewer->user_data(win->user_data());
       o->end();
       Fl_Group::current()->resizable(o);
     } // Fl_Scroll* o
@@ -1413,6 +1435,19 @@ void UserInterface::zoom(bool out) {
   }
   viewer->size(w,h);
   resizeImage(viewer);
+}
+
+void UserInterface::dnd_file(std::string file) {
+  std::string fname = file;
+  char * tmp = const_cast<char*>(fname.c_str());
+  fl_decode_uri(tmp);
+  fname = tmp;
+  unsigned int URI  = fname.find("file:///");
+  if(URI==0)
+  {
+    fname = fname.substr(URI+7,std::string::npos);
+  }
+  view_image(fname);
 }
 
 int main(int argc, char *argv[]) {

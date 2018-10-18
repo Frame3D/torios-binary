@@ -1,16 +1,16 @@
-TARGET = flcalc
+TARGET  = flcalc
 CC      = gcc
-CXX		= g++
-LD		= g++
+CXX     = g++
+LD      = g++
 
 
 FLUID = fluid
 
 IFLAGS = -I/usr/X11/include
 LFLAGS = -L/usr/X11R6/lib -L/usr/local/lib
-CPPFLAGS  = -O2 $(IFLAGS) $(DFLAGS) -Wall 
-CXXFLAGS  = -O2 $(IFLAGS) $(DFLAGS) -Wall 
-CFLAGS  = -O2 $(IFLAGS) $(DFLAGS) -Wall 
+CPPFLAGS  = -O2 $(IFLAGS) $(DFLAGS) -Wall
+CXXFLAGS  = -O2 $(IFLAGS) $(DFLAGS) -Wall
+CFLAGS  = -O2 $(IFLAGS) $(DFLAGS) -Wall
 LLIBS =
 LIBS = -lfltk -lX11 -lm
 OBJS =	Main.o StaticText.o SciCalc.o
@@ -28,7 +28,7 @@ all : $(TARGET)
 	$(CC) -c $< -o $(<:.c=.o) $(CPPFLAGS)
 
 $(TARGET) : $(OBJS)
-	$(LD) -o $(TARGET) $(OBJS) $(LFLAGS) $(LLIBS) $(LIBS)
+	$(LD) -fPIC -o $(TARGET) $(OBJS) $(LFLAGS) $(LLIBS) $(LIBS)
 	strip $(TARGET)
 
 clean:

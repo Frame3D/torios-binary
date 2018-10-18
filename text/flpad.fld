@@ -704,10 +704,10 @@ return;} {}
   } {
     Fl_Window win {
       label {FLTK Pad} open
-      xywh {348 120 520 545} type Double color 47
+      xywh {348 120 520 545} type Double color 47 hide
       code0 {//Fl::event_dispatch(handle);}
       code1 {o->size_range(o->w(), o->h(), 0, 0);}
-      code2 {make_icon(o);} xclass flpad visible
+      code2 {make_icon(o);} xclass flpad
     } {
       Fl_Menu_Bar menu {open
         xywh {0 0 520 25} box FLAT_BOX down_box FLAT_BOX color 39 selection_color 80 labelsize 16 labelcolor 7 align 260 textsize 16 textcolor 7
@@ -1407,7 +1407,8 @@ if(textor==NULL)
   return;
 textor->buffer()->remove_selection();} {}
   }
-  Function {dnd_file(const char* items)} {} {
+  Function {dnd_file(const char* items)} {open
+  } {
     code {if(items==NULL)
   return;
 std::string s = items;
@@ -1424,8 +1425,10 @@ if(URI<s.length())
 char *ch = strdup(s.c_str());
 fl_decode_uri(ch);
 s=ch;
+
 load_file(s,-1);
-free(ch);} {}
+free(ch);} {selected
+    }
   }
   Function {find_cb()} {} {
     code {std::string val;
@@ -1753,8 +1756,7 @@ textor->filename="";
 buff->select(0, buff->length());
 buff->remove_selection();
 textor->changed = 0;
-buff->call_modify_callbacks();} {selected
-    }
+buff->call_modify_callbacks();} {}
   }
   Function {open_cb()} {open
   } {

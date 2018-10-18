@@ -90,10 +90,6 @@ This is pretty much only usable (as is) for ToriOS Debian/Ubuntu based distros
 
 ![Alt text](/screenshots/flwelcome.png?raw=true "flwelcome")
 
-## flfm
-
-This is basically not usable yet, but is an experimental idea for a lightweight filemanager
-
 ## flapt
 
 This is unusable still... but can be a visual apt program (eventually)
