@@ -1,88 +1,88 @@
 # data file for the Fltk User Interface Designer (fluid)
-version 1.0303 
-i18n_type 1 
-i18n_include <libintl.h> 
-i18n_function gettext 
-header_name {.h} 
+version 1.0304
+i18n_type 1
+i18n_include <libintl.h>
+i18n_function gettext
+header_name {.h}
 code_name {.cxx}
 comment {copyright 2018 Israel Dahl
 GPL 3
 created from the FLTK tutorial using FLUID to design the UI
 created as part of the ToriOS project} {in_source in_header
-} 
+}
 
 decl {\#include "../include/toolbar_icons.h"} {public global
-} 
+}
 
 decl {\#include "keywords.h"} {public global
-} 
+}
 
 decl {\#include <algorithm>} {public global
-} 
+}
 
 decl {\#include <sstream>} {public global
-} 
+}
 
 decl {\#include <fstream>} {public global
-} 
+}
 
 decl {\#include <iostream>} {public global
-} 
+}
 
 decl {\#include <FL/Fl_Color_Chooser.H>} {public global
-} 
+}
 
 decl {\#include <FL/Fl_File_Chooser.H>} {public global
-} 
+}
 
 decl {\#include <FL/Fl_Text_Editor.H>} {public global
-} 
+}
 
 decl {\#include <FL/Fl_Printer.H>} {public global
-} 
+}
 
 decl {\#include <FL/fl_ask.H>} {public global
-} 
+}
 
 decl {\#include <FL/Fl_RGB_Image.H>} {public global
-} 
+}
 
 decl {\#include <errno.h>} {public global
-} 
+}
 
 decl {\#include <vector>} {public global
-} 
+}
 
 decl {\#include <ctype.h>} {public global
-} 
+}
 
 decl {\#include <string.h>} {public global
-} 
+}
 
 decl {\#include <stdlib.h>} {public global
-} 
+}
 
 decl {\#include <stdio.h>} {public global
-} 
+}
 
 decl {\#include <cstdio>} {public global
-} 
+}
 
 decl {\#include <cstdlib>} {public global
-} 
+}
 
 decl {\#include <string>} {public global
-} 
+}
 
 decl {int ret_val;} {public global
-} 
+}
 
 decl {std::string return_value;} {public global
-} 
+}
 
 decl {unsigned int EDIT_COLOR;
 unsigned int NORMAL_COLOR;} {public global
-} 
+}
 
 decl {unsigned int FOREGROUND_TEXT;
 unsigned int BACKGROUND_TEXT;
@@ -97,19 +97,19 @@ int FONT_TEXT;
 int SIZE_TEXT;
 int LINE_NUMBERS;
 int BUTTON_COLOR;} {public global
-} 
+}
 
 decl {std::string COMMENTS;} {private local
-} 
+}
 
 decl {std::vector<std::string> BLOCK_COMMENTS;} {private local
-} 
+}
 
 decl {std::vector<std::string> TYPES;} {private local
-} 
+}
 
 decl {std::vector<std::string> KEYWORDS;} {private local
-} 
+}
 
 class Fl_Syntax_Text_Editor {open : {public Fl_Text_Editor}
 } {
@@ -260,7 +260,7 @@ switch(which)
 styletable[which] = styles; //  set
 //std::cout<<"Got style table for: "<<whichtype<<"\\nFONT="<<styles.font<<"\\tCOLOR="<<styles.color<<std::endl;} {}
   }
-  Function {get_type(std::string fname)} {return_type {unsigned int}
+  Function {get_type(std::string fname)} {open return_type {unsigned int}
   } {
     code {unsigned int NONE=12;
 if(fname.empty())
@@ -275,7 +275,8 @@ if(
     (EXT.compare(".cpp")==0) ||
     (EXT.compare(".cxx")==0) ||
     (EXT.compare(".h")==0) ||
-    (EXT.compare(".hpp")==0)
+    (EXT.compare(".hpp")==0) ||
+    (EXT.compare(".xpm")==0)
   )
 {
   trace("c/c++ file");
@@ -301,7 +302,8 @@ else if(
   return 3;
 }
 trace("unknown syntax");
-return NONE;} {}
+return NONE;} {selected
+    }
   }
   Function {init_highlight()} {open
   } {
@@ -590,7 +592,7 @@ switch(event)
 }
 return Fl_Text_Editor::handle(event);} {}
   }
-} 
+}
 
 class UI {open
 } {
@@ -1427,8 +1429,7 @@ fl_decode_uri(ch);
 s=ch;
 
 load_file(s,-1);
-free(ch);} {selected
-    }
+free(ch);} {}
   }
   Function {find_cb()} {} {
     code {std::string val;
@@ -2133,7 +2134,7 @@ else
   E->wrap_mode(Fl_Text_Display::WRAP_AT_BOUNDS, 0);
 }} {}
   }
-} 
+}
 
 Function {main(int argc, char **argv)} {return_type int
 } {
@@ -2169,12 +2170,12 @@ catch (...)
   std::cerr << "Unknown exception!" << std::endl;
   return EXIT_FAILURE;
 }} {}
-} 
+}
 
 Function {compare_keywords(const void *a, const void *b)} {return_type {static int}
 } {
   code {return (strcmp(*((const char **)a), *((const char **)b)));} {}
-} 
+}
 
 Function {c_highlight(std::string text, int length)} {return_type {std::string}
 } {
@@ -2326,7 +2327,7 @@ for (unsigned int iter=0; length>0; length --)
   }
 }
 return out_line;} {}
-} 
+}
 
 Function {c_style(const char* text, char* style, int length)} {} {
   code {trace("c_style");
@@ -2336,7 +2337,7 @@ const char* blockCommentOpen="/*";
 const char* blockCommentClose="*/";
 bool hasBlockComments=true;
 style_highlighter(text,style,length, c_code_types,c_code_keywords, diectiveChar,lineComment, hasBlockComments,blockCommentOpen,blockCommentClose);} {}
-} 
+}
 
 Function {style_highlighter(const char* text, char* style, int length, const void * keys, const void* types, char diectiveChar,const char* lineComment,bool hasBlockComments=false, const char* blockCommentOpen=NULL, const char* blockCommentClose=NULL)} {} {
   code {trace("c style highlighter");
@@ -2531,7 +2532,7 @@ for (current = *style, col = 0, last = 0; length > 0; length --, text ++)
     if (current == 'B' || current == 'E' || current == 'H') current = 'A';
   }
 }// main for loop} {}
-} 
+}
 
 Function {c_style_comments()} {return_type {std::vector<std::string>}
 } {
@@ -2540,7 +2541,7 @@ std::vector<std::string> T;
 T.push_back("/*");
 T.push_back("*/");
 return T;} {}
-} 
+}
 
 Function {c_style_keywords()} {return_type {std::vector<std::string>}
 } {
@@ -2580,7 +2581,7 @@ T.push_back("while");
 T.push_back("xor");
 T.push_back("xor_eq");
 return T;} {}
-} 
+}
 
 Function {c_style_types()} {return_type {std::vector<std::string>}
 } {
@@ -2622,7 +2623,7 @@ T.push_back("virtual");
 T.push_back("void");
 T.push_back("volatile");
 return T;} {}
-} 
+}
 
 Function {check_string(std::string text, std::string keyword)} {return_type bool
 } {
@@ -2635,7 +2636,7 @@ if(finder<text.length())
   return true;
 }
 return false;} {}
-} 
+}
 
 Function {get_syntax_type(unsigned int type)} {} {
   code {BLOCK_COMMENTS.clear();
@@ -2659,7 +2660,7 @@ switch(type)
   default: //PLAIN
     break;
 }} {}
-} 
+}
 
 Function {hasInVector(std::string line,unsigned int pos,std::vector<std::string> VEC)} {return_type bool
 } {
@@ -2675,22 +2676,22 @@ for( std::vector<std::string>::iterator it = VEC.begin();
     return true;
 }
 return false;} {}
-} 
+}
 
 Function {hasComment(std::string line, unsigned int pos)} {return_type bool
 } {
   code {return hasInVector(line,pos,BLOCK_COMMENTS);} {}
-} 
+}
 
 Function {hasKeyword(std::string line, unsigned int pos)} {return_type bool
 } {
   code {return hasInVector(line,pos,KEYWORDS);} {}
-} 
+}
 
 Function {hasType(std::string line, unsigned int pos)} {return_type bool
 } {
   code {return hasInVector(line,pos,TYPES);} {}
-} 
+}
 
 Function {make_vec(std::string string_to_become_vector)} {return_type {std::vector<std::string>}
 } {
@@ -2717,11 +2718,11 @@ for(found=original.find(delimiter);found<finder;found=original.find(delimiter))
 }
 if(postComma.compare("")!=0){Vector.push_back(postComma);}
 return Vector;} {}
-} 
+}
 
 Function {sh_style_comments()} {} {
   code {COMMENTS="\#";} {}
-} 
+}
 
 Function {sh_style_keywords()} {return_type {std::vector<std::string>}
 } {
@@ -2776,14 +2777,14 @@ T.push_back("coproc");
 T.push_back("mapfile");
 T.push_back("ulimit");
 return T;} {}
-} 
+}
 
 Function {sh_style_types()} {return_type {std::vector<std::string>}
 } {
   code {std::vector<std::string> T;
 T.push_back("");
 return T;} {}
-} 
+}
 
 Function {style_parse(const char* text=NULL, char* style=NULL, int length=0,unsigned int Type=12)} {} {
   code {if(text==NULL)
@@ -2810,7 +2811,7 @@ switch(Type)
     trace("Not a known syntax type");
     break;
 }} {}
-} 
+}
 
 Function {trace(std::string MSG, int n = 0)} {} {
   code {//return;
@@ -2818,4 +2819,4 @@ std::cout<<MSG;
 if(n!=0)
   std::cout<<"-->"<<n;
 std::cout<<std::endl;} {}
-} 
+}

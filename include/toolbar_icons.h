@@ -28,6 +28,7 @@
 #include "xpm/color-zoom-out.xpm"
 #include "xpm/undo.xpm"
 #include "xpm/color-undo.xpm"
+#include "xpm/lock.xpm"
 #include "xpm/settings.xpm"
 
 //individual program Icons
@@ -65,8 +66,8 @@ static Fl_Pixmap undo_image(undo_xpm);
 static Fl_Pixmap replace_image(replace_xpm);
 static Fl_Pixmap zoom_in(zoom_in_xpm);
 static Fl_Pixmap zoom_out(zoom_out_xpm);
-//static Fl_Pixmap home_image(home_xpm);
-//static Fl_Pixmap folder_image(folder_xpm);
+static Fl_Pixmap lock_image(lock_xpm);
+
 
 //COLOR
 static Fl_Pixmap color_zoom_out(color_zoom_out_xpm);
@@ -80,7 +81,6 @@ static Fl_Pixmap color_save_image(color_save_xpm);
 static Fl_Pixmap color_open_image(color_open_xpm);
 static Fl_Pixmap color_undo_image(color_undo_xpm);
 static Fl_Pixmap color_replace_image(color_replace_xpm);
-//static Fl_Pixmap color_home_image(color_home_xpm);
 
 // Power Management
 static Fl_Pixmap shutdown_icon(system_shutdown_xpm);

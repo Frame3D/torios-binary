@@ -154,7 +154,8 @@ unsigned int Fl_Syntax_Text_Editor::get_type(std::string fname) {
       (EXT.compare(".cpp")==0) ||
       (EXT.compare(".cxx")==0) ||
       (EXT.compare(".h")==0) ||
-      (EXT.compare(".hpp")==0)
+      (EXT.compare(".hpp")==0) ||
+      (EXT.compare(".xpm")==0)
     )
   {
     trace("c/c++ file");
