@@ -1,0 +1,1030 @@
+# Portugues (Portugal) translation for the package "torios-binary"
+# Copyright (C) 2018 "Israel Dahl"
+# This file is distributed under the same license as the "torios-binary" package.
+# Pedro Albuquerque <palbuquerque73@gmail.com>, 2018.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \"torios-binary\"\n"
+"Report-Msgid-Bugs-To: palbuquerque73@gmail.com\n"
+"POT-Creation-Date: 2018-10-18 16:19-0500\n"
+"PO-Revision-Date: 2018-10-20 06:00+0100\n"
+"Last-Translator: Pedro Albuquerque <palbuquerque73@gmail.com>\n"
+"Language-Team: Portuguese (Portugal) <palbuquerque73@gmail.com>\n"
+"Language: pt\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Gtranslator 2.91.7\n"
+
+#
+# File: about/flabout.cxx, line: 118
+# File: text/flpad.cxx, line: 981
+# File: image/flimage.cxx, line: 138
+msgid "About"
+msgstr "Acerca"
+
+#
+# File: about/flabout.cxx, line: 120
+# File: askpass/flaskpass.cxx, line: 38
+#. Fl_Button* o
+msgid "Ok"
+msgstr "Aceitar"
+
+#
+# File: askpass/flaskpass.cxx, line: 23
+msgid "ToriOS Askpass"
+msgstr "ToriOS Askpass"
+
+#
+# File: askpass/flaskpass.cxx, line: 25
+msgid "Password"
+msgstr "Senha"
+
+#
+# File: askpass/flaskpass.cxx, line: 31
+# File: pm-dialogs/flpower.cxx, line: 37
+# File: text/flpad.cxx, line: 1033
+# File: text/flpad.cxx, line: 1318
+# File: text/flpad.cxx, line: 1387
+#. Fl_Input* password
+#. Fl_Input* replace_with
+#. Fl_Button* o
+#. Fl_Button* numbers
+msgid "Cancel"
+msgstr "Cancelar"
+
+#
+# File: pm-dialogs/flpower.cxx, line: 26
+# File: pm-dialogs/flpower.cxx, line: 53
+#. Fl_Box* icon
+msgid "Shutdown"
+msgstr "Encerrar"
+
+#
+# File: pm-dialogs/flpower.cxx, line: 27
+msgid "Reboot"
+msgstr "Reiniciar"
+
+#
+# File: pm-dialogs/flpower.cxx, line: 28
+msgid "Suspend"
+msgstr "Suspender"
+
+#
+# File: pm-dialogs/flpower.cxx, line: 29
+msgid "Hibernate"
+msgstr "Hibernar"
+
+#
+# File: pm-dialogs/flpower.cxx, line: 30
+msgid "Log Out"
+msgstr "Terminar sessão"
+
+#
+# File: pm-dialogs/flpower.cxx, line: 35
+msgid "Power"
+msgstr "Energia"
+
+#
+# File: pm-dialogs/flpower.cxx, line: 44
+# File: run/flrun.cxx, line: 93
+#. Fl_Button* o
+#. Fl_Input* run_input
+msgid "OK"
+msgstr "Aceitar"
+
+#
+# File: run/flrun.cxx, line: 84
+# File: run/flrun.cxx, line: 87
+msgid "Run"
+msgstr "Executar"
+
+#
+# File: text/flpad.cxx, line: 983
+# File: image/flimage.cxx, line: 140
+# File: welcome/flwelcome.cxx, line: 385
+# File: welcome/flwelcome.cxx, line: 685
+# File: welcome/flwelcome.cxx, line: 700
+#. Fl_Browser* install_list
+#. Fl_Text_Display* text_info
+msgid "Close"
+msgstr "Fechar"
+
+#
+# File: text/flpad.cxx, line: 989
+#. Fl_Button* o
+msgid ""
+"Designed in FLUID, based on the FLTK tutorial\n"
+"Copyright 1998-2005 by Bill Spitzak and others.\n"
+"\n"
+"This version was built for ToriOS\n"
+"copyright 2018 Israel Dahl"
+msgstr ""
+"Desenhado em FLUID, baseado no tutorial FLTK\n"
+"Copyright 1998-2005 por Bill Spitzak e outros.\n"
+"\n"
+"Esta versão foi compilada para ToriOS\n"
+"copyright 2018 Israel Dahl"
+
+#
+# File: text/flpad.cxx, line: 1024
+msgid "Find and Replace"
+msgstr "Localizar e substituri"
+
+#
+# File: text/flpad.cxx, line: 1026
+# File: text/flpad.cxx, line: 1167
+msgid "Find"
+msgstr "Localizar"
+
+#
+# File: text/flpad.cxx, line: 1030
+# File: text/flpad.cxx, line: 1174
+#. Fl_Input* replace_find
+msgid "Replace"
+msgstr "Substituir"
+
+#
+# File: text/flpad.cxx, line: 1039
+#. Fl_Button* replace_cancel
+msgid "Replace All"
+msgstr "Substituir tudo"
+
+#
+# File: text/flpad.cxx, line: 1044
+#. Fl_Button* replace_all
+msgid "Replace Next"
+msgstr "Substituir seguinte"
+
+#
+# File: text/flpad.cxx, line: 1057
+msgid "FLTK Pad"
+msgstr "Tapete FLTK"
+
+#
+# File: text/flpad.cxx, line: 1123
+msgid "@+"
+msgstr "@+"
+
+#
+# File: text/flpad.cxx, line: 1124
+msgid "Add a Tab"
+msgstr "Adicionar separador"
+
+#
+# File: text/flpad.cxx, line: 1130
+msgid "Remove current Tab"
+msgstr "Remover separador actual"
+
+#
+# File: text/flpad.cxx, line: 1139
+msgid "Open"
+msgstr "Abrir"
+
+#
+# File: text/flpad.cxx, line: 1146
+# File: screenie/flscreenie.cxx, line: 177
+#. Fl_Scroll* o
+msgid "Save"
+msgstr "Gravar"
+
+#
+# File: text/flpad.cxx, line: 1153
+msgid "New"
+msgstr "Novo"
+
+#
+# File: text/flpad.cxx, line: 1160
+msgid "Undo"
+msgstr "Desfazer"
+
+#
+# File: text/flpad.cxx, line: 1181
+msgid "Copy current selection"
+msgstr "Copiar selecção actual"
+
+#
+# File: text/flpad.cxx, line: 1188
+# File: text/flpad.cxx, line: 1202
+msgid "Paste current clipboard"
+msgstr "Colar memória actual"
+
+#
+# File: text/flpad.cxx, line: 1195
+msgid "Settings"
+msgstr "Definições"
+
+#
+# File: text/flpad.cxx, line: 1229
+msgid "Preferences"
+msgstr "Preferências"
+
+#
+# File: text/flpad.cxx, line: 1232
+msgid "Font"
+msgstr "Letra"
+
+#
+# File: text/flpad.cxx, line: 1249
+msgid "Font Numeric for use in config file"
+msgstr "Letra numérica para uso no ficheiro de configuração"
+
+#
+# File: text/flpad.cxx, line: 1255
+#. Fl_Value_Output* font_save
+msgid "Toolbar Button Color"
+msgstr "Cor do botão da barra de ferramentas"
+
+#
+# File: text/flpad.cxx, line: 1263
+#. Fl_Check_Button* tool_color
+msgid "Color"
+msgstr "Cor"
+
+#
+# File: text/flpad.cxx, line: 1270
+#. Fl_Button* tExt
+msgid "Font Size"
+msgstr "Tamanho da letra"
+
+#
+# File: text/flpad.cxx, line: 1288
+#. Fl_Value_Input* fsout
+msgid "Line Number Size"
+msgstr "Tamanho do nº de linha"
+
+#
+# File: text/flpad.cxx, line: 1289
+msgid "0 hides line numbers"
+msgstr "0 oculta nºs de linha"
+
+#
+# File: text/flpad.cxx, line: 1306
+#. Fl_Value_Input* lsout
+msgid "Background Color"
+msgstr "Cor de fundo"
+
+#
+# File: text/flpad.cxx, line: 1313
+#. Fl_Button* bg
+msgid "Syntax"
+msgstr "Sintaxe"
+
+#
+# File: text/flpad.cxx, line: 1324
+# File: text/flpad.cxx, line: 1393
+#. Fl_Button* o
+msgid "SAVE"
+msgstr "GRAVAR"
+
+#
+# File: text/flpad.cxx, line: 1337
+msgid "Syntax Colors"
+msgstr "Cores de sintaxe"
+
+#
+# File: text/flpad.cxx, line: 1339
+msgid "Comments"
+msgstr "Comentários"
+
+#
+# File: text/flpad.cxx, line: 1340
+msgid "The color of comments"
+msgstr "A cor dos comentários"
+
+#
+# File: text/flpad.cxx, line: 1347
+#. Fl_Button* cm
+msgid "Strings"
+msgstr "Cadeias"
+
+#
+# File: text/flpad.cxx, line: 1348
+msgid "The color of strings"
+msgstr "A cor das cadeias"
+
+#
+# File: text/flpad.cxx, line: 1355
+#. Fl_Button* str
+msgid "Directives"
+msgstr "Directivas"
+
+#
+# File: text/flpad.cxx, line: 1356
+msgid "The color of directives"
+msgstr "A cor das directivas"
+
+#
+# File: text/flpad.cxx, line: 1363
+#. Fl_Button* directives
+msgid "Types"
+msgstr "Tipos"
+
+#
+# File: text/flpad.cxx, line: 1364
+msgid "The color of types"
+msgstr "A cor dos tipos"
+
+#
+# File: text/flpad.cxx, line: 1371
+#. Fl_Button* typezz
+msgid "Keywords"
+msgstr "Palavras-chave"
+
+#
+# File: text/flpad.cxx, line: 1372
+msgid "The color of keywords"
+msgstr "A cor das palavras-chave"
+
+#
+# File: text/flpad.cxx, line: 1379
+#. Fl_Button* keywordz
+msgid "Numbers"
+msgstr "Números"
+
+#
+# File: text/flpad.cxx, line: 1380
+msgid "The color of numbers"
+msgstr "A cor dos números"
+
+#
+# File: text/flpad.cxx, line: 1399
+#. Fl_Button* o
+msgid "Theme"
+msgstr "Tema"
+
+#
+# File: screenie/flscreenie.cxx, line: 38
+msgid "Screenie"
+msgstr "Screenie"
+
+#
+# File: screenie/flscreenie.cxx, line: 40
+msgid "Full Screen"
+msgstr "Ecrã completo"
+
+#
+# File: screenie/flscreenie.cxx, line: 47
+# File: screenie/flscreenie.cxx, line: 184
+#. Fl_Button* o
+#. Fl_Button* saver
+msgid "Quit"
+msgstr "Sair"
+
+#
+# File: screenie/flscreenie.cxx, line: 54
+#. Fl_Button* o
+msgid "Take a Screen shot"
+msgstr "Tirar uma captura de ecrã"
+
+#
+# File: screenie/flscreenie.cxx, line: 56
+#. Fl_Box* o
+msgid "Area"
+msgstr "Área"
+
+#
+# File: screenie/flscreenie.cxx, line: 86
+msgid "Take Screen Shot"
+msgstr "Capturar ecrã"
+
+#
+# File: screenie/flscreenie.cxx, line: 166
+msgid "Preview"
+msgstr "Antevisão"
+
+#
+# File: image/flimage.cxx, line: 886
+msgid "Image Viewer"
+msgstr "Visualizador de imagens"
+
+#
+# File: image/flimage.cxx, line: 904
+#. Fl_Menu_Bar* o
+msgid "@<"
+msgstr "@<"
+
+#
+# File: image/flimage.cxx, line: 905
+msgid "Press ',' to use this"
+msgstr "Prima \",\" para utilizar"
+
+#
+# File: image/flimage.cxx, line: 911
+#. Fl_Button* o
+msgid "@>"
+msgstr "@>"
+
+#
+# File: image/flimage.cxx, line: 912
+msgid "Press '.' to use this"
+msgstr "Prima \".\" para utilizar"
+
+#
+# File: calc/SciCalc.cxx, line: 545
+msgid "flCalc"
+msgstr "flCalc"
+
+#
+# File: calc/SciCalc.cxx, line: 559
+# File: welcome/flwelcome.cxx, line: 427
+#. StaticText* leddisplay
+msgid "Exit"
+msgstr "Sair"
+
+#
+# File: calc/SciCalc.cxx, line: 560
+msgid "Quit the program"
+msgstr "Sair do programa"
+
+#
+# File: calc/SciCalc.cxx, line: 569
+msgid "Degree, Radian, Gradian"
+msgstr "Grau, Radiano, Gradiano"
+
+#
+# File: calc/SciCalc.cxx, line: 593
+msgid "Memory"
+msgstr "Memória"
+
+#
+# File: calc/SciCalc.cxx, line: 605
+#. StaticText* box_M
+msgid "inv"
+msgstr "inv"
+
+#
+# File: calc/SciCalc.cxx, line: 616
+# File: calc/SciCalc.cxx, line: 883
+#. Fl_Button* but_1
+msgid "2"
+msgstr "2"
+
+#
+# File: calc/SciCalc.cxx, line: 617
+msgid "Base 2"
+msgstr "Base 2"
+
+#
+# File: calc/SciCalc.cxx, line: 626
+# File: calc/SciCalc.cxx, line: 835
+#. Fl_Button* radio_2
+#. Fl_Button* but_7
+msgid "8"
+msgstr "8"
+
+#
+# File: calc/SciCalc.cxx, line: 627
+msgid "Base 8"
+msgstr "Base 8"
+
+#
+# File: calc/SciCalc.cxx, line: 636
+#. Fl_Button* radio_8
+msgid "10"
+msgstr "10"
+
+#
+# File: calc/SciCalc.cxx, line: 637
+msgid "Base 10 (default)"
+msgstr "Base 10 (predefinição)"
+
+#
+# File: calc/SciCalc.cxx, line: 647
+#. Fl_Button* radio_10
+msgid "16"
+msgstr "16"
+
+#
+# File: calc/SciCalc.cxx, line: 648
+msgid "Base"
+msgstr "Base"
+
+#
+# File: calc/SciCalc.cxx, line: 663
+msgid "Square root"
+msgstr "Raiz quadrada"
+
+#
+# File: calc/SciCalc.cxx, line: 671
+#. avoid localization
+#. Fl_Button* but_sqrt
+msgid "x^y"
+msgstr "x^y"
+
+#
+# File: calc/SciCalc.cxx, line: 672
+msgid "Raises X to the power of Y"
+msgstr "Eleva X à potência de Y"
+
+#
+# File: calc/SciCalc.cxx, line: 679
+#. Fl_Button* but_pow
+msgid "sin"
+msgstr "sen"
+
+#
+# File: calc/SciCalc.cxx, line: 680
+msgid "Sine of an angle"
+msgstr "Seno de um ângulo"
+
+#
+# File: calc/SciCalc.cxx, line: 687
+#. Fl_Button* but_sin
+msgid "cos"
+msgstr "cos"
+
+#
+# File: calc/SciCalc.cxx, line: 688
+msgid "Cosine of an angle"
+msgstr "Co-seno de um ângulo"
+
+#
+# File: calc/SciCalc.cxx, line: 695
+#. Fl_Button* but_cos
+msgid "tan"
+msgstr "tan"
+
+#
+# File: calc/SciCalc.cxx, line: 696
+msgid "Tangent of an angle"
+msgstr "Tangente de um ângulo"
+
+#
+# File: calc/SciCalc.cxx, line: 703
+#. Fl_Button* but_tan
+msgid "log"
+msgstr "log"
+
+#
+# File: calc/SciCalc.cxx, line: 704
+msgid "Common logarithm"
+msgstr "Logaritmo comum"
+
+#
+# File: calc/SciCalc.cxx, line: 711
+#. Fl_Button* but_log
+msgid "ln"
+msgstr "ln"
+
+#
+# File: calc/SciCalc.cxx, line: 712
+msgid "Natural logarithm (to the base e)"
+msgstr "Logaritmo natural (para base e)"
+
+#
+# File: calc/SciCalc.cxx, line: 719
+#. Fl_Button* but_ln
+msgid "int"
+msgstr "int"
+
+#
+# File: calc/SciCalc.cxx, line: 726
+#. If I'm not mistaken, this means degree->radian
+#. Fl_Button* but_int
+msgid "d->r"
+msgstr "g->r"
+
+#
+# File: calc/SciCalc.cxx, line: 733
+#. If I'm not mistaken, this means degree-radian-gradian
+#. Fl_Button* but_dr
+msgid "d-r-g"
+msgstr "g-r-g"
+
+#
+# File: calc/SciCalc.cxx, line: 734
+msgid ""
+"Change the mode of the calculator to accommodate for different measurement "
+"of angles- Radians, Degrees and Gradian(Grads)"
+msgstr ""
+"Altera o modo da calculadora para acomodar diferentes medidas de ângulos - "
+"Grau, Radiano e Gradiano (Grad)"
+
+#
+# File: calc/SciCalc.cxx, line: 741
+#. Fl_Button* but_drg
+msgid "["
+msgstr "["
+
+#
+# File: calc/SciCalc.cxx, line: 748
+#. Fl_Button* but_leftbr
+msgid "]"
+msgstr "]"
+
+#
+# File: calc/SciCalc.cxx, line: 755
+#. Fl_Button* but_rightbr
+msgid "exch"
+msgstr "exch"
+
+#
+# File: calc/SciCalc.cxx, line: 761
+#. Fl_Button* but_exch
+msgid "1/x"
+msgstr "1/x"
+
+#
+# File: calc/SciCalc.cxx, line: 767
+#. Fl_Button* but_invx
+msgid "x!"
+msgstr "x!"
+
+#
+# File: calc/SciCalc.cxx, line: 778
+msgid "M+"
+msgstr "M+"
+
+#
+# File: calc/SciCalc.cxx, line: 779
+msgid ""
+"Add the number on the display to the memory, and store the result in memory"
+msgstr ""
+"Adiciona o número no mostrador à memória e armazena o resultado em memória."
+
+#
+# File: calc/SciCalc.cxx, line: 787
+#. Fl_Button* but_Mplus
+msgid "M*"
+msgstr "M*"
+
+#
+# File: calc/SciCalc.cxx, line: 788
+msgid ""
+"Multiply the number on the display to the memory, and store the result in "
+"memory"
+msgstr ""
+"Multiplica o número no mostrador com a memória e armazena o resultado em "
+"memória."
+
+#
+# File: calc/SciCalc.cxx, line: 797
+#. Fl_Button* but_Mmult
+msgid "MC"
+msgstr "MC"
+
+#
+# File: calc/SciCalc.cxx, line: 798
+msgid "Erase the memory content"
+msgstr "Apaga o conteúdo da memória."
+
+#
+# File: calc/SciCalc.cxx, line: 806
+#. Fl_Button* but_Mclear
+msgid "Mst"
+msgstr "Mst"
+
+#
+# File: calc/SciCalc.cxx, line: 807
+msgid "Put the number on the display into the memory to save."
+msgstr "Põe o número no mostrador na memória para armazenar."
+
+#
+# File: calc/SciCalc.cxx, line: 814
+#. Fl_Button* but_Mst
+msgid "Mrc"
+msgstr "Mrc"
+
+#
+# File: calc/SciCalc.cxx, line: 815
+msgid "Recall the number in memory"
+msgstr "Chama o número na memória."
+
+#
+# File: calc/SciCalc.cxx, line: 827
+msgid "7"
+msgstr "7"
+
+#
+# File: calc/SciCalc.cxx, line: 843
+#. Fl_Button* but_8
+msgid "9"
+msgstr "9"
+
+#
+# File: calc/SciCalc.cxx, line: 851
+#. Fl_Button* but_9
+msgid "4"
+msgstr "4"
+
+#
+# File: calc/SciCalc.cxx, line: 859
+#. Fl_Button* but_4
+msgid "5"
+msgstr "5"
+
+#
+# File: calc/SciCalc.cxx, line: 867
+#. Fl_Button* but_5
+msgid "6"
+msgstr "6"
+
+#
+# File: calc/SciCalc.cxx, line: 875
+#. Fl_Button* but_6
+msgid "1"
+msgstr "1"
+
+#
+# File: calc/SciCalc.cxx, line: 891
+#. Fl_Button* but_2
+msgid "3"
+msgstr "3"
+
+#
+# File: calc/SciCalc.cxx, line: 899
+#. Fl_Button* but_3
+msgid "0"
+msgstr "0"
+
+#
+# File: calc/SciCalc.cxx, line: 907
+#. Fl_Button* but_0
+msgid "."
+msgstr "."
+
+#
+# File: calc/SciCalc.cxx, line: 915
+#. Fl_Button* but_dot
+msgid "+/-"
+msgstr "+/-"
+
+#
+# File: calc/SciCalc.cxx, line: 916
+msgid ""
+"Changes the mathematical sign of the displayed number to the opposite one"
+msgstr "Altera o sinal matemático do número mostrado para o sinal oposto."
+
+#
+# File: calc/SciCalc.cxx, line: 928
+msgid "C"
+msgstr "C"
+
+#
+# File: calc/SciCalc.cxx, line: 929
+msgid "Resets the calculator without resetting the memory"
+msgstr "Limpa a calculadora sem limpar a memória."
+
+#
+# File: calc/SciCalc.cxx, line: 937
+#. Fl_Button* but_C
+msgid "AC"
+msgstr "AC"
+
+#
+# File: calc/SciCalc.cxx, line: 938
+msgid "Reset the calculator and reset the memory"
+msgstr "Limpa a calculadora e a memória."
+
+#
+# File: calc/SciCalc.cxx, line: 946
+#. Fl_Button* but_AC
+msgid "x"
+msgstr "x"
+
+#
+# File: calc/SciCalc.cxx, line: 947
+msgid "Multiply"
+msgstr "Multiplicar."
+
+#
+# File: calc/SciCalc.cxx, line: 956
+#. Fl_Button* but_X
+msgid "/"
+msgstr "/"
+
+#
+# File: calc/SciCalc.cxx, line: 957
+msgid "Divide"
+msgstr "Dividir."
+
+#
+# File: calc/SciCalc.cxx, line: 966
+#. Fl_Button* but_div
+msgid "+"
+msgstr "+"
+
+#
+# File: calc/SciCalc.cxx, line: 967
+msgid "Add"
+msgstr "Somar."
+
+#
+# File: calc/SciCalc.cxx, line: 976
+#. Fl_Button* but_plus
+msgid "-"
+msgstr "-"
+
+#
+# File: calc/SciCalc.cxx, line: 977
+msgid "Subtract"
+msgstr "Subtrair."
+
+#
+# File: calc/SciCalc.cxx, line: 987
+msgid "Pi"
+msgstr "Pi"
+
+#
+# File: calc/SciCalc.cxx, line: 996
+#. avoid localization
+#. Fl_Button* but_pi
+msgid "="
+msgstr "="
+
+#
+# File: calc/SciCalc.cxx, line: 997
+msgid "Equal"
+msgstr "Igual."
+
+#
+# File: welcome/flwelcome.cxx, line: 378
+# File: welcome/flwelcome.cxx, line: 392
+# File: welcome/flwelcome.cxx, line: 434
+#. Fl_Button* o
+msgid "Install"
+msgstr "Instalar"
+
+#
+# File: welcome/flwelcome.cxx, line: 399
+# File: welcome/flwelcome.cxx, line: 511
+#. Fl_Button* o
+msgid "Information"
+msgstr "Informação"
+
+#
+# File: welcome/flwelcome.cxx, line: 425
+msgid "Welcome"
+msgstr "Boas vindas"
+
+#
+# File: welcome/flwelcome.cxx, line: 438
+msgid "Web Browser"
+msgstr "Navegador web"
+
+#
+# File: welcome/flwelcome.cxx, line: 439
+msgid "Install many popular web browsers"
+msgstr "Instala navegadores web populares."
+
+#
+# File: welcome/flwelcome.cxx, line: 444
+#. Fl_Button* o
+msgid "Office Programs"
+msgstr "Programas de escritório"
+
+#
+# File: welcome/flwelcome.cxx, line: 445
+msgid "Write documents easily"
+msgstr "Escreva documentos facilmente."
+
+#
+# File: welcome/flwelcome.cxx, line: 450
+#. Fl_Button* o
+msgid "Music Player"
+msgstr "Reprodutor de música"
+
+#
+# File: welcome/flwelcome.cxx, line: 451
+msgid "Install a music player"
+msgstr "Instala um reprodutor de música."
+
+#
+# File: welcome/flwelcome.cxx, line: 456
+#. Fl_Button* o
+msgid "Video Player"
+msgstr "Reprodutor de vídeo"
+
+#
+# File: welcome/flwelcome.cxx, line: 457
+msgid "Install a video player"
+msgstr "Instala um reprodutor de vídeo."
+
+#
+# File: welcome/flwelcome.cxx, line: 462
+#. Fl_Button* o
+msgid "Media Codecs"
+msgstr "Codecs de multimédia"
+
+#
+# File: welcome/flwelcome.cxx, line: 463
+msgid "Install programs needed to play certain media"
+msgstr "Instala programas necessários para reproduzir alguma multimédia."
+
+#
+# File: welcome/flwelcome.cxx, line: 468
+#. Fl_Button* o
+msgid "Games"
+msgstr "Jogos"
+
+#
+# File: welcome/flwelcome.cxx, line: 469
+msgid "Many games to choose from"
+msgstr "Muitos jogos de onde escolher."
+
+#
+# File: welcome/flwelcome.cxx, line: 476
+#. Fl_Group* o
+msgid "Update"
+msgstr "Actualizar"
+
+#
+# File: welcome/flwelcome.cxx, line: 480
+# File: welcome/flwelcome.cxx, line: 494
+#. Fl_Group* o
+msgid "System"
+msgstr "Sistema"
+
+#
+# File: welcome/flwelcome.cxx, line: 481
+msgid "Keep your system up to date"
+msgstr "Mantenha o seu sistema actualizado"
+
+#
+# File: welcome/flwelcome.cxx, line: 486
+#. Fl_Button* o
+msgid "Bootloader"
+msgstr "Bootloader"
+
+#
+# File: welcome/flwelcome.cxx, line: 487
+msgid "Update your computers boot loader"
+msgstr "Actualiza o carregador do sistema operativo do computador."
+
+#
+# File: welcome/flwelcome.cxx, line: 498
+msgid "Appearance"
+msgstr "Aparência"
+
+#
+# File: welcome/flwelcome.cxx, line: 499
+msgid "Configure your desktop"
+msgstr "Configure a sua área de trabalho"
+
+#
+# File: welcome/flwelcome.cxx, line: 504
+#. Fl_Button* o
+msgid "Login"
+msgstr "Sessão"
+
+#
+# File: welcome/flwelcome.cxx, line: 505
+msgid "Modify user logins easily"
+msgstr "Modifique facilmente inícios de sessão dos utilizadores."
+
+#
+# File: welcome/flwelcome.cxx, line: 512
+msgid "Get information on your computer"
+msgstr "Obtenha informação sobre o seu computador"
+
+#
+# File: welcome/flwelcome.cxx, line: 517
+#. Fl_Button* o
+msgid "Language"
+msgstr "Idioma"
+
+#
+# File: welcome/flwelcome.cxx, line: 518
+msgid "Modify language settings"
+msgstr "Modifique as definições de idioma"
+
+#
+# File: welcome/flwelcome.cxx, line: 525
+#. Fl_Group* o
+msgid "ToriOS Website"
+msgstr "Página web do ToriOS"
+
+#
+# File: welcome/flwelcome.cxx, line: 526
+msgid "See our website"
+msgstr "Visite a nossa página"
+
+#
+# File: welcome/flwelcome.cxx, line: 534
+#. Fl_Button* o
+msgid "ToriOS Code"
+msgstr "Código do ToriOS"
+
+#
+# File: welcome/flwelcome.cxx, line: 535
+msgid "Code with us!"
+msgstr "Programe connosco!"
+
+#
+# File: welcome/flwelcome.cxx, line: 542
+#. Fl_Button* o
+msgid "ToriOS Twitter"
+msgstr "Twitter do ToriOS"
+
+#
+# File: welcome/flwelcome.cxx, line: 543
+msgid "Tweet us!"
+msgstr "Tweet-nos!"
+
+#
+# File: welcome/flwelcome.cxx, line: 698
+msgid "Terminal Output"
+msgstr "Saída do terminal"
