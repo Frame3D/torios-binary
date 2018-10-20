@@ -1,9 +1,11 @@
 [Desktop Entry]
 Version=1.0
 Name=Image Viewer
+Name[pt_PT]=Visualizador de imagens
 Comment=Display image files
 Comment[fr]=Affiche des fichiers images
-Comment[pt]=Exiba arquivos de imagem
+Comment[pt_BR]=Exiba arquivos de imagem
+Comment[pt_PT]=Veja ficheiros de imagem
 Exec=flimage %f
 Terminal=false
 Icon=image-viewer
