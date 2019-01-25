@@ -52,6 +52,7 @@ Fl_Double_Window* UI::make_window() {
     { Fl_Box* o = new Fl_Box(5, 30, 32, 32);
       o->image(lock_image);
     } // Fl_Box* o
+    passwin->xclass("flaskpass");
     passwin->end();
   } // Fl_Double_Window* passwin
   return passwin;
@@ -107,7 +108,10 @@ int main(int argc, char*argv[]) {
   if (argc > 1)
   {
     first_arge = argv[1];
-    all_args.assign(argv + 1, argv + argc);
+    for(int i = 1; i!=argc; i++)
+    {
+      all_args.push_back(argv[i]);
+    }
   }
   UI *ui = new UI();
   ui->MSG=ui->combine(all_args);

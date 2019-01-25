@@ -25,7 +25,7 @@ class UI {open
   } {
     Fl_Window passwin {
       label {Enter Password} open
-      xywh {851 229 265 120} type Double visible
+      xywh {851 229 265 120} type Double xclass flaskpass visible
     } {
       Fl_Input password {
         label Password
@@ -35,7 +35,7 @@ class UI {open
       Fl_Button ok {
         label Ok
         callback {std::cout<<password->value()<<std::endl;
-exit(0);} selected
+exit(0);}
         xywh {175 75 75 30} box FLAT_BOX color 61 selection_color 67 labelcolor 7
       }
       Fl_Button {} {
@@ -103,7 +103,10 @@ std::vector<std::string> all_args;
 if (argc > 1)
 {
   first_arge = argv[1];
-  all_args.assign(argv + 1, argv + argc);
+  for(int i = 1; i!=argc; i++)
+  {
+    all_args.push_back(argv[i]);
+  }
 }
 UI *ui = new UI();
 ui->MSG=ui->combine(all_args);
