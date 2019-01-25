@@ -302,8 +302,7 @@ else if(
   return 3;
 }
 trace("unknown syntax");
-return NONE;} {selected
-    }
+return NONE;} {}
   }
   Function {init_highlight()} {open
   } {
@@ -836,10 +835,6 @@ Fl_Text_Editor::kf_select_all(0,textor);}
             xywh {0 0 100 20} hide deactivate
           }
         }
-        Submenu docs {
-          label {&Documents} open
-          xywh {5 5 100 20}
-        } {}
         Submenu {} {
           label {&Help} open
           xywh {0 0 100 20}
@@ -851,7 +846,7 @@ Fl_Text_Editor::kf_select_all(0,textor);}
           }
         }
       }
-      Fl_Group buttons {
+      Fl_Group buttons {open
         xywh {0 25 520 30} box FLAT_BOX
       } {
         Fl_Button add_button {
@@ -1285,15 +1280,38 @@ if(txt==NULL)
 trace(txt);
 ((UI*)(p->user_data()))->pick_tab(txt);} {}
   }
-  Function {close_tab()} {} {
+  Function {close_tab()} {open
+  } {
     code {Fl_Widget * E = tabs->value();
 if(E==NULL)
 {
   if(ask("Exit?", "Yes", "No"))
     exit(0);
 }
+Fl_Group* curr = tabs->value()->as_group();
 if(!check_save())
   return;
+trace("Looking for correct tab");
+Fl_Syntax_Text_Editor *T = NULL;
+for ( int i = 0;i<=curr->children();i++)
+{
+  if(curr->child(i)!=NULL)
+  {
+  trace("found a text editor!");
+    T = (Fl_Syntax_Text_Editor *) curr->child(i);
+    std::string tmp = T->filename;
+    tmp = "Documents/"+ tmp;
+    trace("menu string ="+tmp);
+    int val = menu->find_index(tmp.c_str());
+    if(val != -1)
+    {
+      trace("removing document:"+tmp);
+      menu->remove(val);
+    }
+    menu->redraw();
+  }
+}
+
 tabs->remove(E);
 if(tabs->children()<=0)
 {
@@ -1339,7 +1357,7 @@ if(textor==NULL)
   return;
 Fl_Text_Editor::kf_copy(0, textor);} {}
   }
-  Function {current_editor()} {return_type {Fl_Syntax_Text_Editor *}
+  Function {current_editor()} {open return_type {Fl_Syntax_Text_Editor *}
   } {
     code {if(tabs==NULL)
   return NULL;
@@ -1409,8 +1427,7 @@ if(textor==NULL)
   return;
 textor->buffer()->remove_selection();} {}
   }
-  Function {dnd_file(const char* items)} {open
-  } {
+  Function {dnd_file(const char* items)} {} {
     code {if(items==NULL)
   return;
 std::string s = items;
@@ -1622,7 +1639,7 @@ if(val)
     code {Fl_Text_Editor * E = current_editor();
 E->insert_position(E->line_start(pos));} {}
   }
-  Function {handle_menu(Fl_Widget *w, void *v)} {open return_type {static void}
+  Function {handle_menu(Fl_Widget *w, void *v)} {return_type {static void}
   } {
     code {if(!w || !v)
   return;
@@ -1691,7 +1708,7 @@ Fl_Text_Editor::kf_insert(0,textor);} {}
 //if(pick_tab(newfile)){return;}
 if(NEW)
   add_tab(false);
-trace("added tab");
+//trace("added tab");
 Fl_Syntax_Text_Editor * E = current_editor();
 if(E==NULL)
 {
@@ -1759,8 +1776,7 @@ buff->remove_selection();
 textor->changed = 0;
 buff->call_modify_callbacks();} {}
   }
-  Function {open_cb()} {open
-  } {
+  Function {open_cb()} {} {
     code {Fl_Syntax_Text_Editor * E = current_editor();
 if(E==NULL)
 {
@@ -1775,8 +1791,7 @@ if(f.compare("Untitled")==0)
 else
   open_file();} {}
   }
-  Function {open_file(bool NEW=true)} {open
-  } {
+  Function {open_file(bool NEW=true)} {} {
     code {Fl_Syntax_Text_Editor * E = current_editor();
 //std::string newf="";
 std::string init="";
@@ -1860,6 +1875,28 @@ if(E!=NULL)
     return;
 }
 exit(0);} {}
+  }
+  Function {recent_menu()} {open
+  } {
+    code {int index = menu->find_index("Documents");    // get index of "File/Recent" submenu
+if ( index != -1 ) menu->clear_submenu(index);  // clear the submenu
+Fl_Group* curr = tabs->as_group();
+for (int i = 0; i< curr->children();i++)
+{
+  Fl_Syntax_Text_Editor *T = NULL;
+  if(curr->child(i)!=NULL)
+  {
+      trace("found a text editor!");
+      T = (Fl_Syntax_Text_Editor *) curr->child(i);
+      std::string tmp = T->filename;
+      tmp = "Documents/"+ tmp;
+      trace("menu string ="+tmp);
+      menu->add(tmp.c_str(),0,choose_doc,this,0);
+    
+  }
+}
+menu->redraw();} {selected
+    }
   }
   Function {replace_cb()} {} {
     code {Fl_Syntax_Text_Editor * E = current_editor();
@@ -1963,7 +2000,8 @@ int height = win->h() - (buttons->h() +buttons->x());
 o->size(width,height);
 o->redraw();} {}
   }
-  Function {refresh_all()} {} {
+  Function {refresh_all()} {open
+  } {
     code {change_theme(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);} {}
   }
   Function {save_cb(void)} {} {
@@ -2088,18 +2126,7 @@ g->copy_label(title.c_str());
 g->copy_tooltip(fname.c_str());
 g->redraw();
 tabs->redraw();
-std::string tmp="Documents/"+fname;
-
-int val  = menu->find_index(tmp.c_str());
-if(val == -1)
-{
- menu->add(tmp.c_str(),0,choose_doc,this,0);
-}
-else
-{
-  menu->replace(val,tmp.c_str());
-}
-menu->redraw();} {}
+recent_menu();} {}
   }
   Function {show_line_numbers(int width=0)} {} {
     code {for(int i = 0;i< tabs->children();i++)
@@ -2136,7 +2163,7 @@ else
   }
 }
 
-Function {main(int argc, char **argv)} {return_type int
+Function {main(int argc, char **argv)} {open return_type int
 } {
   code {NORMAL_COLOR=FL_BLACK;
 EDIT_COLOR=FL_RED;

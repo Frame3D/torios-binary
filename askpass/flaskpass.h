@@ -14,20 +14,23 @@
 
 class UI {
 public:
+  std::string MSG; 
   Fl_Double_Window* make_window();
   Fl_Double_Window *passwin;
   Fl_Input *password;
 private:
-  inline void cb_Cancel_i(Fl_Button*, void*);
-  static void cb_Cancel(Fl_Button*, void*);
+  inline void cb_password_i(Fl_Input*, void*);
+  static void cb_password(Fl_Input*, void*);
 public:
   Fl_Button *ok;
 private:
   inline void cb_ok_i(Fl_Button*, void*);
   static void cb_ok(Fl_Button*, void*);
+  inline void cb_Cancel_i(Fl_Button*, void*);
+  static void cb_Cancel(Fl_Button*, void*);
 public:
   std::string combine(std::vector<std::string> in);
-  std::string MSG; 
+  void set_text();
 };
 int main(int argc, char*argv[]);
 #endif

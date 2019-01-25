@@ -3,12 +3,11 @@
 #include <libintl.h>
 #include "flaskpass.h"
 
-void UI::cb_Cancel_i(Fl_Button*, void*) {
-  std::cout<<std::endl;
-exit(1);
+void UI::cb_password_i(Fl_Input*, void*) {
+  Fl::focus(ok);
 }
-void UI::cb_Cancel(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_Cancel_i(o,v);
+void UI::cb_password(Fl_Input* o, void* v) {
+  ((UI*)(o->parent()->user_data()))->cb_password_i(o,v);
 }
 
 void UI::cb_ok_i(Fl_Button*, void*) {
@@ -19,15 +18,30 @@ void UI::cb_ok(Fl_Button* o, void* v) {
   ((UI*)(o->parent()->user_data()))->cb_ok_i(o,v);
 }
 
+void UI::cb_Cancel_i(Fl_Button*, void*) {
+  std::cout<<std::endl;
+exit(1);
+}
+void UI::cb_Cancel(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->user_data()))->cb_Cancel_i(o,v);
+}
+
 Fl_Double_Window* UI::make_window() {
   { passwin = new Fl_Double_Window(265, 120, gettext("Enter Password"));
     passwin->user_data((void*)(this));
-    { Fl_Input* o = password = new Fl_Input(45, 30, 200, 35, gettext("Password"));
+    { password = new Fl_Input(45, 30, 200, 35, gettext("Password"));
       password->type(5);
       password->box(FL_FLAT_BOX);
+      password->callback((Fl_Callback*)cb_password);
       password->align(Fl_Align(257));
-      o->copy_label(MSG.c_str());
     } // Fl_Input* password
+    { ok = new Fl_Button(175, 75, 75, 30, gettext("Ok"));
+      ok->box(FL_FLAT_BOX);
+      ok->color((Fl_Color)61);
+      ok->selection_color((Fl_Color)67);
+      ok->labelcolor(FL_BACKGROUND2_COLOR);
+      ok->callback((Fl_Callback*)cb_ok);
+    } // Fl_Button* ok
     { Fl_Button* o = new Fl_Button(85, 75, 80, 30, gettext("Cancel"));
       o->box(FL_FLAT_BOX);
       o->color((Fl_Color)80);
@@ -35,13 +49,6 @@ Fl_Double_Window* UI::make_window() {
       o->labelcolor(FL_BACKGROUND2_COLOR);
       o->callback((Fl_Callback*)cb_Cancel);
     } // Fl_Button* o
-    { ok = new Fl_Button(175, 75, 75, 30, gettext("Ok"));
-      ok->box(FL_FLAT_BOX);
-      ok->color(FL_DARK_GREEN);
-      ok->selection_color(FL_DARK_RED);
-      ok->labelcolor(FL_BACKGROUND2_COLOR);
-      ok->callback((Fl_Callback*)cb_ok);
-    } // Fl_Button* ok
     { Fl_Box* o = new Fl_Box(5, 30, 32, 32);
       o->image(lock_image);
     } // Fl_Box* o
@@ -52,7 +59,24 @@ Fl_Double_Window* UI::make_window() {
 
 std::string UI::combine(std::vector<std::string> in) {
   std::string out;
-  if(in.empty())
+  bool empty = false;
+  if (in.empty())
+    empty = true;
+  else
+  {
+    bool notEmpty=false;
+    for( std::vector<std::string>::iterator it = in.begin();
+      it!=in.end();
+      ++it)
+    {
+     std::string TMP =*it;
+      if( (TMP.compare("")!=0) && (TMP.compare(" ")!=0) )
+        notEmpty=true;
+    }
+    if(!notEmpty)
+      empty=true;
+  }
+  if(empty)
   {
     out="Password";
   }
@@ -69,6 +93,13 @@ std::string UI::combine(std::vector<std::string> in) {
   return out;
 }
 
+void UI::set_text() {
+  passwin->label(MSG.c_str());
+  password->label(MSG.c_str());
+  password->redraw();
+  passwin->redraw();
+}
+
 int main(int argc, char*argv[]) {
   std::string current_exec_name = argv[0];
   std::string first_arge;
@@ -81,5 +112,6 @@ int main(int argc, char*argv[]) {
   UI *ui = new UI();
   ui->MSG=ui->combine(all_args);
   ui->make_window()->show();
+  ui->set_text();
   return Fl::run();
 }

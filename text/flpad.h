@@ -164,9 +164,6 @@ private:
   static void cb_Re(Fl_Menu_*, void*);
   inline void cb_Go_i(Fl_Menu_*, void*);
   static void cb_Go(Fl_Menu_*, void*);
-public:
-  static Fl_Menu_Item *docs;
-private:
   inline void cb_About_i(Fl_Menu_*, void*);
   static void cb_About(Fl_Menu_*, void*);
 public:
@@ -366,6 +363,7 @@ public:
   std::string prefline(std::string LINE,unsigned int COLOR);
   void print_cb();
   void quit_cb();
+  void recent_menu();
   void replace_cb();
   void replace2_cb();
   void replall_cb();

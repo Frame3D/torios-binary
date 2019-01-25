@@ -662,14 +662,11 @@ Fl_Menu_Item UI::menu_menu[] = {
  {"Re&place Next", 0,  (Fl_Callback*)UI::cb_Re, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {"&Go to Line", 0,  (Fl_Callback*)UI::cb_Go, 0, 17, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {0,0,0,0,0,0,0,0,0},
- {"&Documents", 0,  0, 0, 64, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {0,0,0,0,0,0,0,0,0},
  {"&Help", 0,  0, 0, 64, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {"&About", 0,  (Fl_Callback*)UI::cb_About, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {0,0,0,0,0,0,0,0,0},
  {0,0,0,0,0,0,0,0,0}
 };
-Fl_Menu_Item* UI::docs = UI::menu_menu + 24;
 
 void UI::cb_add_button_i(Fl_Button*, void*) {
   add_tab(false);
@@ -1112,7 +1109,7 @@ Fl_Double_Window* UI::make_window() {
       }
       if (!menu_menu_i18n_done) {
         int i=0;
-        for ( ; i<28; i++)
+        for ( ; i<26; i++)
           if (menu_menu[i].label())
             menu_menu[i].label(gettext(menu_menu[i].label()));
         menu_menu_i18n_done = 1;
@@ -1611,8 +1608,30 @@ void UI::close_tab() {
     if(ask("Exit?", "Yes", "No"))
       exit(0);
   }
+  Fl_Group* curr = tabs->value()->as_group();
   if(!check_save())
     return;
+  trace("Looking for correct tab");
+  Fl_Syntax_Text_Editor *T = NULL;
+  for ( int i = 0;i<=curr->children();i++)
+  {
+    if(curr->child(i)!=NULL)
+    {
+    trace("found a text editor!");
+      T = (Fl_Syntax_Text_Editor *) curr->child(i);
+      std::string tmp = T->filename;
+      tmp = "Documents/"+ tmp;
+      trace("menu string ="+tmp);
+      int val = menu->find_index(tmp.c_str());
+      if(val != -1)
+      {
+        trace("removing document:"+tmp);
+        menu->remove(val);
+      }
+      menu->redraw();
+    }
+  }
+  
   tabs->remove(E);
   if(tabs->children()<=0)
   {
@@ -2023,7 +2042,7 @@ void UI::load_file(std::string newfile, int ipos,bool NEW) {
   //if(pick_tab(newfile)){return;}
   if(NEW)
     add_tab(false);
-  trace("added tab");
+  //trace("added tab");
   Fl_Syntax_Text_Editor * E = current_editor();
   if(E==NULL)
   {
@@ -2196,6 +2215,27 @@ void UI::quit_cb() {
       return;
   }
   exit(0);
+}
+
+void UI::recent_menu() {
+  int index = menu->find_index("Documents");    // get index of "File/Recent" submenu
+  if ( index != -1 ) menu->clear_submenu(index);  // clear the submenu
+  Fl_Group* curr = tabs->as_group();
+  for (int i = 0; i< curr->children();i++)
+  {
+    Fl_Syntax_Text_Editor *T = NULL;
+    if(curr->child(i)!=NULL)
+    {
+        trace("found a text editor!");
+        T = (Fl_Syntax_Text_Editor *) curr->child(i);
+        std::string tmp = T->filename;
+        tmp = "Documents/"+ tmp;
+        trace("menu string ="+tmp);
+        menu->add(tmp.c_str(),0,choose_doc,this,0);
+      
+    }
+  }
+  menu->redraw();
 }
 
 void UI::replace_cb() {
@@ -2432,18 +2472,7 @@ void UI::set_title(Fl_Widget* g) {
   g->copy_tooltip(fname.c_str());
   g->redraw();
   tabs->redraw();
-  std::string tmp="Documents/"+fname;
-  
-  int val  = menu->find_index(tmp.c_str());
-  if(val == -1)
-  {
-   menu->add(tmp.c_str(),0,choose_doc,this,0);
-  }
-  else
-  {
-    menu->replace(val,tmp.c_str());
-  }
-  menu->redraw();
+  recent_menu();
 }
 
 void UI::show_line_numbers(int width) {
