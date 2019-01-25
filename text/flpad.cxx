@@ -16,7 +16,7 @@ Fl_Syntax_Text_Editor::Fl_Syntax_Text_Editor(int x, int y, int w, int h, const c
   //this->label(label);
   changed=0;
   loading=0;
-  filename="Untitled";
+  filename="";
   RELEASE=false;
   //std::cerr<<"Constructor: new Text Editor="<<this<<std::endl;
   textbuffer = new Fl_Text_Buffer();
@@ -1754,7 +1754,7 @@ void UI::delete_cb() {
   textor->buffer()->remove_selection();
 }
 
-void UI::dnd_file(const char* items) {
+void UI::dnd_file(const char* items, bool NEW) {
   if(items==NULL)
     return;
   std::string s = items;
@@ -1772,7 +1772,7 @@ void UI::dnd_file(const char* items) {
   fl_decode_uri(ch);
   s=ch;
   
-  load_file(s,-1);
+  load_file(s,-1,NEW);
   free(ch);
 }
 
@@ -2041,8 +2041,10 @@ void UI::load_file(std::string newfile, int ipos,bool NEW) {
   //todo 
   //if(pick_tab(newfile)){return;}
   if(NEW)
+  {
     add_tab(false);
-  //trace("added tab");
+    trace("added tab");
+  }
   Fl_Syntax_Text_Editor * E = current_editor();
   if(E==NULL)
   {
@@ -2056,7 +2058,7 @@ void UI::load_file(std::string newfile, int ipos,bool NEW) {
   //E->textbuffer->call_modify_callbacks();
   if (!insert)
     E->filename="";
-  int r;
+  int r = 0;
   if (!insert)
   {
     r = E->textbuffer->loadfile(newfile.c_str());
@@ -2074,6 +2076,9 @@ void UI::load_file(std::string newfile, int ipos,bool NEW) {
     E->filename=newfile;
   E->loading = 0;
   set_title(tabs->value());
+  std::string tmp = "Documents/"+E->filename;
+  menu->add(tmp.c_str(),0,choose_doc,this,0);
+  menu->redraw();
 }
 
 void UI::make_icon(Fl_Window *o) {
@@ -2215,27 +2220,6 @@ void UI::quit_cb() {
       return;
   }
   exit(0);
-}
-
-void UI::recent_menu() {
-  int index = menu->find_index("Documents");    // get index of "File/Recent" submenu
-  if ( index != -1 ) menu->clear_submenu(index);  // clear the submenu
-  Fl_Group* curr = tabs->as_group();
-  for (int i = 0; i< curr->children();i++)
-  {
-    Fl_Syntax_Text_Editor *T = NULL;
-    if(curr->child(i)!=NULL)
-    {
-        trace("found a text editor!");
-        T = (Fl_Syntax_Text_Editor *) curr->child(i);
-        std::string tmp = T->filename;
-        tmp = "Documents/"+ tmp;
-        trace("menu string ="+tmp);
-        menu->add(tmp.c_str(),0,choose_doc,this,0);
-      
-    }
-  }
-  menu->redraw();
 }
 
 void UI::replace_cb() {
@@ -2472,7 +2456,6 @@ void UI::set_title(Fl_Widget* g) {
   g->copy_tooltip(fname.c_str());
   g->redraw();
   tabs->redraw();
-  recent_menu();
 }
 
 void UI::show_line_numbers(int width) {
@@ -2520,17 +2503,18 @@ int main(int argc, char **argv) {
     ui->get_preferences();
     Fl::set_fonts();
     ui->make_window()->show();
+    ui->win->wait_for_expose();
     if (argc > 1)
     {
-      char* charchar1 = argv[1];
-      fl_decode_uri(charchar1);
-      std::string fname = charchar1;
-      unsigned int URI  = fname.find("file:///");
-      if(URI==0)
+      for (int i=1; i<argc; i++)
       {
-        fname = fname.substr(URI+7,std::string::npos);
+        char* charchar1 = argv[i];
+        if(charchar1 != NULL)
+        {
+          std::string fname = charchar1;
+          ui->dnd_file(fname.c_str(),false);
+        }
       }
-      ui->load_file(fname, -1, false);
     }
     return Fl::run();
   }

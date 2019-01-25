@@ -342,7 +342,7 @@ public:
   void dark_theme();
   void default_theme();
   void delete_cb();
-  void dnd_file(const char* items);
+  void dnd_file(const char* items, bool NEW=true);
   void find_cb();
   void find2_cb();
   void font_populate(Fl_Browser *o);
@@ -363,7 +363,6 @@ public:
   std::string prefline(std::string LINE,unsigned int COLOR);
   void print_cb();
   void quit_cb();
-  void recent_menu();
   void replace_cb();
   void replace2_cb();
   void replall_cb();
