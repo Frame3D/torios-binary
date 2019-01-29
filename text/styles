@@ -1,0 +1,22 @@
+[c]
+ext=cxx,cpp,c
+keywords=alignas, alignof, and, and_eq, asm, bitand, bitor, break, case, catch, class, compl, constexpr, continue, default, delete, do, dynamic_cast, else, explicit, export, extern, false, for, friend, goto, if, inline, new, noexcept, not, not_eq, operator, or, or_eq, private, protected, public, register, reinterpret_cast, return, sizeof, struct, switch, template, this, thread_local, throw, true, try, typedef, typeid, typename, union, using, while, xor, xor_eq
+types=auto, bool, char, char16_t, char32_t, class, const, const_cast, decltype, double, dynamic_cast, enum, explicit, extern, float, friend, inline, int, long, mutable, namespace, nullptr_t, private, protected, public, register, short, signed, sizeof, static, static_assert, static_cast, string, struct, template, typedef, typename, union, unsigned, virtual, vector, void, volatile, wchar_t
+comments=//
+blockopen=/*
+blockclose=*/
+defines=#
+[sh]
+ext=sh,bash
+keywords=case, do, done, elif, else, esac, fi, for, function, if, in, select, source, then, time, until, while, let, echo, printf, read, cd, pwd, pushd, popd, dirs, eval, set, unset, export, declare, typeset, readonly, getopts, source, exit, exec, shopt, caller, true, false, type, hash, bind, help, coproc, mapfile, ulimit
+types=/usr/bin,/usr/local/bin
+comments=#
+defines=#!
+[haxe]
+ext=hx
+keywords=class,public,var,extends,override,function,new,import,for,in,super,private,package
+types=Int,Float,String,Bool,Void
+blockopen=/*
+blockclose=*/
+defines=#
+

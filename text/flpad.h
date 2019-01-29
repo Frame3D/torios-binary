@@ -7,12 +7,15 @@
 #ifndef flpad_h
 #define flpad_h
 #include <FL/Fl.H>
+#include "lexertk.hpp"
 #include "../include/toolbar_icons.h"
 #include "keywords.h"
 #include <algorithm>
 #include <sstream>
+#include <dirent.h>
 #include <fstream>
 #include <iostream>
+#include <streambuf>
 #include <FL/Fl_Color_Chooser.H>
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Text_Editor.H>
@@ -45,6 +48,7 @@ int FONT_TEXT;
 int SIZE_TEXT;
 int LINE_NUMBERS;
 int BUTTON_COLOR; 
+std::string SYNTAX_FILE; 
 
 class Fl_Syntax_Text_Editor : public Fl_Text_Editor {
 public:
@@ -53,27 +57,32 @@ public:
   bool WRAPPED; 
   bool RELEASE; 
   Fl_Text_Display::Style_Table_Entry styletable[8]; 
-  unsigned int SYNTAX_TYPE; 
   Fl_Text_Buffer * stylebuffer; 
   Fl_Text_Buffer * textbuffer; 
   std::string filename; 
-  int changed; 
   std::string search; 
+  unsigned int SYNTAX_TYPE; 
+  int changed; 
   int loading; 
+  std::vector<std::string> KEYWORDS, TYPES; 
+  lexertk::generator generator; 
+  lexertk::helper::bracket_checker bracket_checker; 
+  lexertk::helper::symbol_replacer symbol_replacer; 
   static void changed_cb(int, int nInserted, int nDeleted, int, const char*, void *v);
-  void editor_style_parse(std::string text, std::string &style, int length, unsigned int type);
-  static void editor_style_update(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL, void *cbArg = NULL);
+  std::string file_string();
   void get_styletable(Fl_Text_Display::Style_Table_Entry &styles,int which);
   unsigned int get_type(std::string fname);
+protected:
+  int handle(int event);
+public:
   void init_highlight();
-  void modify_cb(int pos, int nInserted, int nDeleted, int unused, const char * nada);
-  void restyler_update(int pos, int nInserted, int nDeleted, int unused , const char * nada);
+  void modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL);
   void set_type(std::string fname);
+  std::string style_line(std::string thisLine);
   static void style_update(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL, void *cbArg = NULL);
   static void style_unfinished_cb(int, void*);
   void theme_editor(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size,int linenum );
-protected:
-  int handle(int event);
+  void refresh();
 };
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Button.H>
@@ -91,8 +100,6 @@ protected:
 #include <FL/Fl_Menu_Button.H>
 
 class UI {
-protected:
-  static int handle(int event, Fl_Window *o);
 public:
   bool RELEASE; 
   UI();
@@ -350,6 +357,9 @@ public:
   void get_preferences();
   void goto_cb();
   void goto_line(int pos);
+protected:
+  static int handle(int event, Fl_Window *o);
+public:
   static void handle_menu(Fl_Widget *w, void *v);
   std::string input(std::string MSG, std::string text, std::string ok="OK", std::string cancel="Cancel");
   void insert_cb();
@@ -380,22 +390,18 @@ public:
 };
 int main(int argc, char **argv);
 int compare_keywords(const void *a, const void *b);
-std::string c_highlight(std::string text, int length);
 void c_style(const char* text, char* style, int length);
-void style_highlighter(const char* text, char* style, int length, const void * keys, const void* types, char diectiveChar,const char* lineComment,bool hasBlockComments=false, const char* blockCommentOpen=NULL, const char* blockCommentClose=NULL);
-std::vector<std::string> c_style_comments();
-std::vector<std::string> c_style_keywords();
-std::vector<std::string> c_style_types();
-bool check_string(std::string text, std::string keyword);
-void get_syntax_type(unsigned int type);
-bool hasInVector(std::string line,unsigned int pos,std::vector<std::string> VEC);
-bool hasComment(std::string line, unsigned int pos);
-bool hasKeyword(std::string line, unsigned int pos);
-bool hasType(std::string line, unsigned int pos);
-std::vector<std::string> make_vec(std::string string_to_become_vector);
-void sh_style_comments();
-std::vector<std::string> sh_style_keywords();
-std::vector<std::string> sh_style_types();
+void style_highlighter(const char* text, char* style, int length, const void * keys, const void* types ,char diectiveChar ,const char* lineComment,bool hasBlockComments=false, const char* blockCommentOpen=NULL, const char* blockCommentClose=NULL, bool hasDirectives=true);
+std::vector<std::string> make_vec(std::string string_to_become_vector,std::string delimiter=" ");
 void style_parse(const char* text=NULL, char* style=NULL, int length=0,unsigned int Type=12);
+std::string replace_style(std::string code_word, std::string style);
 void trace(std::string MSG, int n = 0);
+std::string get(std::string header, std::string line);
+bool test_file(std::string fileWithFullPATH);
+std::string get_syntax_file();
+std::vector<std::string> comma_line(std::string lang,std::string field);
+std::vector <std::string> keywords(unsigned int type);
+std::vector <std::string> types(unsigned int type);
+std::vector<std::string> line_item(unsigned int type, std::string thing);
+bool is_space(const char x);
 #endif

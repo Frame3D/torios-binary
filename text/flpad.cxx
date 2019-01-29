@@ -6,10 +6,6 @@
 
 #include <libintl.h>
 #include "flpad.h"
-static std::string COMMENTS; 
-static std::vector<std::string> BLOCK_COMMENTS; 
-static std::vector<std::string> TYPES; 
-static std::vector<std::string> KEYWORDS; 
 
 Fl_Syntax_Text_Editor::Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label ):Fl_Text_Editor(x,y,w,h,label) {
   this->resize(x,y,w,h);
@@ -26,19 +22,19 @@ Fl_Syntax_Text_Editor::Fl_Syntax_Text_Editor(int x, int y, int w, int h, const c
   memset(style, 'A', textbuffer->length());
   stylebuffer = new Fl_Text_Buffer(textbuffer->length());
   style[textbuffer->length()] = '\0';
+  SYNTAX_TYPE=12; //PLAIN
+  init_highlight();
   style_parse(text, style, textbuffer->length(),12);
   stylebuffer->text(style);
   //std::cerr<<"stylebuffer="<<stylebuffer<<std::endl;
   delete[] style;
   free(text);
-  SYNTAX_TYPE=12; //PLAIN
   WRAPPED=false;
   box(FL_FLAT_BOX);
   trace("editor colors");
   theme_editor(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);
   trace("add modify callback");
   textbuffer->add_modify_callback(changed_cb,(void *)this);
-  init_highlight();
   //textbuffer->call_modify_callbacks();
 }
 
@@ -59,41 +55,18 @@ void Fl_Syntax_Text_Editor::changed_cb(int, int nInserted, int nDeleted, int, co
   ((UI *)(o->parent()->user_data()))->set_title(o->parent());
 }
 
-void Fl_Syntax_Text_Editor::editor_style_parse(std::string text, std::string &style, int length, unsigned int type) {
-  if(text.empty())
-  {
-    trace("style_choose::No text sent in");
-    return;
-  }
-  if(length<=0)
-  {
-    trace("style_choose:: length is 0");
-     return;
-  }
-  switch(type)
-  {
-    case 1: //c/cpp
-      style=c_highlight(text, length);
-      break;
-    case 2: //sh
-      break;
-    case 3: //hx
-      break;
-    default:
-      break;
-  }
-  //trace("<<"+style+">>");
-  //return style;
-}
-
-void Fl_Syntax_Text_Editor::editor_style_update(int pos, int nInserted, int nDeleted, int unused, const char * nada, void *cbArg ) {
-  Fl_Syntax_Text_Editor * ED = (Fl_Syntax_Text_Editor *)cbArg;
-  if(ED==NULL)
-  {
-    trace("Couldn't get text editor :(");
-    return;
-  }
-  ED->restyler_update(pos,nInserted,nDeleted,unused,nada);
+std::string Fl_Syntax_Text_Editor::file_string() {
+  if(filename.compare("")==0){return "";}
+  std::ifstream t(filename);
+  std::string str;
+  
+  t.seekg(0, std::ios::end);   
+  str.reserve(t.tellg());
+  t.seekg(0, std::ios::beg);
+  
+  str.assign((std::istreambuf_iterator<char>(t)),
+              std::istreambuf_iterator<char>());
+  return str;
 }
 
 void Fl_Syntax_Text_Editor::get_styletable(Fl_Text_Display::Style_Table_Entry &styles,int which) {
@@ -145,9 +118,31 @@ unsigned int Fl_Syntax_Text_Editor::get_type(std::string fname) {
   if(fname.empty())
     return NONE;
   const char* ext = fl_filename_ext(fname.c_str());
-  trace(ext);
+  
+  /// get the shebang
+  std::string thisLine;
+  std::ifstream inputFileStream(fname.c_str(), std::ifstream::in);
+  if(inputFileStream.is_open())
+  {
+    getline(inputFileStream,thisLine);
+  }
+  if(thisLine.find("#!")==0)
+  {
+    trace("shebang");
+    std::string tmp=thisLine;
+    unsigned int find = tmp.rfind("/");
+    if(find<tmp.length())
+    {
+      tmp=tmp.substr(find+1,std::string::npos);
+      tmp="."+tmp;
+      ext=tmp.c_str();
+    }
+  }
+  
+  //nothing?  lets leave then...
   if(ext == NULL)
     return NONE;
+  trace(ext);
   std::string EXT = ext;
   if(
       (EXT.compare(".c")==0) ||
@@ -159,8 +154,6 @@ unsigned int Fl_Syntax_Text_Editor::get_type(std::string fname) {
     )
   {
     trace("c/c++ file");
-    KEYWORDS=c_style_keywords();
-    TYPES=c_style_types();
     return 1;
   }
   else if(
@@ -169,8 +162,6 @@ unsigned int Fl_Syntax_Text_Editor::get_type(std::string fname) {
          )
   {
     trace("shell script");
-    KEYWORDS=sh_style_keywords();
-    TYPES=sh_style_types();
     return 2;
   }
   else if(
@@ -182,6 +173,41 @@ unsigned int Fl_Syntax_Text_Editor::get_type(std::string fname) {
   }
   trace("unknown syntax");
   return NONE;
+}
+
+int Fl_Syntax_Text_Editor::handle(int event) {
+  UI* ui = ((UI*)(parent()->parent()->parent()->user_data()));
+  switch(event)
+  {
+    case FL_PUSH:
+    case FL_RELEASE:
+      trace("push/release!");
+      if(Fl::event_button() == FL_RIGHT_MOUSE)
+      {
+        if(Fl::event_clicks())
+        {
+          break;
+        }
+        ui->make_popup(this);
+        trace("Right");
+        return 1;
+      }
+      break;
+    case FL_DND_DRAG:
+    case FL_DND_LEAVE:
+    break;
+    case FL_DND_RELEASE:
+      RELEASE=true;
+      break;
+    case FL_PASTE:
+      if(RELEASE)
+      {
+        RELEASE=false;
+        ui->dnd_file(Fl::event_text());
+        return 1;
+      }
+  }
+  return Fl_Text_Editor::handle(event);
 }
 
 void Fl_Syntax_Text_Editor::init_highlight() {
@@ -211,10 +237,33 @@ void Fl_Syntax_Text_Editor::init_highlight() {
   
   highlight_data(stylebuffer, styletable, sizeof(styletable) / sizeof(styletable[0]), 'A', style_unfinished_cb, 0);
   textbuffer->add_modify_callback(style_update, (void*) this);
-  //textbuffer->add_modify_callback(editor_style_update,(void*) this);
 }
 
 void Fl_Syntax_Text_Editor::modify_cb(int pos, int nInserted, int nDeleted, int unused, const char * nada) {
+  //TESTING LEXER
+  bool use_lex=true;
+  if(use_lex)
+  {
+  std::string thisLine;
+  std::string out;
+  std::ifstream inputFileStream(filename.c_str(), std::ifstream::in);
+  if(inputFileStream.is_open())
+  {
+    while (getline(inputFileStream,thisLine))
+    {
+      std::string tmp = style_line(thisLine);
+      if(out.compare("")==0)
+        out=tmp;
+      else
+        out=out+"\n"+tmp;
+      trace(thisLine+"\n"+tmp);
+    }
+  }
+  char* RES = const_cast <char*> (out.c_str());
+  stylebuffer->text(RES);
+  redisplay_range(0,stylebuffer->length());
+  return;
+  }
   //trace("Style update");
   
   unsigned int Type = SYNTAX_TYPE;
@@ -223,7 +272,6 @@ void Fl_Syntax_Text_Editor::modify_cb(int pos, int nInserted, int nDeleted, int 
   char	last,				// Last style on line
   	*style,				// Style data
   	*text;				// Text data
-  
   // If this is just a selection change, just unselect the style buffer...
   if (nInserted == 0 && nDeleted == 0) {
     stylebuffer->unselect();
@@ -292,92 +340,25 @@ void Fl_Syntax_Text_Editor::modify_cb(int pos, int nInserted, int nDeleted, int 
   free(style);
 }
 
-void Fl_Syntax_Text_Editor::restyler_update(int pos, int nInserted, int nDeleted, int unused , const char * nada) {
-  int start=0;  // Start of text
-  int end;      // End of text
-  char last;    // Last style on line
-  std::string style;  // Style data
-  std::string text;   // Text data
-  trace("update style");
-  unsigned int type = SYNTAX_TYPE;
-  // If this is just a selection change, just unselect the style buffer...
-  if (nInserted == 0 && nDeleted == 0)
-  {
-    if(stylebuffer->selected()!=0)
-    {
-       stylebuffer->unselect();
-       return;
-     }
-  }
-  
-  // Track changes in the text buffer...
-  if (nInserted > 0)
-  {
-    //trace("- Insert characters into the style buffer...");
-    std::string ns (nInserted+1,'A');
-    style = ns;
-    stylebuffer->insert(pos,style.c_str());
-  }
-  else
-  {
-    //trace("- Just delete characters in the style buffer...");
-    stylebuffer->remove(pos, pos + nDeleted);
-  }
-  
-  //trace("- Select the area that was just updated to avoid unnecessary callbacks");
-  
-  stylebuffer->select(pos, pos + nInserted - nDeleted);
-  
-  /*
-  trace(
-  "- Re-parse the changed region; we do this by parsing from the\n\
-     beginning of the previous line of the changed region to the end of\n\
-     the line of the changed region...Then we check the last\n\
-     style character and keep updating if we have a multi-line\n\
-     comment character..."
-  );
-  */
-  
-  start = textbuffer->line_start(pos);
-  end = textbuffer->line_end(pos + nInserted - nDeleted);
-  text= textbuffer->text_range(start, end);
-  style = stylebuffer->text_range(start, end);
-  
-  if (start==end)
-    last = 0;
-  else
-    last  = style[end - start - 1];
-  
-  editor_style_parse(text, style, end - start, type);
-  //trace("done with first parsing");
-  if(style.compare("")!=0)
-  {
-    stylebuffer->replace(start, end, style.c_str());
-    redisplay_range(start, end);
-  }
-  
-  if (start==end || last != style[end - start - 1])
-  {
-    //trace("-we must keep checking");
-    end = textbuffer->length();
-    text= textbuffer->text_range(start, end);
-    style = stylebuffer->text_range(start, end);
-    
-    editor_style_parse(text, style, end - start, type);
-    if(style.compare("")!=0)
-    {
-      stylebuffer->replace(start, end, style.c_str());
-      redisplay_range(start, end);
-    }
-  }
-}
-
 void Fl_Syntax_Text_Editor::set_type(std::string fname) {
   if(fname.empty())
     return;
   unsigned int f = get_type(fname);
   SYNTAX_TYPE=f;
+  KEYWORDS=keywords(SYNTAX_TYPE);
+  TYPES=types(SYNTAX_TYPE);
+  generator.set_keywords(KEYWORDS);
+  generator.set_types(TYPES);
   trace("set syntax type for: "+fname+" to:",SYNTAX_TYPE);
+}
+
+std::string Fl_Syntax_Text_Editor::style_line(std::string thisLine) {
+  if(!generator.process(thisLine))
+    trace("error processing text:"+thisLine);
+  else
+    return lexertk::helper::style_line(generator);
+  
+  return "A";
 }
 
 void Fl_Syntax_Text_Editor::style_update(int pos, int nInserted, int nDeleted, int unused, const char * nada, void *cbArg ) {
@@ -437,39 +418,10 @@ void Fl_Syntax_Text_Editor::theme_editor(unsigned int FG,unsigned int BG, unsign
   free(text);
 }
 
-int Fl_Syntax_Text_Editor::handle(int event) {
-  UI* ui = ((UI*)(parent()->parent()->parent()->user_data()));
-  switch(event)
-  {
-    case FL_PUSH:
-    case FL_RELEASE:
-      trace("push/release!");
-      if(Fl::event_button() == FL_RIGHT_MOUSE)
-      {
-        if(Fl::event_clicks())
-        {
-          break;
-        }
-        ui->make_popup(this);
-        trace("Right");
-        return 1;
-      }
-      break;
-    case FL_DND_DRAG:
-    case FL_DND_LEAVE:
-    break;
-    case FL_DND_RELEASE:
-      RELEASE=true;
-      break;
-    case FL_PASTE:
-      if(RELEASE)
-      {
-        RELEASE=false;
-        ui->dnd_file(Fl::event_text());
-        return 1;
-      }
-  }
-  return Fl_Text_Editor::handle(event);
+void Fl_Syntax_Text_Editor::refresh() {
+  style_update();
+  redisplay_range(0,textbuffer->length());
+  redraw();
 }
 
 void UI::cb_Close_i(Fl_Button*, void*) {
@@ -942,33 +894,6 @@ Fl_Menu_Item UI::menu_Theme[] = {
  {"Dark Background", 0,  (Fl_Callback*)UI::cb_Dark, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {0,0,0,0,0,0,0,0,0}
 };
-
-int UI::handle(int event, Fl_Window *o) {
-  UI* ui = ((UI*)(o->user_data()));
-  bool RELEASE=ui->RELEASE;
-  switch(event)
-  {
-    case FL_DND_DRAG:
-    case FL_DND_LEAVE:
-    break;
-    case FL_DND_RELEASE:
-      RELEASE=true;
-      trace("FL_DND_RELEASE");
-      //return 1;
-      break;
-    case FL_RELEASE:
-      if(RELEASE)
-      {
-        RELEASE=false;
-        //trace("Pasting complete!");
-        std::cout<<Fl::event_text()<<std::endl;
-        //ui->dnd_file(Fl::event_text());
-        return 1;
-      }
-  }
-  //trace("e=",event);
-  return Fl::handle_(event,o);
-}
 
 UI::UI() {
   get_preferences();
@@ -1973,6 +1898,33 @@ void UI::goto_line(int pos) {
   E->insert_position(E->line_start(pos));
 }
 
+int UI::handle(int event, Fl_Window *o) {
+  UI* ui = ((UI*)(o->user_data()));
+  bool RELEASE=ui->RELEASE;
+  switch(event)
+  {
+    case FL_DND_DRAG:
+    case FL_DND_LEAVE:
+    break;
+    case FL_DND_RELEASE:
+      RELEASE=true;
+      trace("FL_DND_RELEASE");
+      //return 1;
+      break;
+    case FL_RELEASE:
+      if(RELEASE)
+      {
+        RELEASE=false;
+        //trace("Pasting complete!");
+        std::cout<<Fl::event_text()<<std::endl;
+        //ui->dnd_file(Fl::event_text());
+        return 1;
+      }
+  }
+  //trace("e=",event);
+  return Fl::handle_(event,o);
+}
+
 void UI::handle_menu(Fl_Widget *w, void *v) {
   if(!w || !v)
     return;
@@ -2062,13 +2014,13 @@ void UI::load_file(std::string newfile, int ipos,bool NEW) {
   if (!insert)
   {
     r = E->textbuffer->loadfile(newfile.c_str());
-    E->textbuffer->call_modify_callbacks();
   }
   else
   {
     r = E->textbuffer->insertfile(newfile.c_str(), ipos);
-    E->textbuffer->call_modify_callbacks();
   }
+  E->refresh();
+  E->textbuffer->call_modify_callbacks();
   
   if (r)
     fl_alert("Error reading from file \'%s\':\n%s.", newfile.c_str(), strerror(errno));
@@ -2127,7 +2079,7 @@ void UI::open_cb() {
   }
   std::string f = E->filename;
   
-  if(f.compare("Untitled")==0)
+  if(f.compare("")==0)
     open_file(false);
   else
     open_file();
@@ -2534,157 +2486,6 @@ int compare_keywords(const void *a, const void *b) {
   return (strcmp(*((const char **)a), *((const char **)b)));
 }
 
-std::string c_highlight(std::string text, int length) {
-  trace("c_highlight");
-  unsigned int col=0;
-  std::string out_line="";
-  char current = 'A';
-  char IT=text[0];
-  bool declare = false;
-  bool canBeNum = true;
-  for (unsigned int iter=0; length>0; length --)
-  {
-    if(iter>text.length())
-      return out_line;
-    IT=text[iter];
-    if (IT == '\n')
-    {
-      declare = false;
-      iter++;
-      if (current != 'C' && current != 'D')
-      {
-        current = 'A';
-        canBeNum=true;
-      }
-      out_line.push_back('\n');
-    }
-    else if ( (IT == ' ') || (IT == '\t'))
-    {
-      //declare = false;
-      if (current != 'C' && current != 'D' && current != 'B')
-      {
-        canBeNum=true;
-        current = 'A';
-      }
-      iter++;
-      out_line.push_back(current);
-    }
-    else
-    {
-      if (!isalpha(IT) )
-      {
-        if (current != 'C' && current != 'D')
-        {
-          current = 'A';
-          canBeNum=true;
-        } 
-      }
-      else
-      {
-        canBeNum=false;
-      }
-      
-      if (current == 'A' )
-      {
-        //PLAIN TEXT STYLE
-      
-        if (IT == '#')
-        {
-          current = 'E';
-          declare = true;
-        }
-        else if(hasType(text,text.length()-length))
-        {
-          if(!declare)
-            current = 'F';
-        }
-        else if(hasKeyword(text,iter))
-        {
-          if(!declare)
-            current = 'G';
-        }
-        else if(canBeNum && isdigit(IT))
-        {
-          if(!declare)
-           current = 'H';
-        }
-        else if (text.find("//",text.length()-length)==iter)
-        {
-          current = 'B';
-        }
-        else if (text.find("/*")==text.length()-length) //BLOCK COMMENT
-        {
-          current = 'C';
-        }
-        else if (text.find("\\\"")==text.length()-length)
-        {
-          out_line.push_back(current); // this string is \" so we need to add in the \ here
-          iter++;
-          if(iter>text.length())
-            break;
-          IT=text[iter];
-          length --;
-          if (length == 0) break;
-  
-          col+=2;
-          continue;
-        }
-        else if ( (IT == '\"') || (IT == '\'')) //STRING
-        {
-          current = 'D';
-        }
-      }
-      else if((current == 'C') && //BLOCK COMMENT
-            text.find("*/")==text.length()-length)
-      {
-        out_line.push_back(current);
-        iter++;
-        length --;
-        if (length == 0) break;
-        out_line.push_back(current);
-        iter++;
-        if(iter>text.length())
-          break;
-        IT=text[iter];
-        length --;
-        if (length == 0) break;
-        current = 'A';
-      }
-      else if (current == 'D') //STRING
-      {
-        if ( (IT == '\"') || (IT == '\'') )
-        {
-          out_line.push_back(current);
-          iter++;
-          if(iter>text.length())
-            break;
-          IT=text[iter];
-          length--;
-          if (length == 0) break;
-  
-          current = 'A';
-        }
-      }
-      else if (IT == '{' || IT == '}')
-      {
-        current = 'G';
-        out_line.push_back(current);
-        declare = false;
-        canBeNum=true;
-        iter++;
-        current = 'A';
-      }
-      out_line.push_back(current);
-      col ++;
-    
-      iter++;
-      if(current == 'H')
-        current = 'A';
-    }
-  }
-  return out_line;
-}
-
 void c_style(const char* text, char* style, int length) {
   trace("c_style");
   char diectiveChar = '#';
@@ -2695,7 +2496,7 @@ void c_style(const char* text, char* style, int length) {
   style_highlighter(text,style,length, c_code_types,c_code_keywords, diectiveChar,lineComment, hasBlockComments,blockCommentOpen,blockCommentClose);
 }
 
-void style_highlighter(const char* text, char* style, int length, const void * keys, const void* types, char diectiveChar,const char* lineComment,bool hasBlockComments, const char* blockCommentOpen, const char* blockCommentClose) {
+void style_highlighter(const char* text, char* style, int length, const void * keys, const void* types ,char diectiveChar ,const char* lineComment,bool hasBlockComments, const char* blockCommentOpen, const char* blockCommentClose, bool hasDirectives) {
   trace("c style highlighter");
   char         current;
   int          col;
@@ -2726,7 +2527,7 @@ void style_highlighter(const char* text, char* style, int length, const void * k
     if (current == 'A')
     {
         // Check for directives, comments, strings, and keywords...
-      if (col == 0 && *text == diectiveChar)
+      if (hasDirectives && (col == 0 && *text == diectiveChar))
       {
         // Set style to directive
         current = 'E';
@@ -2802,7 +2603,7 @@ void style_highlighter(const char* text, char* style, int length, const void * k
             last = 1;
             continue;
           } // if bsearch
-          else if (bsearch(&bufptr, c_code_keywords,
+          else if (bsearch(&bufptr, c_code_keywords,//c_code_keywords,
                    sizeof(c_code_keywords) / sizeof(const char*),
                    sizeof(const char*), compare_keywords))//c_code_keywords
           {
@@ -2887,162 +2688,11 @@ void style_highlighter(const char* text, char* style, int length, const void * k
       col = 0;
       if (current == 'B' || current == 'E' || current == 'H') current = 'A';
     }
+  //  trace(style);
   }// main for loop
 }
 
-std::vector<std::string> c_style_comments() {
-  COMMENTS="//";
-  std::vector<std::string> T;
-  T.push_back("/*");
-  T.push_back("*/");
-  return T;
-}
-
-std::vector<std::string> c_style_keywords() {
-  std::vector<std::string> T;
-  T.push_back("and");
-  T.push_back("and_eq");
-  T.push_back("asm");
-  T.push_back("bitand");
-  T.push_back("bitor");
-  T.push_back("break");
-  T.push_back("case");
-  T.push_back("catch");
-  T.push_back("compl");
-  T.push_back("continue");
-  T.push_back("default");
-  T.push_back("delete");
-  T.push_back("do");
-  T.push_back("else");
-  T.push_back("false");
-  T.push_back("for");
-  T.push_back("goto");
-  T.push_back("if");
-  T.push_back("new");
-  T.push_back("not");
-  T.push_back("not_eq");
-  T.push_back("operator");
-  T.push_back("or");
-  T.push_back("or_eq");
-  T.push_back("return");
-  T.push_back("switch");
-  T.push_back("template");
-  T.push_back("this");
-  T.push_back("throw");
-  T.push_back("true");
-  T.push_back("try");
-  T.push_back("while");
-  T.push_back("xor");
-  T.push_back("xor_eq");
-  return T;
-}
-
-std::vector<std::string> c_style_types() {
-  std::vector<std::string> T;
-  T.push_back("auto");
-  T.push_back("bool");
-  T.push_back("char");
-  T.push_back("class");
-  T.push_back("const");
-  T.push_back("const_cast");
-  T.push_back("double");
-  T.push_back("dynamic_cast");
-  T.push_back("enum");
-  T.push_back("explicit");
-  T.push_back("extern");
-  T.push_back("float");
-  T.push_back("friend");
-  T.push_back("inline");
-  T.push_back("int");
-  T.push_back("long");
-  T.push_back("mutable");
-  T.push_back("namespace");
-  T.push_back("private");
-  T.push_back("protected");
-  T.push_back("public");
-  T.push_back("register");
-  T.push_back("short");
-  T.push_back("signed");
-  T.push_back("sizeof");
-  T.push_back("static");
-  T.push_back("static_cast");
-  T.push_back("struct");
-  T.push_back("template");
-  T.push_back("typedef");
-  T.push_back("typename");
-  T.push_back("union");
-  T.push_back("unsigned");
-  T.push_back("virtual");
-  T.push_back("void");
-  T.push_back("volatile");
-  return T;
-}
-
-bool check_string(std::string text, std::string keyword) {
-  trace("1="+text+"\n2="+keyword);
-  if( (text.compare("")==0) || (keyword.compare("")==0) )
-    return false;
-  unsigned int finder = text.find(keyword);
-  if(finder<text.length())
-  {
-    return true;
-  }
-  return false;
-}
-
-void get_syntax_type(unsigned int type) {
-  BLOCK_COMMENTS.clear();
-  TYPES.clear();
-  KEYWORDS.clear();
-  switch(type)
-  {
-    case 1: //C/CPP
-      BLOCK_COMMENTS=c_style_comments();
-      TYPES=c_style_types();
-      KEYWORDS=c_style_keywords();
-      break;
-    case 2: //sh
-      sh_style_comments();
-      TYPES=sh_style_types();
-      KEYWORDS=sh_style_keywords();
-      break;
-    case 3: //hx
-      BLOCK_COMMENTS=c_style_comments();
-      break;
-    default: //PLAIN
-      break;
-  }
-}
-
-bool hasInVector(std::string line,unsigned int pos,std::vector<std::string> VEC) {
-  std:: string tmp = line;
-  //trace("has in vector");
-  tmp=tmp.substr(pos,std::string::npos);
-  for( std::vector<std::string>::iterator it = VEC.begin();
-       it!=VEC.end();
-       ++it)
-  {
-    std::string test =*it;
-    if(check_string(tmp,test))
-      return true;
-  }
-  return false;
-}
-
-bool hasComment(std::string line, unsigned int pos) {
-  return hasInVector(line,pos,BLOCK_COMMENTS);
-}
-
-bool hasKeyword(std::string line, unsigned int pos) {
-  return hasInVector(line,pos,KEYWORDS);
-}
-
-bool hasType(std::string line, unsigned int pos) {
-  return hasInVector(line,pos,TYPES);
-}
-
-std::vector<std::string> make_vec(std::string string_to_become_vector) {
-  std::string delimiter=" ";
+std::vector<std::string> make_vec(std::string string_to_become_vector,std::string delimiter) {
   std::vector<std::string> Vector;
   std::string original,preComma,postComma;
   original=string_to_become_vector;
@@ -3058,77 +2708,19 @@ std::vector<std::string> make_vec(std::string string_to_become_vector) {
     preComma=original;
     postComma=original;
     preComma=preComma.erase(found,std::string::npos);
-    if(preComma.compare("")!=0){Vector.push_back(preComma);}
+    if(preComma.compare("")!=0)
+    {
+      preComma.erase( std::remove_if( preComma.begin(), preComma.end(), is_space)
+                      ,preComma.end());
+      trace(preComma);
+      Vector.push_back(preComma);
+    }
     postComma=postComma.erase(0,found+1);
     original=postComma;
     finder=original.length();
   }
   if(postComma.compare("")!=0){Vector.push_back(postComma);}
   return Vector;
-}
-
-void sh_style_comments() {
-  COMMENTS="#";
-}
-
-std::vector<std::string> sh_style_keywords() {
-  std::vector<std::string> T;
-  T.push_back("case");
-  T.push_back("do");
-  T.push_back("done");
-  T.push_back("elif");
-  T.push_back("else");
-  T.push_back("esac");
-  T.push_back("fi");
-  T.push_back("for");
-  T.push_back("function");
-  T.push_back("if");
-  T.push_back("in");
-  T.push_back("select");
-  T.push_back("source");
-  T.push_back("then");
-  T.push_back("time");
-  T.push_back("until");
-  T.push_back("while");
-  
-  T.push_back("let");
-  T.push_back("echo");
-  T.push_back("printf");
-  T.push_back("read");
-  T.push_back("cd");
-  T.push_back("pwd");
-  T.push_back("pushd");
-  T.push_back("popd");
-  T.push_back("dirs");
-  T.push_back("eval");
-  T.push_back("set");
-  T.push_back("unset");
-  T.push_back("export");
-  T.push_back("declare");
-  T.push_back("typeset");
-  T.push_back("readonly");
-  T.push_back("getopts");
-  T.push_back("source");
-  T.push_back("exit");
-  T.push_back("exec");
-  T.push_back("shopt");
-  T.push_back("caller");
-  T.push_back("true");
-  T.push_back("false");
-  T.push_back("type");
-  T.push_back("hash");
-  T.push_back("bind");
-  T.push_back("help");
-  T.push_back("coproc");
-  T.push_back("mapfile");
-  T.push_back("ulimit");
-  return T;
-}
-
-std::vector<std::string> sh_style_types() {
-  std::vector<std::string> T;
-  T.push_back("");
-  return T;
 }
 
 void style_parse(const char* text, char* style, int length,unsigned int Type) {
@@ -3149,6 +2741,7 @@ void style_parse(const char* text, char* style, int length,unsigned int Type) {
       c_style(text, style, length);
       break;
     case 2: //sh
+      //sh_style(text, style, length);
       break;
     case 3: //hx
       break;
@@ -3158,10 +2751,157 @@ void style_parse(const char* text, char* style, int length,unsigned int Type) {
   }
 }
 
+std::string replace_style(std::string code_word, std::string style) {
+  // find how many letters we are replacing
+  unsigned int length = code_word.length();
+  // make sure we just sent in a single character
+  if(style.length()>1)
+    style=style.substr(0,1);
+  // make our output
+  std::string out;
+  //generate it based on length
+  for (unsigned int i = 0; i< length; i++)
+    out+=style;
+  //return it!
+  return out;
+}
+
 void trace(std::string MSG, int n ) {
   //return;
   std::cout<<MSG;
   if(n!=0)
     std::cout<<"-->"<<n;
   std::cout<<std::endl;
+}
+
+std::string get(std::string header, std::string line) {
+  if(line.compare("")==0){return "";}
+  if(header.compare("")==0){return "";}
+  std::string filename = get_syntax_file();
+  if(filename.compare("")==0){return "";}
+  if(!test_file(filename))
+  {
+    trace("No file sent in\n"+filename+","+line);
+    return "";
+  }
+  std::string find_header=header;
+  unsigned int open=header.find("[");
+  unsigned int close=header.find("]");
+  unsigned int header_length=header.length();
+  if(open>header_length){find_header="["+find_header;}
+  if(close>header_length){find_header=find_header+"]";}
+  
+  bool found_after_this=false;
+  std::string this_line;
+  int lengthofARGS = line.length();
+  std::string subString;
+  std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
+  /** check if the input file stream is open */
+  if(inputFileStrem.is_open())
+  {
+    while (getline(inputFileStrem,this_line))
+    {
+      subString=this_line.substr(0,lengthofARGS);
+      if(this_line.find("[")<=1)
+      {
+        found_after_this=false;
+      }
+      if(this_line.find(find_header)<this_line.length())
+      {
+        trace("FOUND:"+find_header);
+        found_after_this=true;
+      }
+      /** if found return it immediately */
+      if(found_after_this)
+      {
+        if(this_line.find(line)<this_line.length())
+        {
+          unsigned int eq = this_line.find("=");
+          if(eq<this_line.length())
+          {
+            this_line=this_line.substr(eq+1,std::string::npos);
+          }
+          return this_line;
+        }
+      }
+    }
+  }
+  return "";
+}
+
+bool test_file(std::string fileWithFullPATH) {
+  DIR *mydir=NULL;
+  struct dirent *entryPointer=NULL;
+  std::string dir=fileWithFullPATH;
+  unsigned int slash=fileWithFullPATH.rfind('/');
+  dir=dir.substr(0,slash);
+  mydir=opendir(dir.c_str());
+  if(mydir!=NULL)
+  {
+    while ((entryPointer=readdir(mydir))!=NULL)
+    {
+      if(entryPointer->d_type == DT_REG)
+      {
+        std::string fullpath=entryPointer->d_name;
+        if(dir.rfind('/')!=dir.length()-1){dir+="/";}
+        fullpath=dir+fullpath;
+        if(fullpath.compare(fileWithFullPATH)==0)
+        {
+          closedir(mydir);
+          return true;
+        }
+      }
+    }
+    closedir(mydir);
+  }
+  else{trace("could not open directory to search for "+fileWithFullPATH);}
+  return false;
+}
+
+std::string get_syntax_file() {
+  if(SYNTAX_FILE.compare("")!=0)
+    return SYNTAX_FILE;
+  //testing
+  SYNTAX_FILE = "/home/israeldahl/bzr/torios-binary/text/styles";
+  
+  
+  return SYNTAX_FILE;
+}
+
+std::vector<std::string> comma_line(std::string lang,std::string field) {
+  //get the line from the file
+  std::string LINE=get(lang,field);
+  //return a vector from the string delimited by commas
+  return make_vec(LINE,",");
+}
+
+std::vector <std::string> keywords(unsigned int type) {
+  return line_item(type, "keywords");
+}
+
+std::vector <std::string> types(unsigned int type) {
+  return line_item(type, "types");
+}
+
+std::vector<std::string> line_item(unsigned int type, std::string thing) {
+  switch (type)
+  {
+    case 1://c
+      return comma_line("c",thing);
+      break;
+    case 2:
+      return comma_line("sh",thing);
+      break;
+    case 3:
+      return comma_line("haxe",thing);
+      break;
+    default:
+      break;
+  }
+  std::vector<std::string> n;
+  return n;
+}
+
+bool is_space(const char x) {
+  return std::isspace(x);
 }

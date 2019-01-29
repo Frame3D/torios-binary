@@ -11,6 +11,9 @@ created from the FLTK tutorial using FLUID to design the UI
 created as part of the ToriOS project} {in_source in_header
 }
 
+decl {\#include "lexertk.hpp"} {public global
+}
+
 decl {\#include "../include/toolbar_icons.h"} {public global
 }
 
@@ -23,10 +26,16 @@ decl {\#include <algorithm>} {public global
 decl {\#include <sstream>} {public global
 }
 
+decl {\#include <dirent.h>} {public global
+}
+
 decl {\#include <fstream>} {public global
 }
 
 decl {\#include <iostream>} {public global
+}
+
+decl {\#include <streambuf>} {public global
 }
 
 decl {\#include <FL/Fl_Color_Chooser.H>} {public global
@@ -99,16 +108,7 @@ int LINE_NUMBERS;
 int BUTTON_COLOR;} {public global
 }
 
-decl {std::string COMMENTS;} {private local
-}
-
-decl {std::vector<std::string> BLOCK_COMMENTS;} {private local
-}
-
-decl {std::vector<std::string> TYPES;} {private local
-}
-
-decl {std::vector<std::string> KEYWORDS;} {private local
+decl {std::string SYNTAX_FILE;} {public global
 }
 
 class Fl_Syntax_Text_Editor {open : {public Fl_Text_Editor}
@@ -129,19 +129,19 @@ char *text = textbuffer->text();
 memset(style, 'A', textbuffer->length());
 stylebuffer = new Fl_Text_Buffer(textbuffer->length());
 style[textbuffer->length()] = '\\0';
+SYNTAX_TYPE=12; //PLAIN
+init_highlight();
 style_parse(text, style, textbuffer->length(),12);
 stylebuffer->text(style);
 //std::cerr<<"stylebuffer="<<stylebuffer<<std::endl;
 delete[] style;
 free(text);
-SYNTAX_TYPE=12; //PLAIN
 WRAPPED=false;
 box(FL_FLAT_BOX);
 trace("editor colors");
 theme_editor(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);
 trace("add modify callback");
 textbuffer->add_modify_callback(changed_cb,(void *)this);
-init_highlight();
 //textbuffer->call_modify_callbacks();} {}
   }
   Function {~Fl_Syntax_Text_Editor()} {} {
@@ -155,21 +155,29 @@ textbuffer->remove_modify_callback(changed_cb, this);} {}
   }
   decl {Fl_Text_Display::Style_Table_Entry styletable[8];} {public global
   }
-  decl {unsigned int SYNTAX_TYPE;} {public local
-  }
   decl {Fl_Text_Buffer * stylebuffer;} {public global
   }
   decl {Fl_Text_Buffer * textbuffer;} {public global
   }
   decl {std::string filename;} {public local
   }
-  decl {int changed;} {public global
-  }
   decl {std::string search;} {public local
+  }
+  decl {unsigned int SYNTAX_TYPE;} {public local
+  }
+  decl {int changed;} {public global
   }
   decl {int loading;} {public global
   }
-  Function {changed_cb(int, int nInserted, int nDeleted, int, const char*, void *v)} {return_type {static void}
+  decl {std::vector<std::string> KEYWORDS, TYPES;} {public global
+  }
+  decl {lexertk::generator generator} {public local
+  }
+  decl {lexertk::helper::bracket_checker bracket_checker;} {public local
+  }
+  decl {lexertk::helper::symbol_replacer symbol_replacer;} {public local
+  }
+  Function {changed_cb(int, int nInserted, int nDeleted, int, const char*, void *v)} {open return_type {static void}
   } {
     code {Fl_Syntax_Text_Editor * o = (Fl_Syntax_Text_Editor *)v;
 //std::cerr<<"Editor object="<< o<<std::endl;
@@ -180,44 +188,22 @@ if ((nInserted || nDeleted) && !o->loading)
 }
 ((UI *)(o->parent()->user_data()))->set_title(o->parent());} {}
   }
-  Function {editor_style_parse(std::string text, std::string &style, int length, unsigned int type)} {return_type void
+  Function {file_string()} {return_type {std::string}
   } {
-    code {if(text.empty())
-{
-  trace("style_choose::No text sent in");
-  return;
-}
-if(length<=0)
-{
-  trace("style_choose:: length is 0");
-   return;
-}
-switch(type)
-{
-  case 1: //c/cpp
-    style=c_highlight(text, length);
-    break;
-  case 2: //sh
-    break;
-  case 3: //hx
-    break;
-  default:
-    break;
-}
-//trace("<<"+style+">>");
-//return style;} {}
+    code {if(filename.compare("")==0){return "";}
+std::ifstream t(filename);
+std::string str;
+
+t.seekg(0, std::ios::end);   
+str.reserve(t.tellg());
+t.seekg(0, std::ios::beg);
+
+str.assign((std::istreambuf_iterator<char>(t)),
+            std::istreambuf_iterator<char>());
+return str;} {}
   }
-  Function {editor_style_update(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL, void *cbArg = NULL)} {return_type {static void}
+  Function {get_styletable(Fl_Text_Display::Style_Table_Entry &styles,int which)} {open
   } {
-    code {Fl_Syntax_Text_Editor * ED = (Fl_Syntax_Text_Editor *)cbArg;
-if(ED==NULL)
-{
-  trace("Couldn't get text editor :(");
-  return;
-}
-ED->restyler_update(pos,nInserted,nDeleted,unused,nada);} {}
-  }
-  Function {get_styletable(Fl_Text_Display::Style_Table_Entry &styles,int which)} {} {
     code {int font = FONT_TEXT;
 int bold = font + 1;
 int ital = bold + 1;
@@ -266,9 +252,31 @@ styletable[which] = styles; //  set
 if(fname.empty())
   return NONE;
 const char* ext = fl_filename_ext(fname.c_str());
-trace(ext);
+
+/// get the shebang
+std::string thisLine;
+std::ifstream inputFileStream(fname.c_str(), std::ifstream::in);
+if(inputFileStream.is_open())
+{
+  getline(inputFileStream,thisLine);
+}
+if(thisLine.find("\#!")==0)
+{
+  trace("shebang");
+  std::string tmp=thisLine;
+  unsigned int find = tmp.rfind("/");
+  if(find<tmp.length())
+  {
+    tmp=tmp.substr(find+1,std::string::npos);
+    tmp="."+tmp;
+    ext=tmp.c_str();
+  }
+}
+
+//nothing?  lets leave then...
 if(ext == NULL)
   return NONE;
+trace(ext);
 std::string EXT = ext;
 if(
     (EXT.compare(".c")==0) ||
@@ -280,8 +288,6 @@ if(
   )
 {
   trace("c/c++ file");
-  KEYWORDS=c_style_keywords();
-  TYPES=c_style_types();
   return 1;
 }
 else if(
@@ -290,8 +296,6 @@ else if(
        )
 {
   trace("shell script");
-  KEYWORDS=sh_style_keywords();
-  TYPES=sh_style_types();
   return 2;
 }
 else if(
@@ -304,7 +308,43 @@ else if(
 trace("unknown syntax");
 return NONE;} {}
   }
-  Function {init_highlight()} {} {
+  Function {handle(int event)} {protected return_type int
+  } {
+    code {UI* ui = ((UI*)(parent()->parent()->parent()->user_data()));
+switch(event)
+{
+  case FL_PUSH:
+  case FL_RELEASE:
+    trace("push/release!");
+    if(Fl::event_button() == FL_RIGHT_MOUSE)
+    {
+      if(Fl::event_clicks())
+      {
+        break;
+      }
+      ui->make_popup(this);
+      trace("Right");
+      return 1;
+    }
+    break;
+  case FL_DND_DRAG:
+  case FL_DND_LEAVE:
+  break;
+  case FL_DND_RELEASE:
+    RELEASE=true;
+    break;
+  case FL_PASTE:
+    if(RELEASE)
+    {
+      RELEASE=false;
+      ui->dnd_file(Fl::event_text());
+      return 1;
+    }
+}
+return Fl_Text_Editor::handle(event);} {}
+  }
+  Function {init_highlight()} {open
+  } {
     code {Fl_Text_Display::Style_Table_Entry A; //  Plain
 get_styletable(A,0);
 
@@ -330,12 +370,35 @@ Fl_Text_Display::Style_Table_Entry H; // Numbers
 get_styletable(H,7);
 
 highlight_data(stylebuffer, styletable, sizeof(styletable) / sizeof(styletable[0]), 'A', style_unfinished_cb, 0);
-textbuffer->add_modify_callback(style_update, (void*) this);
-//textbuffer->add_modify_callback(editor_style_update,(void*) this);} {}
+textbuffer->add_modify_callback(style_update, (void*) this);} {}
   }
-  Function {modify_cb(int pos, int nInserted, int nDeleted, int unused, const char * nada)} {return_type void
+  Function {modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL)} {open return_type void
   } {
-    code {//trace("Style update");
+    code {//TESTING LEXER
+bool use_lex=true;
+if(use_lex)
+{
+std::string thisLine;
+std::string out;
+std::ifstream inputFileStream(filename.c_str(), std::ifstream::in);
+if(inputFileStream.is_open())
+{
+  while (getline(inputFileStream,thisLine))
+  {
+    std::string tmp = style_line(thisLine);
+    if(out.compare("")==0)
+      out=tmp;
+    else
+      out=out+"\\n"+tmp;
+    trace(thisLine+"\\n"+tmp);
+  }
+}
+char* RES = const_cast <char*> (out.c_str());
+stylebuffer->text(RES);
+redisplay_range(0,stylebuffer->length());
+return;
+}
+//trace("Style update");
 
 unsigned int Type = SYNTAX_TYPE;
 int	start,				// Start of text
@@ -343,7 +406,6 @@ int	start,				// Start of text
 char	last,				// Last style on line
 	*style,				// Style data
 	*text;				// Text data
-
 // If this is just a selection change, just unselect the style buffer...
 if (nInserted == 0 && nDeleted == 0) {
   stylebuffer->unselect();
@@ -411,93 +473,28 @@ if (start==end || last != style[end - start - 1]) {
 free(text);
 free(style);} {}
   }
-  Function {restyler_update(int pos, int nInserted, int nDeleted, int unused , const char * nada)} {} {
-    code {int start=0;  // Start of text
-int end;      // End of text
-char last;    // Last style on line
-std::string style;  // Style data
-std::string text;   // Text data
-trace("update style");
-unsigned int type = SYNTAX_TYPE;
-// If this is just a selection change, just unselect the style buffer...
-if (nInserted == 0 && nDeleted == 0)
-{
-  if(stylebuffer->selected()!=0)
-  {
-     stylebuffer->unselect();
-     return;
-   }
-}
-
-// Track changes in the text buffer...
-if (nInserted > 0)
-{
-  //trace("- Insert characters into the style buffer...");
-  std::string ns (nInserted+1,'A');
-  style = ns;
-  stylebuffer->insert(pos,style.c_str());
-}
-else
-{
-  //trace("- Just delete characters in the style buffer...");
-  stylebuffer->remove(pos, pos + nDeleted);
-}
-
-//trace("- Select the area that was just updated to avoid unnecessary callbacks");
-
-stylebuffer->select(pos, pos + nInserted - nDeleted);
-
-/*
-trace(
-"- Re-parse the changed region; we do this by parsing from the\\n\\
-   beginning of the previous line of the changed region to the end of\\n\\
-   the line of the changed region...Then we check the last\\n\\
-   style character and keep updating if we have a multi-line\\n\\
-   comment character..."
-);
-*/
-
-start = textbuffer->line_start(pos);
-end = textbuffer->line_end(pos + nInserted - nDeleted);
-text= textbuffer->text_range(start, end);
-style = stylebuffer->text_range(start, end);
-
-if (start==end)
-  last = 0;
-else
-  last  = style[end - start - 1];
-
-editor_style_parse(text, style, end - start, type);
-//trace("done with first parsing");
-if(style.compare("")!=0)
-{
-  stylebuffer->replace(start, end, style.c_str());
-  redisplay_range(start, end);
-}
-
-if (start==end || last != style[end - start - 1])
-{
-  //trace("-we must keep checking");
-  end = textbuffer->length();
-  text= textbuffer->text_range(start, end);
-  style = stylebuffer->text_range(start, end);
-  
-  editor_style_parse(text, style, end - start, type);
-  if(style.compare("")!=0)
-  {
-    stylebuffer->replace(start, end, style.c_str());
-    redisplay_range(start, end);
-  }
-}} {}
-  }
-  Function {set_type(std::string fname)} {} {
+  Function {set_type(std::string fname)} {open
+  } {
     code {if(fname.empty())
   return;
 unsigned int f = get_type(fname);
 SYNTAX_TYPE=f;
+KEYWORDS=keywords(SYNTAX_TYPE);
+TYPES=types(SYNTAX_TYPE);
+generator.set_keywords(KEYWORDS);
+generator.set_types(TYPES);
 trace("set syntax type for: "+fname+" to:",SYNTAX_TYPE);} {}
   }
-  Function {style_update(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL, void *cbArg = NULL)} {return_type {static void}
+  Function {style_line(std::string thisLine)} {return_type {std::string}
+  } {
+    code {if(!generator.process(thisLine))
+  trace("error processing text:"+thisLine);
+else
+  return lexertk::helper::style_line(generator);
+
+return "A";} {}
+  }
+  Function {style_update(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL, void *cbArg = NULL)} {open return_type {static void}
   } {
     code {Fl_Syntax_Text_Editor * ED = (Fl_Syntax_Text_Editor *)cbArg;
 if(ED==NULL)
@@ -554,76 +551,19 @@ style_parse(text, style, textbuffer->length(),12);
 delete[] style;
 free(text);} {}
   }
-  Function {handle(int event)} {open protected return_type int
+  Function {refresh()} {open
   } {
-    code {UI* ui = ((UI*)(parent()->parent()->parent()->user_data()));
-switch(event)
-{
-  case FL_PUSH:
-  case FL_RELEASE:
-    trace("push/release!");
-    if(Fl::event_button() == FL_RIGHT_MOUSE)
-    {
-      if(Fl::event_clicks())
-      {
-        break;
-      }
-      ui->make_popup(this);
-      trace("Right");
-      return 1;
-    }
-    break;
-  case FL_DND_DRAG:
-  case FL_DND_LEAVE:
-  break;
-  case FL_DND_RELEASE:
-    RELEASE=true;
-    break;
-  case FL_PASTE:
-    if(RELEASE)
-    {
-      RELEASE=false;
-      ui->dnd_file(Fl::event_text());
-      return 1;
-    }
-}
-return Fl_Text_Editor::handle(event);} {}
+    code {style_update();
+redisplay_range(0,textbuffer->length());
+redraw();} {}
   }
 }
 
 class UI {open
 } {
-  Function {handle(int event, Fl_Window *o)} {protected return_type {static int}
-  } {
-    code {UI* ui = ((UI*)(o->user_data()));
-bool RELEASE=ui->RELEASE;
-switch(event)
-{
-  case FL_DND_DRAG:
-  case FL_DND_LEAVE:
-  break;
-  case FL_DND_RELEASE:
-    RELEASE=true;
-    trace("FL_DND_RELEASE");
-    //return 1;
-    break;
-  case FL_RELEASE:
-    if(RELEASE)
-    {
-      RELEASE=false;
-      //trace("Pasting complete!");
-      std::cout<<Fl::event_text()<<std::endl;
-      //ui->dnd_file(Fl::event_text());
-      return 1;
-    }
-}
-//trace("e=",event);
-return Fl::handle_(event,o);} {}
-  }
   decl {bool RELEASE;} {public local
   }
-  Function {UI()} {open
-  } {
+  Function {UI()} {} {
     code {get_preferences();
 RELEASE=false;} {}
   }
@@ -647,8 +587,7 @@ copyright 2018 Israel Dahl}
       }
     }
   }
-  Function {make_popup(Fl_Widget *o)} {open
-  } {
+  Function {make_popup(Fl_Widget *o)} {} {
     code {Fl_Menu_Item rclick_menu[] = {
   { "Copy",  0, handle_menu, (void*)1 },
   { "Cut",  0, handle_menu, (void*)2 },
@@ -699,10 +638,9 @@ return;} {}
       }
     }
   }
-  Function {make_window()} {open
-  } {
+  Function {make_window()} {} {
     Fl_Window win {
-      label {FLTK Pad} open
+      label {FLTK Pad}
       xywh {348 120 520 545} type Double color 47 hide
       code0 {//Fl::event_dispatch(handle);}
       code1 {o->size_range(o->w(), o->h(), 0, 0);}
@@ -916,7 +854,8 @@ Fl_Text_Editor::kf_select_all(0,textor);}
       } {}
     }
   }
-  Function {pref_window()} {} {
+  Function {pref_window()} {open
+  } {
     Fl_Window pref_win {
       label Preferences open
       xywh {291 182 310 400} type Double color 47 hide xclass flpad
@@ -1278,8 +1217,7 @@ if(txt==NULL)
 trace(txt);
 ((UI*)(p->user_data()))->pick_tab(txt);} {}
   }
-  Function {close_tab()} {open
-  } {
+  Function {close_tab()} {} {
     code {Fl_Widget * E = tabs->value();
 if(E==NULL)
 {
@@ -1355,7 +1293,7 @@ if(textor==NULL)
   return;
 Fl_Text_Editor::kf_copy(0, textor);} {}
   }
-  Function {current_editor()} {open return_type {Fl_Syntax_Text_Editor *}
+  Function {current_editor()} {return_type {Fl_Syntax_Text_Editor *}
   } {
     code {if(tabs==NULL)
   return NULL;
@@ -1425,8 +1363,7 @@ if(textor==NULL)
   return;
 textor->buffer()->remove_selection();} {}
   }
-  Function {dnd_file(const char* items, bool NEW=true)} {open
-  } {
+  Function {dnd_file(const char* items, bool NEW=true)} {} {
     code {if(items==NULL)
   return;
 std::string s = items;
@@ -1445,8 +1382,7 @@ fl_decode_uri(ch);
 s=ch;
 
 load_file(s,-1,NEW);
-free(ch);} {selected
-    }
+free(ch);} {}
   }
   Function {find_cb()} {} {
     code {std::string val;
@@ -1639,6 +1575,33 @@ if(val)
     code {Fl_Text_Editor * E = current_editor();
 E->insert_position(E->line_start(pos));} {}
   }
+  Function {handle(int event, Fl_Window *o)} {protected return_type {static int}
+  } {
+    code {UI* ui = ((UI*)(o->user_data()));
+bool RELEASE=ui->RELEASE;
+switch(event)
+{
+  case FL_DND_DRAG:
+  case FL_DND_LEAVE:
+  break;
+  case FL_DND_RELEASE:
+    RELEASE=true;
+    trace("FL_DND_RELEASE");
+    //return 1;
+    break;
+  case FL_RELEASE:
+    if(RELEASE)
+    {
+      RELEASE=false;
+      //trace("Pasting complete!");
+      std::cout<<Fl::event_text()<<std::endl;
+      //ui->dnd_file(Fl::event_text());
+      return 1;
+    }
+}
+//trace("e=",event);
+return Fl::handle_(event,o);} {}
+  }
   Function {handle_menu(Fl_Widget *w, void *v)} {return_type {static void}
   } {
     code {if(!w || !v)
@@ -1728,13 +1691,13 @@ int r = 0;
 if (!insert)
 {
   r = E->textbuffer->loadfile(newfile.c_str());
-  E->textbuffer->call_modify_callbacks();
 }
 else
 {
   r = E->textbuffer->insertfile(newfile.c_str(), ipos);
-  E->textbuffer->call_modify_callbacks();
 }
+E->refresh();
+E->textbuffer->call_modify_callbacks();
 
 if (r)
   fl_alert("Error reading from file \\'%s\\':\\n%s.", newfile.c_str(), strerror(errno));
@@ -1744,7 +1707,8 @@ E->loading = 0;
 set_title(tabs->value());
 std::string tmp = "Documents/"+E->filename;
 menu->add(tmp.c_str(),0,choose_doc,this,0);
-menu->redraw();} {}
+menu->redraw();} {selected
+    }
   }
   Function {make_icon(Fl_Window *o)} {} {
     code {Fl_Pixmap f(flpad_xpm);
@@ -1752,8 +1716,7 @@ const Fl_Pixmap * flpad_xpm_icon = &f;
 const Fl_RGB_Image *img = new Fl_RGB_Image(flpad_xpm_icon,FL_GRAY);
 o->icon(img);} {}
   }
-  Function {new_cb()} {open
-  } {
+  Function {new_cb()} {} {
     code {Fl_Syntax_Text_Editor * textor = current_editor();
 if( (!check_save()) && (textor!=NULL) )
   return;
@@ -1791,7 +1754,7 @@ if(E==NULL)
 }
 std::string f = E->filename;
 
-if(f.compare("Untitled")==0)
+if(f.compare("")==0)
   open_file(false);
 else
   open_file();} {}
@@ -2143,7 +2106,7 @@ else
   }
 }
 
-Function {main(int argc, char **argv)} {open return_type int
+Function {main(int argc, char **argv)} {return_type int
 } {
   code {NORMAL_COLOR=FL_BLACK;
 EDIT_COLOR=FL_RED;
@@ -2185,158 +2148,6 @@ Function {compare_keywords(const void *a, const void *b)} {return_type {static i
   code {return (strcmp(*((const char **)a), *((const char **)b)));} {}
 }
 
-Function {c_highlight(std::string text, int length)} {return_type {std::string}
-} {
-  code {trace("c_highlight");
-unsigned int col=0;
-std::string out_line="";
-char current = 'A';
-char IT=text[0];
-bool declare = false;
-bool canBeNum = true;
-for (unsigned int iter=0; length>0; length --)
-{
-  if(iter>text.length())
-    return out_line;
-  IT=text[iter];
-  if (IT == '\\n')
-  {
-    declare = false;
-    iter++;
-    if (current != 'C' && current != 'D')
-    {
-      current = 'A';
-      canBeNum=true;
-    }
-    out_line.push_back('\\n');
-  }
-  else if ( (IT == ' ') || (IT == '\\t'))
-  {
-    //declare = false;
-    if (current != 'C' && current != 'D' && current != 'B')
-    {
-      canBeNum=true;
-      current = 'A';
-    }
-    iter++;
-    out_line.push_back(current);
-  }
-  else
-  {
-    if (!isalpha(IT) )
-    {
-      if (current != 'C' && current != 'D')
-      {
-        current = 'A';
-        canBeNum=true;
-      } 
-    }
-    else
-    {
-      canBeNum=false;
-    }
-    
-    if (current == 'A' )
-    {
-      //PLAIN TEXT STYLE
-    
-      if (IT == '\#')
-      {
-        current = 'E';
-        declare = true;
-      }
-      else if(hasType(text,text.length()-length))
-      {
-        if(!declare)
-          current = 'F';
-      }
-      else if(hasKeyword(text,iter))
-      {
-        if(!declare)
-          current = 'G';
-      }
-      else if(canBeNum && isdigit(IT))
-      {
-        if(!declare)
-         current = 'H';
-      }
-      else if (text.find("//",text.length()-length)==iter)
-      {
-        current = 'B';
-      }
-      else if (text.find("/*")==text.length()-length) //BLOCK COMMENT
-      {
-        current = 'C';
-      }
-      else if (text.find("\\\\\\"")==text.length()-length)
-      {
-        out_line.push_back(current); // this string is \\" so we need to add in the \\ here
-        iter++;
-        if(iter>text.length())
-          break;
-        IT=text[iter];
-        length --;
-        if (length == 0) break;
-
-        col+=2;
-        continue;
-      }
-      else if ( (IT == '\\"') || (IT == '\\'')) //STRING
-      {
-        current = 'D';
-      }
-    }
-    else if((current == 'C') && //BLOCK COMMENT
-          text.find("*/")==text.length()-length)
-    {
-      out_line.push_back(current);
-      iter++;
-      length --;
-      if (length == 0) break;
-      out_line.push_back(current);
-      iter++;
-      if(iter>text.length())
-        break;
-      IT=text[iter];
-      length --;
-      if (length == 0) break;
-      current = 'A';
-    }
-    else if (current == 'D') //STRING
-    {
-      if ( (IT == '\\"') || (IT == '\\'') )
-      {
-        out_line.push_back(current);
-        iter++;
-        if(iter>text.length())
-          break;
-        IT=text[iter];
-        length--;
-        if (length == 0) break;
-
-        current = 'A';
-      }
-    }
-    else if (IT == '{' || IT == '}')
-    {
-      current = 'G';
-      out_line.push_back(current);
-      declare = false;
-      canBeNum=true;
-      iter++;
-      current = 'A';
-    }
-    out_line.push_back(current);
-    col ++;
-  
-    iter++;
-    if(current == 'H')
-      current = 'A';
-  }
-}
-return out_line;} {}
-}
-
 Function {c_style(const char* text, char* style, int length)} {} {
   code {trace("c_style");
 char diectiveChar = '\#';
@@ -2347,7 +2158,8 @@ bool hasBlockComments=true;
 style_highlighter(text,style,length, c_code_types,c_code_keywords, diectiveChar,lineComment, hasBlockComments,blockCommentOpen,blockCommentClose);} {}
 }
 
-Function {style_highlighter(const char* text, char* style, int length, const void * keys, const void* types, char diectiveChar,const char* lineComment,bool hasBlockComments=false, const char* blockCommentOpen=NULL, const char* blockCommentClose=NULL)} {} {
+Function {style_highlighter(const char* text, char* style, int length, const void * keys, const void* types ,char diectiveChar ,const char* lineComment,bool hasBlockComments=false, const char* blockCommentOpen=NULL, const char* blockCommentClose=NULL, bool hasDirectives=true)} {open
+} {
   code {trace("c style highlighter");
 char         current;
 int          col;
@@ -2378,7 +2190,7 @@ for (current = *style, col = 0, last = 0; length > 0; length --, text ++)
   if (current == 'A')
   {
       // Check for directives, comments, strings, and keywords...
-    if (col == 0 && *text == diectiveChar)
+    if (hasDirectives && (col == 0 && *text == diectiveChar))
     {
       // Set style to directive
       current = 'E';
@@ -2454,7 +2266,7 @@ for (current = *style, col = 0, last = 0; length > 0; length --, text ++)
           last = 1;
           continue;
         } // if bsearch
-        else if (bsearch(&bufptr, c_code_keywords,
+        else if (bsearch(&bufptr, c_code_keywords,//c_code_keywords,
                  sizeof(c_code_keywords) / sizeof(const char*),
                  sizeof(const char*), compare_keywords))//c_code_keywords
         {
@@ -2539,172 +2351,13 @@ for (current = *style, col = 0, last = 0; length > 0; length --, text ++)
     col = 0;
     if (current == 'B' || current == 'E' || current == 'H') current = 'A';
   }
+//  trace(style);
 }// main for loop} {}
 }
 
-Function {c_style_comments()} {return_type {std::vector<std::string>}
+Function {make_vec(std::string string_to_become_vector,std::string delimiter=" ")} {open return_type {std::vector<std::string>}
 } {
-  code {COMMENTS="//";
-std::vector<std::string> T;
-T.push_back("/*");
-T.push_back("*/");
-return T;} {}
-}
-
-Function {c_style_keywords()} {return_type {std::vector<std::string>}
-} {
-  code {std::vector<std::string> T;
-T.push_back("and");
-T.push_back("and_eq");
-T.push_back("asm");
-T.push_back("bitand");
-T.push_back("bitor");
-T.push_back("break");
-T.push_back("case");
-T.push_back("catch");
-T.push_back("compl");
-T.push_back("continue");
-T.push_back("default");
-T.push_back("delete");
-T.push_back("do");
-T.push_back("else");
-T.push_back("false");
-T.push_back("for");
-T.push_back("goto");
-T.push_back("if");
-T.push_back("new");
-T.push_back("not");
-T.push_back("not_eq");
-T.push_back("operator");
-T.push_back("or");
-T.push_back("or_eq");
-T.push_back("return");
-T.push_back("switch");
-T.push_back("template");
-T.push_back("this");
-T.push_back("throw");
-T.push_back("true");
-T.push_back("try");
-T.push_back("while");
-T.push_back("xor");
-T.push_back("xor_eq");
-return T;} {}
-}
-
-Function {c_style_types()} {return_type {std::vector<std::string>}
-} {
-  code {std::vector<std::string> T;
-T.push_back("auto");
-T.push_back("bool");
-T.push_back("char");
-T.push_back("class");
-T.push_back("const");
-T.push_back("const_cast");
-T.push_back("double");
-T.push_back("dynamic_cast");
-T.push_back("enum");
-T.push_back("explicit");
-T.push_back("extern");
-T.push_back("float");
-T.push_back("friend");
-T.push_back("inline");
-T.push_back("int");
-T.push_back("long");
-T.push_back("mutable");
-T.push_back("namespace");
-T.push_back("private");
-T.push_back("protected");
-T.push_back("public");
-T.push_back("register");
-T.push_back("short");
-T.push_back("signed");
-T.push_back("sizeof");
-T.push_back("static");
-T.push_back("static_cast");
-T.push_back("struct");
-T.push_back("template");
-T.push_back("typedef");
-T.push_back("typename");
-T.push_back("union");
-T.push_back("unsigned");
-T.push_back("virtual");
-T.push_back("void");
-T.push_back("volatile");
-return T;} {}
-}
-
-Function {check_string(std::string text, std::string keyword)} {return_type bool
-} {
-  code {trace("1="+text+"\\n2="+keyword);
-if( (text.compare("")==0) || (keyword.compare("")==0) )
-  return false;
-unsigned int finder = text.find(keyword);
-if(finder<text.length())
-{
-  return true;
-}
-return false;} {}
-}
-
-Function {get_syntax_type(unsigned int type)} {} {
-  code {BLOCK_COMMENTS.clear();
-TYPES.clear();
-KEYWORDS.clear();
-switch(type)
-{
-  case 1: //C/CPP
-    BLOCK_COMMENTS=c_style_comments();
-    TYPES=c_style_types();
-    KEYWORDS=c_style_keywords();
-    break;
-  case 2: //sh
-    sh_style_comments();
-    TYPES=sh_style_types();
-    KEYWORDS=sh_style_keywords();
-    break;
-  case 3: //hx
-    BLOCK_COMMENTS=c_style_comments();
-    break;
-  default: //PLAIN
-    break;
-}} {}
-}
-
-Function {hasInVector(std::string line,unsigned int pos,std::vector<std::string> VEC)} {return_type bool
-} {
-  code {std:: string tmp = line;
-//trace("has in vector");
-tmp=tmp.substr(pos,std::string::npos);
-for( std::vector<std::string>::iterator it = VEC.begin();
-     it!=VEC.end();
-     ++it)
-{
-  std::string test =*it;
-  if(check_string(tmp,test))
-    return true;
-}
-return false;} {}
-}
-
-Function {hasComment(std::string line, unsigned int pos)} {return_type bool
-} {
-  code {return hasInVector(line,pos,BLOCK_COMMENTS);} {}
-}
-
-Function {hasKeyword(std::string line, unsigned int pos)} {return_type bool
-} {
-  code {return hasInVector(line,pos,KEYWORDS);} {}
-}
-
-Function {hasType(std::string line, unsigned int pos)} {return_type bool
-} {
-  code {return hasInVector(line,pos,TYPES);} {}
-}
-
-Function {make_vec(std::string string_to_become_vector)} {return_type {std::vector<std::string>}
-} {
-  code {std::string delimiter=" ";
-std::vector<std::string> Vector;
+  code {std::vector<std::string> Vector;
 std::string original,preComma,postComma;
 original=string_to_become_vector;
 unsigned int found,finder;
@@ -2719,79 +2372,19 @@ for(found=original.find(delimiter);found<finder;found=original.find(delimiter))
   preComma=original;
   postComma=original;
   preComma=preComma.erase(found,std::string::npos);
-  if(preComma.compare("")!=0){Vector.push_back(preComma);}
+  if(preComma.compare("")!=0)
+  {
+    preComma.erase( std::remove_if( preComma.begin(), preComma.end(), is_space)
+                    ,preComma.end());
+    trace(preComma);
+    Vector.push_back(preComma);
+  }
   postComma=postComma.erase(0,found+1);
   original=postComma;
   finder=original.length();
 }
 if(postComma.compare("")!=0){Vector.push_back(postComma);}
 return Vector;} {}
-}
-
-Function {sh_style_comments()} {} {
-  code {COMMENTS="\#";} {}
-}
-
-Function {sh_style_keywords()} {return_type {std::vector<std::string>}
-} {
-  code {std::vector<std::string> T;
-T.push_back("case");
-T.push_back("do");
-T.push_back("done");
-T.push_back("elif");
-T.push_back("else");
-T.push_back("esac");
-T.push_back("fi");
-T.push_back("for");
-T.push_back("function");
-T.push_back("if");
-T.push_back("in");
-T.push_back("select");
-T.push_back("source");
-T.push_back("then");
-T.push_back("time");
-T.push_back("until");
-T.push_back("while");
-
-T.push_back("let");
-T.push_back("echo");
-T.push_back("printf");
-T.push_back("read");
-T.push_back("cd");
-T.push_back("pwd");
-T.push_back("pushd");
-T.push_back("popd");
-T.push_back("dirs");
-T.push_back("eval");
-T.push_back("set");
-T.push_back("unset");
-T.push_back("export");
-T.push_back("declare");
-T.push_back("typeset");
-T.push_back("readonly");
-T.push_back("getopts");
-T.push_back("source");
-T.push_back("exit");
-T.push_back("exec");
-T.push_back("shopt");
-T.push_back("caller");
-T.push_back("true");
-T.push_back("false");
-T.push_back("type");
-T.push_back("hash");
-T.push_back("bind");
-T.push_back("help");
-T.push_back("coproc");
-T.push_back("mapfile");
-T.push_back("ulimit");
-return T;} {}
-}
-
-Function {sh_style_types()} {return_type {std::vector<std::string>}
-} {
-  code {std::vector<std::string> T;
-T.push_back("");
-return T;} {}
 }
 
 Function {style_parse(const char* text=NULL, char* style=NULL, int length=0,unsigned int Type=12)} {} {
@@ -2812,6 +2405,7 @@ switch(Type)
     c_style(text, style, length);
     break;
   case 2: //sh
+    //sh_style(text, style, length);
     break;
   case 3: //hx
     break;
@@ -2821,10 +2415,166 @@ switch(Type)
 }} {}
 }
 
+Function {replace_style(std::string code_word, std::string style)} {return_type {std::string}
+} {
+  code {// find how many letters we are replacing
+unsigned int length = code_word.length();
+// make sure we just sent in a single character
+if(style.length()>1)
+  style=style.substr(0,1);
+// make our output
+std::string out;
+//generate it based on length
+for (unsigned int i = 0; i< length; i++)
+  out+=style;
+//return it!
+return out;} {}
+}
+
 Function {trace(std::string MSG, int n = 0)} {} {
   code {//return;
 std::cout<<MSG;
 if(n!=0)
   std::cout<<"-->"<<n;
 std::cout<<std::endl;} {}
+}
+
+Function {get(std::string header, std::string line)} {return_type {std::string}
+} {
+  code {if(line.compare("")==0){return "";}
+if(header.compare("")==0){return "";}
+std::string filename = get_syntax_file();
+if(filename.compare("")==0){return "";}
+if(!test_file(filename))
+{
+  trace("No file sent in\\n"+filename+","+line);
+  return "";
+}
+std::string find_header=header;
+unsigned int open=header.find("[");
+unsigned int close=header.find("]");
+unsigned int header_length=header.length();
+if(open>header_length){find_header="["+find_header;}
+if(close>header_length){find_header=find_header+"]";}
+
+bool found_after_this=false;
+std::string this_line;
+int lengthofARGS = line.length();
+std::string subString;
+std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
+/** check if the input file stream is open */
+if(inputFileStrem.is_open())
+{
+  while (getline(inputFileStrem,this_line))
+  {
+    subString=this_line.substr(0,lengthofARGS);
+    if(this_line.find("[")<=1)
+    {
+      found_after_this=false;
+    }
+    if(this_line.find(find_header)<this_line.length())
+    {
+      trace("FOUND:"+find_header);
+      found_after_this=true;
+    }
+    /** if found return it immediately */
+    if(found_after_this)
+    {
+      if(this_line.find(line)<this_line.length())
+      {
+        unsigned int eq = this_line.find("=");
+        if(eq<this_line.length())
+        {
+          this_line=this_line.substr(eq+1,std::string::npos);
+        }
+        return this_line;
+      }
+    }
+  }
+}
+return "";} {}
+}
+
+Function {test_file(std::string fileWithFullPATH)} {return_type bool
+} {
+  code {DIR *mydir=NULL;
+struct dirent *entryPointer=NULL;
+std::string dir=fileWithFullPATH;
+unsigned int slash=fileWithFullPATH.rfind('/');
+dir=dir.substr(0,slash);
+mydir=opendir(dir.c_str());
+if(mydir!=NULL)
+{
+  while ((entryPointer=readdir(mydir))!=NULL)
+  {
+    if(entryPointer->d_type == DT_REG)
+    {
+      std::string fullpath=entryPointer->d_name;
+      if(dir.rfind('/')!=dir.length()-1){dir+="/";}
+      fullpath=dir+fullpath;
+      if(fullpath.compare(fileWithFullPATH)==0)
+      {
+        closedir(mydir);
+        return true;
+      }
+    }
+  }
+  closedir(mydir);
+}
+else{trace("could not open directory to search for "+fileWithFullPATH);}
+return false;} {}
+}
+
+Function {get_syntax_file()} {return_type {std::string}
+} {
+  code {if(SYNTAX_FILE.compare("")!=0)
+  return SYNTAX_FILE;
+//testing
+SYNTAX_FILE = "/home/israeldahl/bzr/torios-binary/text/styles";
+
+
+return SYNTAX_FILE;} {}
+}
+
+Function {comma_line(std::string lang,std::string field)} {return_type {std::vector<std::string>}
+} {
+  code {//get the line from the file
+std::string LINE=get(lang,field);
+//return a vector from the string delimited by commas
+return make_vec(LINE,",");} {}
+}
+
+Function {keywords(unsigned int type)} {return_type {std::vector <std::string>}
+} {
+  code {return line_item(type, "keywords");} {}
+}
+
+Function {types(unsigned int type)} {return_type {std::vector <std::string>}
+} {
+  code {return line_item(type, "types");} {}
+}
+
+Function {line_item(unsigned int type, std::string thing)} {return_type {std::vector<std::string>}
+} {
+  code {switch (type)
+{
+  case 1://c
+    return comma_line("c",thing);
+    break;
+  case 2:
+    return comma_line("sh",thing);
+    break;
+  case 3:
+    return comma_line("haxe",thing);
+    break;
+  default:
+    break;
+}
+std::vector<std::string> n;
+return n;} {}
+}
+
+Function {is_space(const char x)} {open return_type bool
+} {
+  code {return std::isspace(x);} {}
 }
