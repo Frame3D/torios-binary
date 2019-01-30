@@ -61,17 +61,16 @@ public:
   Fl_Text_Buffer * textbuffer; 
   std::string filename; 
   std::string search; 
-  unsigned int SYNTAX_TYPE; 
   int changed; 
   int loading; 
   std::vector<std::string> KEYWORDS, TYPES; 
+  std::string STYLE_HEADER; 
   lexertk::generator generator; 
   lexertk::helper::bracket_checker bracket_checker; 
   lexertk::helper::symbol_replacer symbol_replacer; 
   static void changed_cb(int, int nInserted, int nDeleted, int, const char*, void *v);
   std::string file_string();
   void get_styletable(Fl_Text_Display::Style_Table_Entry &styles,int which);
-  unsigned int get_type(std::string fname);
 protected:
   int handle(int event);
 public:
@@ -393,15 +392,13 @@ int compare_keywords(const void *a, const void *b);
 void c_style(const char* text, char* style, int length);
 void style_highlighter(const char* text, char* style, int length, const void * keys, const void* types ,char diectiveChar ,const char* lineComment,bool hasBlockComments=false, const char* blockCommentOpen=NULL, const char* blockCommentClose=NULL, bool hasDirectives=true);
 std::vector<std::string> make_vec(std::string string_to_become_vector,std::string delimiter=" ");
-void style_parse(const char* text=NULL, char* style=NULL, int length=0,unsigned int Type=12);
-std::string replace_style(std::string code_word, std::string style);
 void trace(std::string MSG, int n = 0);
 std::string get(std::string header, std::string line);
-bool test_file(std::string fileWithFullPATH);
+bool test_file(std::string file);
 std::string get_syntax_file();
 std::vector<std::string> comma_line(std::string lang,std::string field);
-std::vector <std::string> keywords(unsigned int type);
-std::vector <std::string> types(unsigned int type);
-std::vector<std::string> line_item(unsigned int type, std::string thing);
+std::vector <std::string> keywords(std::string header);
+std::vector <std::string> types(std::string header);
 bool is_space(const char x);
+std::string get_type(std::string fname);
 #endif

@@ -1,3 +1,4 @@
+STYLES_CONFIG = styles.flpad
 obj      = $(askpass:.c=.o) $(about:.c=.o) $(pm_dialogs:.c=.o)
 TARGET   = torios-binary
 $(TARGET):
@@ -38,9 +39,13 @@ install: $(TARGET)
 	cp desktop/flscreenie.desktop $(DESTDIR)$(PREFIX)/share/applications/flscreenie.desktop
 	cp desktop/flcalc.desktop $(DESTDIR)$(PREFIX)/share/applications/flcalc.desktop
 	cp desktop/flwelcome.desktop $(DESTDIR)$(PREFIX)/share/applications/flwelcome.desktop
+#CONFIG
+	cp text/$(STYLES_CONFIG) $(DESTDIR)$(PREFIX)/flpad/$(STYLES_CONFIG)
 
 .PHONY: uninstall
 uninstall:
+
+#Binary
 	rm -f $(DESTDIR)$(PREFIX)/bin/flaskpass
 	rm -f $(DESTDIR)$(PREFIX)/bin/flabout
 	rm -f $(DESTDIR)$(PREFIX)/bin/flpower
@@ -51,8 +56,12 @@ uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/flimage
 	rm -f $(DESTDIR)$(PREFIX)/bin/flcalc
 	rm -f $(DESTDIR)$(PREFIX)/bin/flwelcome
+
+#Desktop Files
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/flcalc.desktop
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/flscreenie.desktop
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/flimage.desktop
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/flpad.desktop
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/flwelcome.desktop
+#Config
+	rm -f $(DESTDIR)$(PREFIX)/flpad/$(STYLES_CONFIG)

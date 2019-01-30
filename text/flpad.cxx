@@ -22,18 +22,17 @@ Fl_Syntax_Text_Editor::Fl_Syntax_Text_Editor(int x, int y, int w, int h, const c
   memset(style, 'A', textbuffer->length());
   stylebuffer = new Fl_Text_Buffer(textbuffer->length());
   style[textbuffer->length()] = '\0';
-  SYNTAX_TYPE=12; //PLAIN
   init_highlight();
-  style_parse(text, style, textbuffer->length(),12);
+  //style_parse(text, style, textbuffer->length(),12);
   stylebuffer->text(style);
   //std::cerr<<"stylebuffer="<<stylebuffer<<std::endl;
   delete[] style;
   free(text);
   WRAPPED=false;
   box(FL_FLAT_BOX);
-  trace("editor colors");
+  //trace("editor colors");
   theme_editor(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);
-  trace("add modify callback");
+  //trace("add modify callback");
   textbuffer->add_modify_callback(changed_cb,(void *)this);
   //textbuffer->call_modify_callbacks();
 }
@@ -113,75 +112,13 @@ void Fl_Syntax_Text_Editor::get_styletable(Fl_Text_Display::Style_Table_Entry &s
   //std::cout<<"Got style table for: "<<whichtype<<"\nFONT="<<styles.font<<"\tCOLOR="<<styles.color<<std::endl;
 }
 
-unsigned int Fl_Syntax_Text_Editor::get_type(std::string fname) {
-  unsigned int NONE=12;
-  if(fname.empty())
-    return NONE;
-  const char* ext = fl_filename_ext(fname.c_str());
-  
-  /// get the shebang
-  std::string thisLine;
-  std::ifstream inputFileStream(fname.c_str(), std::ifstream::in);
-  if(inputFileStream.is_open())
-  {
-    getline(inputFileStream,thisLine);
-  }
-  if(thisLine.find("#!")==0)
-  {
-    trace("shebang");
-    std::string tmp=thisLine;
-    unsigned int find = tmp.rfind("/");
-    if(find<tmp.length())
-    {
-      tmp=tmp.substr(find+1,std::string::npos);
-      tmp="."+tmp;
-      ext=tmp.c_str();
-    }
-  }
-  
-  //nothing?  lets leave then...
-  if(ext == NULL)
-    return NONE;
-  trace(ext);
-  std::string EXT = ext;
-  if(
-      (EXT.compare(".c")==0) ||
-      (EXT.compare(".cpp")==0) ||
-      (EXT.compare(".cxx")==0) ||
-      (EXT.compare(".h")==0) ||
-      (EXT.compare(".hpp")==0) ||
-      (EXT.compare(".xpm")==0)
-    )
-  {
-    trace("c/c++ file");
-    return 1;
-  }
-  else if(
-           (EXT.compare(".sh")==0) ||
-           (EXT.compare(".bash")==0)
-         )
-  {
-    trace("shell script");
-    return 2;
-  }
-  else if(
-           (EXT.compare(".hx")==0)
-         )
-  {
-    trace("haxe file");
-    return 3;
-  }
-  trace("unknown syntax");
-  return NONE;
-}
-
 int Fl_Syntax_Text_Editor::handle(int event) {
   UI* ui = ((UI*)(parent()->parent()->parent()->user_data()));
   switch(event)
   {
     case FL_PUSH:
     case FL_RELEASE:
-      trace("push/release!");
+      //trace("push/release!");
       if(Fl::event_button() == FL_RIGHT_MOUSE)
       {
         if(Fl::event_clicks())
@@ -189,7 +126,7 @@ int Fl_Syntax_Text_Editor::handle(int event) {
           break;
         }
         ui->make_popup(this);
-        trace("Right");
+        //trace("Right");
         return 1;
       }
       break;
@@ -240,124 +177,74 @@ void Fl_Syntax_Text_Editor::init_highlight() {
 }
 
 void Fl_Syntax_Text_Editor::modify_cb(int pos, int nInserted, int nDeleted, int unused, const char * nada) {
-  //TESTING LEXER
-  bool use_lex=true;
-  if(use_lex)
-  {
   std::string thisLine;
-  std::string out;
+  
+  char* buf = textbuffer->text();
+  std::string out(buf);
+  /*
   std::ifstream inputFileStream(filename.c_str(), std::ifstream::in);
   if(inputFileStream.is_open())
   {
     while (getline(inputFileStream,thisLine))
     {
-      std::string tmp = style_line(thisLine);
+      std::string tmp = thisLine;//style_line(thisLine);
       if(out.compare("")==0)
         out=tmp;
       else
         out=out+"\n"+tmp;
-      trace(thisLine+"\n"+tmp);
+      //trace("FILE:"+thisLine+"\nSTYLE:"+tmp);
     }
   }
-  char* RES = const_cast <char*> (out.c_str());
+  */
+  
+  std::string res = style_line(out);
+  //trace("OUT=\n"+res);
+  char* RES = const_cast <char*> (res.c_str());
   stylebuffer->text(RES);
   redisplay_range(0,stylebuffer->length());
-  return;
-  }
-  //trace("Style update");
-  
-  unsigned int Type = SYNTAX_TYPE;
-  int	start,				// Start of text
-  	end;				// End of text
-  char	last,				// Last style on line
-  	*style,				// Style data
-  	*text;				// Text data
-  // If this is just a selection change, just unselect the style buffer...
-  if (nInserted == 0 && nDeleted == 0) {
-    stylebuffer->unselect();
-    return;
-  }
-  
-    // Track changes in the text buffer...
-  if (nInserted > 0) {
-    // Insert characters into the style buffer...
-    style = new char[nInserted + 1];
-    memset(style, 'A', nInserted);
-    style[nInserted] = '\0';
-    stylebuffer->insert(pos, style);
-    delete[] style;
-  } else {
-      // Just delete characters in the style buffer...
-    stylebuffer->remove(pos, pos + nDeleted);
-  }
-  
-    // Select the area that was just updated to avoid unnecessary
-    // callbacks...
-  stylebuffer->select(pos, pos + nInserted - nDeleted);
-  
-    // Re-parse the changed region; we do this by parsing from the
-    // beginning of the previous line of the changed region to the end of
-    // the line of the changed region...  Then we check the last
-    // style character and keep updating if we have a multi-line
-    // comment character...
-  start = textbuffer->line_start(pos);
-  //  if (start > 0) start = textbuf->line_start(start - 1);
-  end   =  textbuffer->line_end(pos + nInserted);
-  text  = textbuffer->text_range(start, end);
-  style = stylebuffer->text_range(start, end);
-  
-  if (start==end)
-    last = 0;
-  else
-    last  = style[end - start - 1];
-  
-  //  printf("start = %d, end = %d, text = \"%s\", style = \"%s\", last='%c'...\n",
-  //         start, end, text, style, last);
-  style_parse(text, style, end - start, Type);
-  //  printf("new style = \"%s\", new last='%c'...\n",
-  //         style, style[end - start - 1]);
-  
-  stylebuffer->replace(start, end, style);
-  redisplay_range(start, end);
-  
-  if (start==end || last != style[end - start - 1]) {
-  //    printf("Recalculate the rest of the buffer style\n");
-      // Either the user deleted some text, or the last character
-      // on the line changed styles, so reparse the
-      // remainder of the buffer...
-    free(text);
-    free(style);
-  
-    end   = textbuffer->length();
-    text  = textbuffer->text_range(start, end);
-    style = stylebuffer->text_range(start, end);
-  
-    style_parse(text, style, end - start, Type);
-    stylebuffer->replace(start, end, style);
-    redisplay_range(start, end);
-  }
-  free(text);
-  free(style);
 }
 
 void Fl_Syntax_Text_Editor::set_type(std::string fname) {
+  std::string dir=fname;
+  unsigned int find = dir.rfind("/");
+  
+  //if there is no directory this isn't correct
+  if(find>dir.length())
+  {
+    // try the PWD if we can
+    const char* PWD= getenv("PWD");
+    if(PWD!=NULL)
+    {
+      dir=PWD;
+      dir+="/";
+      fname=dir+fname;
+      filename=fname;
+    }
+  }
+  
   if(fname.empty())
     return;
-  unsigned int f = get_type(fname);
-  SYNTAX_TYPE=f;
-  KEYWORDS=keywords(SYNTAX_TYPE);
-  TYPES=types(SYNTAX_TYPE);
+  STYLE_HEADER = get_type(fname);
+  KEYWORDS=keywords(STYLE_HEADER);
+  TYPES=types(STYLE_HEADER);
   generator.set_keywords(KEYWORDS);
   generator.set_types(TYPES);
-  trace("set syntax type for: "+fname+" to:",SYNTAX_TYPE);
+  trace("set syntax type for: "+fname+" to:"+STYLE_HEADER);
 }
 
 std::string Fl_Syntax_Text_Editor::style_line(std::string thisLine) {
   if(!generator.process(thisLine))
     trace("error processing text:"+thisLine);
   else
-    return lexertk::helper::style_line(generator);
-  
+  {
+    std::string line =lexertk::helper::style_line(generator);
+    if(line.compare("")==0)
+    {
+      //trace("adding newline!");
+      line="\n";
+    }
+    return line;
+  }
   return "A";
 }
 
@@ -413,13 +300,14 @@ void Fl_Syntax_Text_Editor::theme_editor(unsigned int FG,unsigned int BG, unsign
   
   char *style = stylebuffer->text();
   char *text = textbuffer->text();
-  style_parse(text, style, textbuffer->length(),12);
+  modify_cb();
+  //style_parse(text, style, textbuffer->length(),12);
   delete[] style;
   free(text);
 }
 
 void Fl_Syntax_Text_Editor::refresh() {
-  style_update();
+  style_update(0,0,0,0,NULL,this);
   redisplay_range(0,textbuffer->length());
   redraw();
 }
@@ -1989,7 +1877,7 @@ void UI::insert_cb() {
 }
 
 void UI::load_file(std::string newfile, int ipos,bool NEW) {
-  trace("Loading file:"+newfile);
+  //trace("Loading file:"+newfile);
   //todo 
   //if(pick_tab(newfile)){return;}
   if(NEW)
@@ -2390,7 +2278,7 @@ void UI::set_title(Fl_Widget* g) {
       title=fname;
       
   }
-  
+  textor->refresh();
   //Has this been changed at all??
   if (textor->changed)
   {
@@ -2712,7 +2600,7 @@ std::vector<std::string> make_vec(std::string string_to_become_vector,std::strin
     {
       preComma.erase( std::remove_if( preComma.begin(), preComma.end(), is_space)
                       ,preComma.end());
-      trace(preComma);
+      //trace(preComma);
       Vector.push_back(preComma);
     }
     postComma=postComma.erase(0,found+1);
@@ -2721,49 +2609,6 @@ std::vector<std::string> make_vec(std::string string_to_become_vector,std::strin
   }
   if(postComma.compare("")!=0){Vector.push_back(postComma);}
   return Vector;
-}
-
-void style_parse(const char* text, char* style, int length,unsigned int Type) {
-  if(text==NULL)
-  {
-    trace("style_parse::No text sent in");
-    return;
-  }
-  if(length<=0)
-  {
-    trace("style_parse:: length is 0 or less");
-    return;
-  }
-  trace("Syntax type is",Type);
-  switch(Type)
-  {
-    case 1: //c/cpp
-      c_style(text, style, length);
-      break;
-    case 2: //sh
-      //sh_style(text, style, length);
-      break;
-    case 3: //hx
-      break;
-    default:
-      trace("Not a known syntax type");
-      break;
-  }
-}
-
-std::string replace_style(std::string code_word, std::string style) {
-  // find how many letters we are replacing
-  unsigned int length = code_word.length();
-  // make sure we just sent in a single character
-  if(style.length()>1)
-    style=style.substr(0,1);
-  // make our output
-  std::string out;
-  //generate it based on length
-  for (unsigned int i = 0; i< length; i++)
-    out+=style;
-  //return it!
-  return out;
 }
 
 void trace(std::string MSG, int n ) {
@@ -2808,7 +2653,7 @@ std::string get(std::string header, std::string line) {
       }
       if(this_line.find(find_header)<this_line.length())
       {
-        trace("FOUND:"+find_header);
+        //trace("FOUND:"+find_header);
         found_after_this=true;
       }
       /** if found return it immediately */
@@ -2829,42 +2674,106 @@ std::string get(std::string header, std::string line) {
   return "";
 }
 
-bool test_file(std::string fileWithFullPATH) {
+bool test_file(std::string file) {
+  //if empty it doesn't exist
+  if(file.compare("")==0)
+    return false;
+  
+  
+  std::string dir=file;
+  unsigned int find = dir.rfind("/");
+  
+  //if there is no directory this isn't correct
+  if(find>dir.length())
+  {
+    // try the PWD if we can
+    const char* PWD= getenv("PWD");
+    if(PWD==NULL)
+      return false;
+    dir=PWD;
+    dir+="/";
+    file=dir+file;
+  }
+  else
+  {
+    // get the directory
+    dir=dir.substr(0,find);
+  }
+  
+  //open the directory
   DIR *mydir=NULL;
   struct dirent *entryPointer=NULL;
-  std::string dir=fileWithFullPATH;
-  unsigned int slash=fileWithFullPATH.rfind('/');
-  dir=dir.substr(0,slash);
   mydir=opendir(dir.c_str());
+  
+  //make sure there is a slash at the end
+  if(dir.rfind('/')!=dir.length()-1){dir+="/";}
+  
   if(mydir!=NULL)
   {
     while ((entryPointer=readdir(mydir))!=NULL)
     {
       if(entryPointer->d_type == DT_REG)
       {
+        //get a pointer to the file in this directory
         std::string fullpath=entryPointer->d_name;
-        if(dir.rfind('/')!=dir.length()-1){dir+="/";}
         fullpath=dir+fullpath;
-        if(fullpath.compare(fileWithFullPATH)==0)
+        //is it the same as what we sent in?
+        if(fullpath.compare(file)==0)
         {
+          //close the directory
           closedir(mydir);
           return true;
         }
       }
     }
+    //close the directory... apparently this didn't work :(
     closedir(mydir);
   }
-  else{trace("could not open directory to search for "+fileWithFullPATH);}
   return false;
 }
 
 std::string get_syntax_file() {
+  std::string base_name = "styles.flpad";
   if(SYNTAX_FILE.compare("")!=0)
     return SYNTAX_FILE;
   //testing
-  SYNTAX_FILE = "/home/israeldahl/bzr/torios-binary/text/styles";
-  
-  
+  std::string home_tester;
+  const char* home_config = getenv("XDG_CONFIG_HOME");
+  if(home_config == NULL)
+  {
+    home_config = getenv("HOME");
+    if(home_config != NULL)
+    {
+      home_tester=home_config;
+      home_tester =home_tester + "/.config/" + base_name;
+    }
+  }
+  else
+  {
+    home_tester = home_config;
+    home_tester = home_tester + "/" + base_name;
+  }
+  trace(home_tester);
+  if(test_file(home_tester))
+  {
+    SYNTAX_FILE=home_tester;
+  }
+  else
+  {
+    std::string tester = "/usr/share/flpad/";
+    if(test_file(tester+base_name))
+    {
+      SYNTAX_FILE=tester+base_name;
+    }
+    else
+    {
+      tester = "/usr/local/share/flpad/";
+      if(test_file(tester+base_name))
+        SYNTAX_FILE=tester+base_name;
+    }
+  }
+  if(SYNTAX_FILE.compare("")==0)
+    trace("No syntax file found...");
   return SYNTAX_FILE;
 }
 
@@ -2875,33 +2784,101 @@ std::vector<std::string> comma_line(std::string lang,std::string field) {
   return make_vec(LINE,",");
 }
 
-std::vector <std::string> keywords(unsigned int type) {
-  return line_item(type, "keywords");
+std::vector <std::string> keywords(std::string header) {
+  return comma_line(header, "keywords");
 }
 
-std::vector <std::string> types(unsigned int type) {
-  return line_item(type, "types");
-}
-
-std::vector<std::string> line_item(unsigned int type, std::string thing) {
-  switch (type)
-  {
-    case 1://c
-      return comma_line("c",thing);
-      break;
-    case 2:
-      return comma_line("sh",thing);
-      break;
-    case 3:
-      return comma_line("haxe",thing);
-      break;
-    default:
-      break;
-  }
-  std::vector<std::string> n;
-  return n;
+std::vector <std::string> types(std::string header) {
+  return comma_line(header, "types");
 }
 
 bool is_space(const char x) {
   return std::isspace(x);
+}
+
+std::string get_type(std::string fname) {
+  if(!test_file(fname))
+  {
+    trace("No file sent in\n"+fname);
+    return "";
+  }
+  
+  const char* ext = fl_filename_ext(fname.c_str());
+  
+  /// get the shebang
+  std::string thisLine;
+  std::ifstream inputFileStream(fname.c_str(), std::ifstream::in);
+  if(inputFileStream.is_open())
+  {
+    getline(inputFileStream,thisLine);
+  }
+  
+  // shell scripts don't always constain an extention... but the shebang tells
+  if(thisLine.find("#!")==0)
+  {
+    std::string tmp=thisLine;
+    unsigned int find = tmp.rfind("/");
+    if(find<tmp.length())
+    {
+      tmp=tmp.substr(find+1,std::string::npos);
+      tmp="."+tmp;
+      ext=tmp.c_str();
+    }
+  }
+  
+  //nothing?  lets leave then...
+  if(ext == NULL)
+    return "";
+  
+  std::string EXT=ext;
+  unsigned int f_dot = EXT.find(".");
+  if(f_dot<EXT.length())
+    EXT=EXT.substr(f_dot+1,std::string::npos);
+  //trace("extention="+EXT);
+  //get the syntax highlighter file
+  std::string filename = get_syntax_file();
+  if(filename.compare("")==0){return "";}
+  
+  //this is the line we are looking for
+  std::string line="ext=";
+  
+  //parse the syntax highlighter file
+  std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
+  /** check if the input file stream is open */
+  if(inputFileStrem.is_open())
+  {
+    std::string this_line;
+    std::string HEADER="";
+    while (getline(inputFileStrem,this_line))
+    {
+      
+      if(this_line.find("[")<=1)
+      {
+         unsigned int open_bracket=this_line.find("[");
+         unsigned int close_bracket=this_line.find("]");
+         HEADER=this_line.substr(open_bracket+1,close_bracket-1);
+         //trace("["+HEADER+"]");
+      }
+      unsigned int eq = this_line.find("=");
+      if(this_line.find(line)<this_line.length())
+      {
+        this_line=this_line.substr(eq+1,std::string::npos);
+        trace(this_line+"::"+EXT);
+        std::vector<std::string> V = make_vec(this_line,",");
+        for( std::vector<std::string>::iterator itr = V.begin();
+                                                itr!=V.end();
+                                                ++itr)
+        {
+          std::string tmp=*itr;
+          //trace(tmp+"=="+EXT);
+          if(tmp.compare(EXT)==0)
+            return HEADER;
+        }
+      }
+    }
+  }
+  
+  if(EXT.compare("bash")==0)
+    return "sh";
+  return "";
 }

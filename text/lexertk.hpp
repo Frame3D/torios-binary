@@ -65,7 +65,7 @@ Copyright 2019  Israel Dahl
 
 namespace lexertk
 {
-
+   inline void trace(std::string msg){std::cout<<msg<<std::endl;}
    namespace details
    {
 
@@ -83,6 +83,20 @@ namespace lexertk
                 ('\b' == c) || ('\v' == c) ||
                 ('\f' == c) ;
       }
+      inline bool is_escaped(const char c)
+      {
+         return ('\a' == c) || ('\b' == c) ||
+                ('\f' == c) || ('\n' == c) ||
+                ('\r' == c) || ('\t' == c) ||
+                ('\v' == c) || ('\?' == c) ||
+                ('\e' == c);
+      }
+
+      inline bool is_newline(const char c){return ('\n'==c);}
+
+      inline bool is_tab(const char c){return ('\t'==c);}
+
+      inline bool is_return(const char c){return ('\r'==c);}
 
       inline bool is_operator_char(const char c)
       {
@@ -273,7 +287,7 @@ namespace lexertk
          e_none        =   0, e_error       =   1, e_err_symbol  =   2,
          e_err_number  =   3, e_err_string  =   4, e_err_sfunc   =   5,
          e_eof         =   6, e_number      =   7, e_symbol      =   8,
-         e_string      =   9, e_assign      =  10, e_shr         =  11,
+         e_string      = 990, e_assign      =  10, e_shr         =  11,
          e_shl         =  12, e_lte         =  13, e_ne          =  14,
          e_gte         =  15, e_lt          = '<', e_gt          = '>',
          e_eq          = '=', e_rbracket    = ')', e_lbracket    = '(',
@@ -282,7 +296,8 @@ namespace lexertk
          e_sub         = '-', e_div         = '/', e_mul         = '*',
          e_mod         = '%', e_pow         = '^', e_colon       = ':',
          e_comment     = 777, e_err_comment = 888, e_whitespace  = 999,
-         e_type        = 778, e_keyword     = 889
+         e_type        = 778, e_keyword     = 889, e_newline     ='\n',
+         e_return      = '\r',e_tab         ='\t', e_bracket     = 998
       };
 
       token()
@@ -360,6 +375,16 @@ namespace lexertk
       inline token& set_whitespace(const Iterator begin, const Iterator end, const Iterator base_begin = Iterator(0))
       {
          type = e_whitespace;
+//std::cout<<"----------------------------::"<<begin<<"::----------------"<<std::endl;
+         if(details::is_escaped_whitespace(*begin))
+         {
+           if(details::is_newline(*begin))
+             type = e_newline;
+           else if (details::is_tab(*begin))
+             type = e_tab;
+           else if (details::is_return(*begin))
+             type = e_return;
+         }
          value.assign(begin,end);
          if (base_begin)
             position = std::distance(base_begin,begin);
@@ -472,7 +497,7 @@ namespace lexertk
          const char* TYPE_TEXT = "F";
          const char* KEYWORD_TEXT = "G";
          const char* NUMBER_TEXT = "H";
-         const char* BRACKET     = "A";
+         const char* BRACKET     = "G";
          switch (t)
          {
             case e_number      : return NUMBER_TEXT;
@@ -486,7 +511,11 @@ namespace lexertk
             case e_lsqrbracket : return BRACKET;
             case e_rcrlbracket : return BRACKET;
             case e_lcrlbracket : return BRACKET;
+            case e_bracket     : return DIRECTIVE_TEXT;
             case e_comment     : return COMMENT_TEXT;
+            case e_newline     : return "\n";
+            case e_tab         : return "\t";
+            case e_return      : return "\r";
             default            : return PLAIN_TEXT;
          }
       }
@@ -526,7 +555,7 @@ namespace lexertk
 
       inline bool is_in_vector(std::string item_to_find, std::vector<std::string> vector_to_check)
       {
-        std::cout<<"*******************\n"<<item_to_find<<"\n*******************"<<std::endl;
+        //std::cout<<"*******************\n"<<item_to_find<<"\n*******************"<<std::endl;
         for( std::vector<std::string>::iterator it = vector_to_check.begin();
 		it!=vector_to_check.end();
 		++it)
@@ -683,6 +712,7 @@ namespace lexertk
          const char* begin = s_itr_;
          while (!is_end(s_itr_) && details::is_whitespace(*s_itr_))
          {
+            //std::cout<<"skip_whitespace:"<<*s_itr_<<":"<<std::endl;
             ++s_itr_;
          }
          t.set_whitespace(begin,s_itr_,base_itr_);
@@ -697,12 +727,12 @@ namespace lexertk
          token_t t;
 
 
-         if (is_end(s_itr_) || is_end((s_itr_ + 1)))
+         if (is_end(s_itr_))
             return;
          else if (!comment::comment_start(*s_itr_,*(s_itr_ + 1),mode,increment))
             return;
 
-         const char* begin = s_itr_ + mode;
+         const char* begin = s_itr_;
          s_itr_ += increment;
 
          while (!is_end(s_itr_) && !comment::comment_end(*s_itr_,*(s_itr_ + 1),mode))
@@ -710,13 +740,11 @@ namespace lexertk
             ++s_itr_;
          }
          
-         t.set_comment(begin-1,s_itr_,base_itr_);
+         t.set_comment(begin,s_itr_,base_itr_);
          token_list_.push_back(t);
 
          if (!is_end(s_itr_))
          {
-            s_itr_ += mode;
-            skip_whitespace();
             skip_comments();
          }
       }
@@ -733,7 +761,7 @@ namespace lexertk
          }
          else if ( ('\'' == (*s_itr_)) || ('\"' == (*s_itr_)) )
          {
-            scan_string();
+            scan_string(*s_itr_);
             return;
          }
          else if (details::is_operator_char(*s_itr_))
@@ -950,9 +978,10 @@ namespace lexertk
          return;
       }
 
-      inline void scan_string()
+      inline void scan_string(const char quote_char)
       {
-         const char* begin = s_itr_ + 1;
+         int QUOTE_CHAR_SIZE = 1;
+         const char* begin = s_itr_ + QUOTE_CHAR_SIZE;
 
          token_t t;
 
@@ -971,17 +1000,16 @@ namespace lexertk
 
          while (!is_end(s_itr_))
          {
-            if (!escaped && ('\\' == *s_itr_))
+            if (!details::is_escaped(*s_itr_) &&(!escaped && ('\\' == *s_itr_)))
             {
                escaped_found = true;
                escaped       = true;
                ++s_itr_;
-
                continue;
             }
             else if (!escaped)
             {
-               if ( ('\'' == *s_itr_) || ('\"' == *s_itr_) )
+               if (quote_char == *s_itr_)
                   break;
             }
             else if (escaped)
@@ -999,12 +1027,13 @@ namespace lexertk
          }
 
          if (!escaped_found)
-            t.set_string(begin,s_itr_,base_itr_);
+            t.set_string(begin-QUOTE_CHAR_SIZE,s_itr_+QUOTE_CHAR_SIZE,base_itr_);
          else
          {
-            std::string parsed_string(begin,s_itr_);
+            /*std::string parsed_string(begin-QUOTE_CHAR_SIZE,s_itr_);
             details::cleanup_escapes(parsed_string);
-            t.set_string(parsed_string, std::distance(base_itr_,begin));
+            t.set_string(parsed_string, std::distance(base_itr_,begin)+QUOTE_CHAR_SIZE);*/
+            t.set_string(begin-QUOTE_CHAR_SIZE,s_itr_+QUOTE_CHAR_SIZE,base_itr_);
          }
 
          token_list_.push_back(t);
