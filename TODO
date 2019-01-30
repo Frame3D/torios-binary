@@ -1,6 +1,5 @@
 flpad
-make syntax highlighting more robust
-add recent documents and make it work better.
+add more languages to styles.flpad
 
 flrun
 make command history, perhaps drop down box...

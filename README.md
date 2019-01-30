@@ -1,7 +1,7 @@
 # torios-binary
 A group of small fltk programs for many uses!
 
-the internal icons are located in the header [include/toolbar_icons.h](https://github.com/Israel-D/torios-binary/blob/master/include/toolbar_icons.h)
+the internal icons are located in the [xpm](https://github.com/Israel-D/torios-binary/blob/master/include/xpm) directory
 
 current Debian/Ubuntu Build-Depends:
 
@@ -36,6 +36,32 @@ current Debian/Ubuntu Build-Depends:
 
 A text editor with initial syntax highlighting available for c/c++ files.
 This was written using the tutorial on the website, with some seriously heavy modification to run ias a modern tabbed text editor.
+
+
+This also includes a heavily modified [lexertk.hpp](https://github.com/ArashPartow/lexertk) to process the text for syntax highlighting.
+
+
+It is extremely easy to add new language definitions copy styles.flpad to $XDG_USER_CONFIG/flpad and edit it:
+
+```conf
+[c]
+ext=cxx,cpp,c
+keywords=alignas, alignof, and, and_eq, asm, bitand, bitor, break, case, catch, class, compl, constexpr, continue, default, delete, do, dynamic_cast, else, explicit, export, extern, false, for, friend, goto, if, inline, new, noexcept, not, not_eq, operator, or, or_eq, private, protected, public, register, reinterpret_cast, return, sizeof, struct, switch, template, this, thread_local, throw, true, try, typedef, typeid, typename, union, using, while, xor, xor_eq
+types=auto, bool, char, char16_t, char32_t, class, const, const_cast, decltype, double, dynamic_cast, enum, explicit, extern, float, friend, inline, int, long, mutable, namespace, nullptr_t, private, protected, public, register, short, signed, sizeof, static, static_assert, static_cast, string, struct, template, typedef, typename, union, unsigned, virtual, vector, void, volatile, wchar_t
+```
+This will look at all files with the cxx,cpp,c extentions and use these keywords, and types for syntax highlighting
+
+
+For shell scripts it will read the shebang line and look for the header, ex
+`#!/bin/sh` will look for the [sh] header
+
+
+You can also turn syntax highlighting on for regular text files to have all quotes highlighted, numbers colored, as well as brackets, etc...
+
+
+This can make editing plain text more fun :smile:
+
+this is how the README.md files are treated... no keywords, just a simple header
 
 ![Alt text](/screenshots/flpad.png?raw=true "flpad")
 
