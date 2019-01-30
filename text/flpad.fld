@@ -102,7 +102,8 @@ unsigned int TYPE_TEXT;
 int FONT_TEXT;
 int SIZE_TEXT;
 int LINE_NUMBERS;
-int BUTTON_COLOR;} {public global
+int BUTTON_COLOR;
+int HIGHLIGHT_PLAIN;} {public global
 }
 
 decl {std::string SYNTAX_FILE;} {public global
@@ -198,8 +199,7 @@ str.assign((std::istreambuf_iterator<char>(t)),
             std::istreambuf_iterator<char>());
 return str;} {}
   }
-  Function {get_styletable(Fl_Text_Display::Style_Table_Entry &styles,int which)} {open
-  } {
+  Function {get_styletable(Fl_Text_Display::Style_Table_Entry &styles,int which)} {} {
     code {int font = FONT_TEXT;
 int bold = font + 1;
 int ital = bold + 1;
@@ -242,7 +242,7 @@ switch(which)
 styletable[which] = styles; //  set
 //std::cout<<"Got style table for: "<<whichtype<<"\\nFONT="<<styles.font<<"\\tCOLOR="<<styles.color<<std::endl;} {}
   }
-  Function {handle(int event)} {open protected return_type int
+  Function {handle(int event)} {protected return_type int
   } {
     code {UI* ui = ((UI*)(parent()->parent()->parent()->user_data()));
 switch(event)
@@ -277,8 +277,7 @@ switch(event)
 }
 return Fl_Text_Editor::handle(event);} {}
   }
-  Function {init_highlight()} {open
-  } {
+  Function {init_highlight()} {} {
     code {Fl_Text_Display::Style_Table_Entry A; //  Plain
 get_styletable(A,0);
 
@@ -309,12 +308,23 @@ textbuffer->add_modify_callback(style_update, (void*) this);} {}
   Function {modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL)} {open return_type void
   } {
     code {std::string thisLine;
-char* buf = textbuffer->text();
-std::string out(buf);
-std::string res = style_line(out);
-char* RES = const_cast <char*> (res.c_str());
-stylebuffer->text(RES);
-redisplay_range(0,stylebuffer->length());} {}
+if ( (HIGHLIGHT_PLAIN==0)&& (STYLE_HEADER.compare("")==0) )
+{
+  char *style = new char[textbuffer->length() + 1];
+  memset(style, 'A', textbuffer->length());
+  style[textbuffer->length()] = '\\0';
+  stylebuffer->text(style);
+}
+else
+{
+  char* buf = textbuffer->text();
+  std::string out(buf);
+  std::string res = style_line(out);
+  char* RES = const_cast <char*> (res.c_str());
+  stylebuffer->text(RES);
+}
+redisplay_range(0,stylebuffer->length());} {selected
+    }
   }
   Function {set_type(std::string fname)} {open
   } {
@@ -508,13 +518,13 @@ return;} {}
   }
   Function {make_window()} {} {
     Fl_Window win {
-      label {FLTK Pad}
+      label {FLTK Pad} open
       xywh {348 120 520 545} type Double color 47 hide
       code0 {//Fl::event_dispatch(handle);}
       code1 {o->size_range(o->w(), o->h(), 0, 0);}
       code2 {make_icon(o);} xclass flpad
     } {
-      Fl_Menu_Bar menu {open
+      Fl_Menu_Bar menu {
         xywh {0 0 520 25} box FLAT_BOX down_box FLAT_BOX color 39 selection_color 80 labelsize 16 labelcolor 7 align 260 textsize 16 textcolor 7
       } {
         Submenu {} {
@@ -650,7 +660,7 @@ Fl_Text_Editor::kf_select_all(0,textor);}
           }
         }
       }
-      Fl_Group buttons {open
+      Fl_Group buttons {
         xywh {0 25 520 30} box FLAT_BOX
       } {
         Fl_Button add_button {
@@ -722,8 +732,7 @@ Fl_Text_Editor::kf_select_all(0,textor);}
       } {}
     }
   }
-  Function {pref_window()} {open
-  } {
+  Function {pref_window()} {} {
     Fl_Window pref_win {
       label Preferences
       xywh {291 182 310 400} type Double color 47 hide xclass flpad
@@ -823,7 +832,7 @@ o->parent()->hide();}
   } {
     Fl_Window syntax_win {
       label {Syntax Colors} open
-      xywh {893 146 170 255} type Double xclass flpad visible
+      xywh {893 146 170 275} type Double hide xclass flpad
     } {
       Fl_Button cm {
         label Comments
@@ -839,7 +848,7 @@ o->parent()->hide();}
       }
       Fl_Button directives {
         label Symbols
-        callback {choose_a_color(o);} selected
+        callback {choose_a_color(o);}
         tooltip {The color of symbols} xywh {20 70 55 30} box FLAT_BOX color 23 align 129
         code0 {o->color( DIRECTIVE_TEXT );}
       }
@@ -864,7 +873,7 @@ o->parent()->hide();}
       Fl_Button {} {
         label Cancel
         callback {syntax_win->hide();}
-        xywh {15 215 65 30} box FLAT_BOX color 80 labelcolor 7
+        xywh {15 235 65 30} box FLAT_BOX color 80 labelcolor 7
       }
       Fl_Button {} {
         label SAVE
@@ -874,12 +883,13 @@ DIRECTIVE_TEXT=directives->color();
 TYPE_TEXT=typezz->color();
 KEYWORD_TEXT=keywordz->color();
 NUMBER_TEXT=numbers->color();
+HIGHLIGHT_PLAIN=plain_text->value();
 if(!save_preferences())
 {
   trace("Failed to save preferences");
 }
 syntax_win->hide();}
-        xywh {95 215 65 30} box FLAT_BOX color 62 labelcolor 7
+        xywh {95 235 65 30} box FLAT_BOX color 62 labelcolor 7
       }
       Fl_Menu_Button {} {
         label Theme open
@@ -897,11 +907,21 @@ colorize_syntax_buttons();}
 colorize_syntax_buttons();}
           xywh {0 0 100 20}
         }
+        MenuItem {} {
+          label None
+          callback {none_theme();
+colorize_syntax_buttons();}
+          xywh {10 10 100 20}
+        }
+      }
+      Fl_Check_Button plain_text {
+        label {Highlight Plain text?}
+        tooltip {Highlight quotes, numbers, brackets, etc... on plain text} xywh {5 200 25 25} down_box GTK_DOWN_BOX color 55 selection_color 63
+        code0 {o->value(HIGHLIGHT_PLAIN);}
       }
     }
   }
-  Function {add_tab(bool LOAD=true, bool NEW = true)} {open
-  } {
+  Function {add_tab(bool LOAD=true, bool NEW = true)} {} {
     code {int y = menu->y()+tabs->y()+add_button->y();
 int h = tabs->h();
 int w = tabs->w();
@@ -1201,6 +1221,7 @@ SELECTION_TEXT=80;
 FONT_TEXT=FL_COURIER;
 SIZE_TEXT=14;
 LINE_NUMBERS=0;
+HIGHLIGHT_PLAIN=0;
 //syntax
 COMMENT_TEXT=3368601600;
 STRING_TEXT=4291493888;
@@ -1216,6 +1237,7 @@ BACKGROUND_TEXT=FL_BACKGROUND2_COLOR;
 SELECTION_TEXT=80;
 FONT_TEXT=FL_COURIER;
 SIZE_TEXT=14;
+HIGHLIGHT_PLAIN=0;
 LINE_NUMBERS=0;
 //syntax
 COMMENT_TEXT=1077952512;
@@ -1340,7 +1362,7 @@ if(xdg_config_home==NULL)
 }
 else
   fname = xdg_config_home;
-fname+="/flpad.config";
+fname+="/flpad/flpad.config";
 return fname;} {}
   }
   Function {get_preferences()} {} {
@@ -1424,6 +1446,11 @@ if(inputFileStrem.is_open())
     {
       subString=line.substr(start,std::string::npos);
       BUTTON_COLOR=convert(subString);
+    }
+    if(line.find("PT:")<line.length())
+    {
+      subString=line.substr(start,std::string::npos);
+      HIGHLIGHT_PLAIN=convert(subString);
     }
   }
 }
@@ -1533,8 +1560,7 @@ if(textor==NULL)
   return;
 Fl_Text_Editor::kf_insert(0,textor);} {}
   }
-  Function {load_file(std::string newfile, int ipos,bool NEW=true)} {open
-  } {
+  Function {load_file(std::string newfile, int ipos,bool NEW=true)} {} {
     code {//trace("Loading file:"+newfile);
 //todo 
 //if(pick_tab(newfile)){return;}
@@ -1583,6 +1609,24 @@ menu->redraw();} {}
 const Fl_Pixmap * flpad_xpm_icon = &f;
 const Fl_RGB_Image *img = new Fl_RGB_Image(flpad_xpm_icon,FL_GRAY);
 o->icon(img);} {}
+  }
+  Function {none_theme()} {open
+  } {
+    code {FOREGROUND_TEXT=FL_FOREGROUND_COLOR;
+BACKGROUND_TEXT=FL_BACKGROUND2_COLOR;
+SELECTION_TEXT=80;
+FONT_TEXT=FL_COURIER;
+SIZE_TEXT=14;
+LINE_NUMBERS=0;
+HIGHLIGHT_PLAIN=0;
+//syntax
+COMMENT_TEXT=FL_FOREGROUND_COLOR;
+STRING_TEXT=FL_FOREGROUND_COLOR;
+DIRECTIVE_TEXT=FL_FOREGROUND_COLOR;
+NUMBER_TEXT=FL_FOREGROUND_COLOR;
+KEYWORD_TEXT=FL_FOREGROUND_COLOR;
+TYPE_TEXT=FL_FOREGROUND_COLOR;
+BUTTON_COLOR=1;} {}
   }
   Function {new_cb()} {} {
     code {Fl_Syntax_Text_Editor * textor = current_editor();
@@ -1843,7 +1887,7 @@ newfile = fl_file_chooser("Save File As?", "*", textor->filename.c_str());
 if (newfile != NULL)
   save_file(newfile);} {}
   }
-  Function {save_preferences()} {open return_type bool
+  Function {save_preferences()} {return_type bool
   } {
     code {std::string out=prefline("FG",FOREGROUND_TEXT);
 out+=prefline("BG",BACKGROUND_TEXT);
@@ -1858,6 +1902,7 @@ out+=prefline("NM",NUMBER_TEXT);
 out+=prefline("KY",KEYWORD_TEXT);
 out+=prefline("TT",TYPE_TEXT);
 out+=prefline("BC",BUTTON_COLOR);
+out+=prefline("PT",HIGHLIGHT_PLAIN);
 std::ofstream dest;
 std::string fname=get_filename();
 dest.open(fname.c_str());
@@ -1885,8 +1930,7 @@ else
   ((Fl_Widget *)(textor->user_data()))->labelcolor(NORMAL_COLOR);
 }} {}
   }
-  Function {set_title(Fl_Widget* g)} {open
-  } {
+  Function {set_title(Fl_Widget* g)} {} {
     code {if(g==NULL)
   return;
 std::string title;
@@ -2166,9 +2210,9 @@ if(mydir!=NULL)
 return false;} {}
 }
 
-Function {get_syntax_file()} {return_type {std::string}
+Function {get_syntax_file()} {open return_type {std::string}
 } {
-  code {std::string base_name = "styles.flpad";
+  code {std::string base_name = "flpad/styles.flpad";
 if(SYNTAX_FILE.compare("")!=0)
   return SYNTAX_FILE;
 //testing
@@ -2195,14 +2239,14 @@ if(test_file(home_tester))
 }
 else
 {
-  std::string tester = "/usr/share/flpad/";
+  std::string tester = "/usr/share/";
   if(test_file(tester+base_name))
   {
     SYNTAX_FILE=tester+base_name;
   }
   else
   {
-    tester = "/usr/local/share/flpad/";
+    tester = "/usr/local/share/";
     if(test_file(tester+base_name))
       SYNTAX_FILE=tester+base_name;
   }

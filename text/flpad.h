@@ -46,7 +46,8 @@ unsigned int TYPE_TEXT;
 int FONT_TEXT;
 int SIZE_TEXT;
 int LINE_NUMBERS;
-int BUTTON_COLOR; 
+int BUTTON_COLOR;
+int HIGHLIGHT_PLAIN; 
 std::string SYNTAX_FILE; 
 
 class Fl_Syntax_Text_Editor : public Fl_Text_Editor {
@@ -329,7 +330,10 @@ private:
   static void cb_Light(Fl_Menu_*, void*);
   inline void cb_Dark_i(Fl_Menu_*, void*);
   static void cb_Dark(Fl_Menu_*, void*);
+  inline void cb_None_i(Fl_Menu_*, void*);
+  static void cb_None(Fl_Menu_*, void*);
 public:
+  Fl_Check_Button *plain_text;
   void add_tab(bool LOAD=true, bool NEW = true);
   int ask(std::string MSG, std::string yes="Yes", std::string no="No", std::string other="");
   static void ask_cb(Fl_Widget *o, long val);
@@ -363,6 +367,7 @@ public:
   void insert_cb();
   void load_file(std::string newfile, int ipos,bool NEW=true);
   void make_icon(Fl_Window *o);
+  void none_theme();
   void new_cb();
   void open_cb();
   void open_file(bool NEW=true);

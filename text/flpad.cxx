@@ -178,11 +178,21 @@ void Fl_Syntax_Text_Editor::init_highlight() {
 
 void Fl_Syntax_Text_Editor::modify_cb(int pos, int nInserted, int nDeleted, int unused, const char * nada) {
   std::string thisLine;
-  char* buf = textbuffer->text();
-  std::string out(buf);
-  std::string res = style_line(out);
-  char* RES = const_cast <char*> (res.c_str());
-  stylebuffer->text(RES);
+  if ( (HIGHLIGHT_PLAIN==0)&& (STYLE_HEADER.compare("")==0) )
+  {
+    char *style = new char[textbuffer->length() + 1];
+    memset(style, 'A', textbuffer->length());
+    style[textbuffer->length()] = '\0';
+    stylebuffer->text(style);
+  }
+  else
+  {
+    char* buf = textbuffer->text();
+    std::string out(buf);
+    std::string res = style_line(out);
+    char* RES = const_cast <char*> (res.c_str());
+    stylebuffer->text(RES);
+  }
   redisplay_range(0,stylebuffer->length());
 }
 
@@ -732,6 +742,7 @@ DIRECTIVE_TEXT=directives->color();
 TYPE_TEXT=typezz->color();
 KEYWORD_TEXT=keywordz->color();
 NUMBER_TEXT=numbers->color();
+HIGHLIGHT_PLAIN=plain_text->value();
 if(!save_preferences())
 {
   trace("Failed to save preferences");
@@ -758,10 +769,19 @@ void UI::cb_Dark(Fl_Menu_* o, void* v) {
   ((UI*)(o->parent()->user_data()))->cb_Dark_i(o,v);
 }
 
+void UI::cb_None_i(Fl_Menu_*, void*) {
+  none_theme();
+colorize_syntax_buttons();
+}
+void UI::cb_None(Fl_Menu_* o, void* v) {
+  ((UI*)(o->parent()->user_data()))->cb_None_i(o,v);
+}
+
 unsigned char UI::menu_Theme_i18n_done = 0;
 Fl_Menu_Item UI::menu_Theme[] = {
  {"Light Background", 0,  (Fl_Callback*)UI::cb_Light, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {"Dark Background", 0,  (Fl_Callback*)UI::cb_Dark, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"None", 0,  (Fl_Callback*)UI::cb_None, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {0,0,0,0,0,0,0,0,0}
 };
 
@@ -1127,7 +1147,7 @@ Fl_Double_Window* UI::pref_window() {
 }
 
 Fl_Double_Window* UI::syntax_window() {
-  { syntax_win = new Fl_Double_Window(170, 255, gettext("Syntax Colors"));
+  { syntax_win = new Fl_Double_Window(170, 275, gettext("Syntax Colors"));
     syntax_win->user_data((void*)(this));
     { Fl_Button* o = cm = new Fl_Button(20, 20, 55, 30, gettext("Comments"));
       cm->tooltip(gettext("The color of comments"));
@@ -1177,13 +1197,13 @@ Fl_Double_Window* UI::syntax_window() {
       numbers->align(Fl_Align(129));
       o->color( NUMBER_TEXT );
     } // Fl_Button* numbers
-    { Fl_Button* o = new Fl_Button(15, 215, 65, 30, gettext("Cancel"));
+    { Fl_Button* o = new Fl_Button(15, 235, 65, 30, gettext("Cancel"));
       o->box(FL_FLAT_BOX);
       o->color((Fl_Color)80);
       o->labelcolor(FL_BACKGROUND2_COLOR);
       o->callback((Fl_Callback*)cb_Cancel1);
     } // Fl_Button* o
-    { Fl_Button* o = new Fl_Button(95, 215, 65, 30, gettext("SAVE"));
+    { Fl_Button* o = new Fl_Button(95, 235, 65, 30, gettext("SAVE"));
       o->box(FL_FLAT_BOX);
       o->color((Fl_Color)62);
       o->labelcolor(FL_BACKGROUND2_COLOR);
@@ -1195,13 +1215,20 @@ Fl_Double_Window* UI::syntax_window() {
       o->selection_color(FL_DARK_RED);
       if (!menu_Theme_i18n_done) {
         int i=0;
-        for ( ; i<2; i++)
+        for ( ; i<3; i++)
           if (menu_Theme[i].label())
             menu_Theme[i].label(gettext(menu_Theme[i].label()));
         menu_Theme_i18n_done = 1;
       }
       o->menu(menu_Theme);
     } // Fl_Menu_Button* o
+    { Fl_Check_Button* o = plain_text = new Fl_Check_Button(5, 200, 25, 25, gettext("Highlight Plain text?"));
+      plain_text->tooltip(gettext("Highlight quotes, numbers, brackets, etc... on plain text"));
+      plain_text->down_box(FL_GTK_DOWN_BOX);
+      plain_text->color((Fl_Color)55);
+      plain_text->selection_color(FL_GREEN);
+      o->value(HIGHLIGHT_PLAIN);
+    } // Fl_Check_Button* plain_text
     syntax_win->xclass("flpad");
     syntax_win->end();
   } // Fl_Double_Window* syntax_win
@@ -1515,6 +1542,7 @@ void UI::dark_theme() {
   FONT_TEXT=FL_COURIER;
   SIZE_TEXT=14;
   LINE_NUMBERS=0;
+  HIGHLIGHT_PLAIN=0;
   //syntax
   COMMENT_TEXT=3368601600;
   STRING_TEXT=4291493888;
@@ -1531,6 +1559,7 @@ void UI::default_theme() {
   SELECTION_TEXT=80;
   FONT_TEXT=FL_COURIER;
   SIZE_TEXT=14;
+  HIGHLIGHT_PLAIN=0;
   LINE_NUMBERS=0;
   //syntax
   COMMENT_TEXT=1077952512;
@@ -1660,7 +1689,7 @@ std::string UI::get_filename() {
   }
   else
     fname = xdg_config_home;
-  fname+="/flpad.config";
+  fname+="/flpad/flpad.config";
   return fname;
 }
 
@@ -1745,6 +1774,11 @@ void UI::get_preferences() {
       {
         subString=line.substr(start,std::string::npos);
         BUTTON_COLOR=convert(subString);
+      }
+      if(line.find("PT:")<line.length())
+      {
+        subString=line.substr(start,std::string::npos);
+        HIGHLIGHT_PLAIN=convert(subString);
       }
     }
   }
@@ -1908,6 +1942,24 @@ void UI::make_icon(Fl_Window *o) {
   const Fl_Pixmap * flpad_xpm_icon = &f;
   const Fl_RGB_Image *img = new Fl_RGB_Image(flpad_xpm_icon,FL_GRAY);
   o->icon(img);
+}
+
+void UI::none_theme() {
+  FOREGROUND_TEXT=FL_FOREGROUND_COLOR;
+  BACKGROUND_TEXT=FL_BACKGROUND2_COLOR;
+  SELECTION_TEXT=80;
+  FONT_TEXT=FL_COURIER;
+  SIZE_TEXT=14;
+  LINE_NUMBERS=0;
+  HIGHLIGHT_PLAIN=0;
+  //syntax
+  COMMENT_TEXT=FL_FOREGROUND_COLOR;
+  STRING_TEXT=FL_FOREGROUND_COLOR;
+  DIRECTIVE_TEXT=FL_FOREGROUND_COLOR;
+  NUMBER_TEXT=FL_FOREGROUND_COLOR;
+  KEYWORD_TEXT=FL_FOREGROUND_COLOR;
+  TYPE_TEXT=FL_FOREGROUND_COLOR;
+  BUTTON_COLOR=1;
 }
 
 void UI::new_cb() {
@@ -2197,6 +2249,7 @@ bool UI::save_preferences() {
   out+=prefline("KY",KEYWORD_TEXT);
   out+=prefline("TT",TYPE_TEXT);
   out+=prefline("BC",BUTTON_COLOR);
+  out+=prefline("PT",HIGHLIGHT_PLAIN);
   std::ofstream dest;
   std::string fname=get_filename();
   dest.open(fname.c_str());
@@ -2505,7 +2558,7 @@ bool test_file(std::string file) {
 }
 
 std::string get_syntax_file() {
-  std::string base_name = "styles.flpad";
+  std::string base_name = "flpad/styles.flpad";
   if(SYNTAX_FILE.compare("")!=0)
     return SYNTAX_FILE;
   //testing
@@ -2532,14 +2585,14 @@ std::string get_syntax_file() {
   }
   else
   {
-    std::string tester = "/usr/share/flpad/";
+    std::string tester = "/usr/share/";
     if(test_file(tester+base_name))
     {
       SYNTAX_FILE=tester+base_name;
     }
     else
     {
-      tester = "/usr/local/share/flpad/";
+      tester = "/usr/local/share/";
       if(test_file(tester+base_name))
         SYNTAX_FILE=tester+base_name;
     }

@@ -22,3 +22,11 @@ defines=#
 [flpad]
 ext=flpad
 keywords=ext,keywords,types,blockopen,blockclose,defines
+[python]
+ext=py
+keywords=False,None,True,and,as,assert,break,class,continue,def,del,elif,else,except,finally,for,from,global,if,import,in,is,lambda,nonlocal,not,or,pass,raise,return,try,while,with,yield
+types=int,float,complex,list,tuple,range,str,bytes,bytearray,memoryview,set,frozenset,dict
+[rust]
+ext=rs
+keywords=as,break,const,continue,crate,else,enum,extern,false,fn,for,if,impl,in,let,loop,match,mod,move,mut,pub,ref,return,self,Self,static,struct,super,trait,type,unsafe,use,where,while,dyn,abstract,become,box,do,final,macro,override,priv,typeof,unsized,virtual,yield,async,await,try,union
+types=true,false,char,str,u8,u16,u32,u64,u128,i8,i16,i32,i64,i128,f32,f64,usize,isize

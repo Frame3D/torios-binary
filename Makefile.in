@@ -40,6 +40,7 @@ install: $(TARGET)
 	cp desktop/flcalc.desktop $(DESTDIR)$(PREFIX)/share/applications/flcalc.desktop
 	cp desktop/flwelcome.desktop $(DESTDIR)$(PREFIX)/share/applications/flwelcome.desktop
 #CONFIG
+	mkdir -p $(DESTDIR)$(PREFIX)/flpad/
 	cp text/$(STYLES_CONFIG) $(DESTDIR)$(PREFIX)/flpad/$(STYLES_CONFIG)
 
 .PHONY: uninstall
