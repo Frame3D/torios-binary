@@ -19,4 +19,6 @@ types=Int,Float,String,Bool,Void
 blockopen=/*
 blockclose=*/
 defines=#
-
+[flpad]
+ext=flpad
+keywords=ext,keywords,types,blockopen,blockclose,defines

@@ -442,7 +442,15 @@ namespace lexertk
 
          return *this;
       }
-
+      template <typename Iterator>
+      inline token& set_as_operator(const Iterator begin, const Iterator end, const Iterator base_begin = Iterator(0))
+      {
+         type = e_eq;
+         value.assign(begin,end);
+         if (base_begin)
+            position = std::distance(base_begin,begin);
+         return *this;
+      }
       static inline std::string to_str(token_type t)
       {
          switch (t)
@@ -516,6 +524,7 @@ namespace lexertk
             case e_newline     : return "\n";
             case e_tab         : return "\t";
             case e_return      : return "\r";
+            case e_eq          : return DIRECTIVE_TEXT;
             default            : return PLAIN_TEXT;
          }
       }
@@ -555,7 +564,6 @@ namespace lexertk
 
       inline bool is_in_vector(std::string item_to_find, std::vector<std::string> vector_to_check)
       {
-        //std::cout<<"*******************\n"<<item_to_find<<"\n*******************"<<std::endl;
         for( std::vector<std::string>::iterator it = vector_to_check.begin();
 		it!=vector_to_check.end();
 		++it)
@@ -706,13 +714,13 @@ namespace lexertk
       }
 
 //DONT SKIP... actually report whitespace
-      inline void skip_whitespace()
+      inline void scan_whitespace()
       {
          token t;
          const char* begin = s_itr_;
          while (!is_end(s_itr_) && details::is_whitespace(*s_itr_))
          {
-            //std::cout<<"skip_whitespace:"<<*s_itr_<<":"<<std::endl;
+            //std::cout<<"scan_whitespace:"<<*s_itr_<<":"<<std::endl;
             ++s_itr_;
          }
          t.set_whitespace(begin,s_itr_,base_itr_);
@@ -720,7 +728,7 @@ namespace lexertk
       }
 
 //DONT SKIP... actually report comments
-      inline void skip_comments()
+      inline void scan_comments()
       {
          int mode = 0;
          int increment = 0;
@@ -745,15 +753,15 @@ namespace lexertk
 
          if (!is_end(s_itr_))
          {
-            skip_comments();
+            scan_comments();
          }
       }
 
       inline void scan_token()
       {
-         skip_whitespace();
+         scan_whitespace();
 
-         skip_comments();
+         scan_comments();
 
          if (is_end(s_itr_))
          {
@@ -769,17 +777,17 @@ namespace lexertk
             scan_operator();
             return;
          }
+         else if (details::is_digit(*s_itr_))
+         {
+            scan_number();
+            return;
+         }
          else if ( (details::is_letter(*s_itr_)) ||
                    (details::is_tilde(*s_itr_))  ||
                    (details::is_dollar(*s_itr_))
                  )
          {
             scan_symbol();
-            return;
-         }
-         else if (details::is_digit((*s_itr_)) || ('.' == (*s_itr_)))
-         {
-            scan_number();
             return;
          }
          else
@@ -794,48 +802,14 @@ namespace lexertk
       inline void scan_operator()
       {
          token_t t;
-
-         if (!is_end(s_itr_ + 1))
+         const char* begin = s_itr_;
+         while (!is_end(s_itr_) && details::is_operator_char(*s_itr_))
          {
-            token_t::token_type ttype = token_t::e_none;
-
-            char c0 = s_itr_[0];
-            char c1 = s_itr_[1];
-
-                 if ((c0 == '<') && (c1 == '=')) ttype = token_t::e_lte;
-            else if ((c0 == '>') && (c1 == '=')) ttype = token_t::e_gte;
-            else if ((c0 == '<') && (c1 == '>')) ttype = token_t::e_ne;
-            else if ((c0 == '!') && (c1 == '=')) ttype = token_t::e_ne;
-            else if ((c0 == '=') && (c1 == '=')) ttype = token_t::e_eq;
-            else if ((c0 == ':') && (c1 == '=')) ttype = token_t::e_assign;
-            else if ((c0 == '<') && (c1 == '<')) ttype = token_t::e_shl;
-            else if ((c0 == '>') && (c1 == '>')) ttype = token_t::e_shr;
-
-            if (token_t::e_none != ttype)
-            {
-               t.set_operator(ttype,s_itr_,s_itr_ + 2,base_itr_);
-               token_list_.push_back(t);
-               s_itr_ += 2;
-               return;
-            }
+           ++s_itr_;
          }
-
-         if ('<' == *s_itr_)
-            t.set_operator(token_t::e_lt ,s_itr_,s_itr_ + 1,base_itr_);
-         else if ('>' == *s_itr_)
-            t.set_operator(token_t::e_gt ,s_itr_,s_itr_ + 1,base_itr_);
-         else if (';' == *s_itr_)
-            t.set_operator(token_t::e_eof,s_itr_,s_itr_ + 1,base_itr_);
-         else if ('&' == *s_itr_)
-            t.set_symbol(s_itr_,s_itr_ + 1,base_itr_);
-         else if ('|' == *s_itr_)
-            t.set_symbol(s_itr_,s_itr_ + 1,base_itr_);
-         else
-            t.set_operator(token_t::token_type(*s_itr_),s_itr_,s_itr_ + 1,base_itr_);
-
+         t.set_as_operator(begin,s_itr_,base_itr_);
          token_list_.push_back(t);
-
-         ++s_itr_;
+         return;
       }
 
       inline void scan_symbol()
@@ -847,7 +821,7 @@ namespace lexertk
          while (
                  (!is_end(s_itr_)) &&
                  (!details::is_whitespace(*s_itr_)) &&
-                 (!details::is_bracket(*s_itr_)) &&
+                 (!details::is_operator_char(*s_itr_)) &&
                  (
                    (details::is_letter_or_digit(*s_itr_)) ||
                    ((*s_itr_) == '_')                     ||
@@ -873,6 +847,15 @@ namespace lexertk
 
       inline void scan_number()
       {
+         token_t t;
+         const char* begin = s_itr_;
+         while (!is_end(s_itr_) && details::is_digit(*s_itr_))
+         {
+           ++s_itr_;
+         }
+         t.set_numeric(begin,s_itr_,base_itr_);
+         token_list_.push_back(t);
+         return;
          /*
             Attempt to match a valid numeric value in one of the following formats:
             01. 123456
@@ -890,12 +873,12 @@ namespace lexertk
             13. .1234E-3
             14. .1234e-3
          */
-         const char* begin       = s_itr_;
+        // const char* begin       = s_itr_;
          bool dot_found          = false;
          bool e_found            = false;
          bool post_e_sign_found  = false;
          bool post_e_digit_found = false;
-         token_t t;
+        // token_t t;
 
          while (!is_end(s_itr_))
          {
@@ -1009,6 +992,7 @@ namespace lexertk
             }
             else if (!escaped)
             {
+               //is this the end quote??
                if (quote_char == *s_itr_)
                   break;
             }
@@ -1030,7 +1014,8 @@ namespace lexertk
             t.set_string(begin-QUOTE_CHAR_SIZE,s_itr_+QUOTE_CHAR_SIZE,base_itr_);
          else
          {
-            /*std::string parsed_string(begin-QUOTE_CHAR_SIZE,s_itr_);
+            /* Commented out because we need to keep the string
+            std::string parsed_string(begin-QUOTE_CHAR_SIZE,s_itr_);
             details::cleanup_escapes(parsed_string);
             t.set_string(parsed_string, std::distance(base_itr_,begin)+QUOTE_CHAR_SIZE);*/
             t.set_string(begin-QUOTE_CHAR_SIZE,s_itr_+QUOTE_CHAR_SIZE,base_itr_);

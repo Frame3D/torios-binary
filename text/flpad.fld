@@ -17,9 +17,6 @@ decl {\#include "lexertk.hpp"} {public global
 decl {\#include "../include/toolbar_icons.h"} {public global
 }
 
-decl {\#include "keywords.h"} {public global
-}
-
 decl {\#include <algorithm>} {public global
 }
 
@@ -312,31 +309,12 @@ textbuffer->add_modify_callback(style_update, (void*) this);} {}
   Function {modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL)} {open return_type void
   } {
     code {std::string thisLine;
-
 char* buf = textbuffer->text();
 std::string out(buf);
-/*
-std::ifstream inputFileStream(filename.c_str(), std::ifstream::in);
-if(inputFileStream.is_open())
-{
-  while (getline(inputFileStream,thisLine))
-  {
-    std::string tmp = thisLine;//style_line(thisLine);
-    if(out.compare("")==0)
-      out=tmp;
-    else
-      out=out+"\\n"+tmp;
-    //trace("FILE:"+thisLine+"\\nSTYLE:"+tmp);
-  }
-}
-*/
-
 std::string res = style_line(out);
-//trace("OUT=\\n"+res);
 char* RES = const_cast <char*> (res.c_str());
 stylebuffer->text(RES);
-redisplay_range(0,stylebuffer->length());} {selected
-    }
+redisplay_range(0,stylebuffer->length());} {}
   }
   Function {set_type(std::string fname)} {open
   } {
@@ -747,7 +725,7 @@ Fl_Text_Editor::kf_select_all(0,textor);}
   Function {pref_window()} {open
   } {
     Fl_Window pref_win {
-      label Preferences open
+      label Preferences
       xywh {291 182 310 400} type Double color 47 hide xclass flpad
     } {
       Fl_Browser font_b {
@@ -841,10 +819,11 @@ o->parent()->hide();}
       }
     }
   }
-  Function {syntax_window()} {} {
+  Function {syntax_window()} {open
+  } {
     Fl_Window syntax_win {
       label {Syntax Colors} open
-      xywh {466 140 170 255} type Double hide xclass flpad
+      xywh {893 146 170 255} type Double xclass flpad visible
     } {
       Fl_Button cm {
         label Comments
@@ -859,9 +838,9 @@ o->parent()->hide();}
         code0 {o->color( STRING_TEXT );}
       }
       Fl_Button directives {
-        label Directives
-        callback {choose_a_color(o);}
-        tooltip {The color of directives} xywh {20 70 55 30} box FLAT_BOX color 23 align 129
+        label Symbols
+        callback {choose_a_color(o);} selected
+        tooltip {The color of symbols} xywh {20 70 55 30} box FLAT_BOX color 23 align 129
         code0 {o->color( DIRECTIVE_TEXT );}
       }
       Fl_Button typezz {
@@ -2032,220 +2011,7 @@ catch (...)
 }} {}
 }
 
-Function {compare_keywords(const void *a, const void *b)} {return_type {static int}
-} {
-  code {return (strcmp(*((const char **)a), *((const char **)b)));} {}
-}
-
-Function {c_style(const char* text, char* style, int length)} {open
-} {
-  code {trace("c_style");
-char diectiveChar = '\#';
-const char* lineComment ="//";
-const char* blockCommentOpen="/*";
-const char* blockCommentClose="*/";
-bool hasBlockComments=true;
-style_highlighter(text,style,length, c_code_types,c_code_keywords, diectiveChar,lineComment, hasBlockComments,blockCommentOpen,blockCommentClose);} {}
-}
-
-Function {style_highlighter(const char* text, char* style, int length, const void * keys, const void* types ,char diectiveChar ,const char* lineComment,bool hasBlockComments=false, const char* blockCommentOpen=NULL, const char* blockCommentClose=NULL, bool hasDirectives=true)} {open
-} {
-  code {trace("c style highlighter");
-char         current;
-int          col;
-int          last;
-char         buf[255],
-             *bufptr;
-const char   *temp;
-
-  // Style letters:
-  //
-  // A - Plain
-  // B - Line comments
-  // C - Block comments
-  // D - Strings
-  // E - Directives
-  // F - Types
-  // G - Keywords
-  // H - Numbers
-bool sng=false;
-bool dub=false; 
-const char* escapeDub="\\\\\\"";
-const char* EescapeDub="\\"\\\\\\"";
-const char* escapeSingle="\\\\\\'";
-const char* EescapeSingle="'\\\\\\\\'";
-for (current = *style, col = 0, last = 0; length > 0; length --, text ++)
-{
-  if (current == 'B' || current == 'F' || current == 'G' || current == 'H') current = 'A';
-  if (current == 'A')
-  {
-      // Check for directives, comments, strings, and keywords...
-    if (hasDirectives && (col == 0 && *text == diectiveChar))
-    {
-      // Set style to directive
-      current = 'E';
-    }
-    else if (strncmp(text, lineComment, 2) == 0)
-    {
-      current = 'B';
-      for (; length > 0 && *text != '\\n'; length --, text ++) *style++ = 'B';
-
-      if (length == 0) break;
-    }
-    else if (hasBlockComments && strncmp(text, blockCommentOpen, 2) == 0)
-    {
-      current = 'C';
-    }
-    else if (isdigit(*text) && !isalpha(*text))
-    {
-      current = 'H';
-    }
-    else if ( 
-               ( (strncmp(text, escapeDub, 2) == 0) && (strncmp(text, EescapeDub, 3) != 0) )
-            || ( (strncmp(text, escapeSingle, 2) == 0) && (strncmp(text, EescapeSingle, 3) != 0) )
-            )
-    {
-      // Quoted quote...
-      //std::cout<<text<<"::"<<escapeSingle<<std::endl;
-      *style++ = current;
-      *style++ = current;
-      text ++;
-      length --;
-      col += 2;
-      continue;
-    }
-    else if (*text == '\\'')
-    {
-      sng=true;
-      current = 'D';
-    }
-     else if (*text == '\\"')
-    {
-      dub=true;
-      current = 'D';
-    }
-
-    else if (!last && (islower((*text)&255) || *text == '_'))
-    {
-        // Might be a keyword...
-      for (temp = text, bufptr = buf;
-           (islower((*temp)&255) || *temp == '_') && bufptr < (buf + sizeof(buf) - 1);
-           *bufptr++ = *temp++);
-
-      if (!islower((*temp)&255) && *temp != '_')
-      {
-        *bufptr = '\\0';
-// c_code_keywords, c_code_types,
-         bufptr = buf;
-
-        if (bsearch(&bufptr, c_code_types,
-            sizeof(c_code_types) / sizeof(const char*),
-            sizeof(const char*), compare_keywords))
-        {
-          while (text < temp)
-          {
-          //trace("TYPE");
-            *style++ = 'F';
-            text ++;
-            length --;
-            col ++;
-          }
-
-          text --;
-          length ++;
-          last = 1;
-          continue;
-        } // if bsearch
-        else if (bsearch(&bufptr, c_code_keywords,//c_code_keywords,
-                 sizeof(c_code_keywords) / sizeof(const char*),
-                 sizeof(const char*), compare_keywords))//c_code_keywords
-        {
-          while (text < temp)
-          {
-          //trace("KEYWORD");
-            *style++ = 'G';
-            text ++;
-            length --;
-            col ++;
-          }
-
-          text --;
-          length ++;
-          last = 1;
-          continue;
-        }//else if bsearch
-      } // if islower
-    } //else if !last islower
-  }//(current == 'A')
-  else if (hasBlockComments && current == 'C' && strncmp(text, blockCommentClose, 2) == 0)
-  {
-    // Close a C comment...
-    *style++ = current;
-    *style++ = current;
-    text ++;
-    length --;
-    current = 'A';
-    col += 2;
-    continue;
-  } //block comments
-  else if (current == 'D')
-  {
-      // Continuing in string...
-    if ( ( (strncmp(text, escapeDub, 2) == 0) && (strncmp(text, EescapeDub, 3) != 0) )
-      || ( (strncmp(text, escapeSingle, 2) == 0) && (strncmp(text, EescapeSingle, 3) != 0) )
-       )
-    {
-      // Quoted end quote...
-      *style++ = current;
-      *style++ = current;
-      text ++;
-      length --;
-      col += 2;
-      continue;
-    }
-    else if ( (*text == '\\"') && dub )
-    {
-      // End quote...
-      *style++ = current;
-      col ++;
-      current = 'A';
-      dub=false;
-      continue;
-    }
-    else if ( (*text == '\\'') && sng )
-    {
-      // End quote...
-      *style++ = current;
-      col ++;
-      current = 'A';
-      sng=false;
-      continue;
-    }
-  } //current == 'D'
-    // Copy style info...
-  if (current == 'A' && (*text == '{' || *text == '}'))
-  {
-    *style++ = 'G';
-  }
-  else
-  {
-    *style++ = current;
-  }
-  col ++;
-
-  last = isalnum((*text)&255) || *text == '_' || *text == '.';
-
-  if (*text == '\\n')
-  {
-    // Reset column and possibly reset the style
-    col = 0;
-    if (current == 'B' || current == 'E' || current == 'H') current = 'A';
-  }
-//  trace(style);
-}// main for loop} {}
-}
-
-Function {make_vec(std::string string_to_become_vector,std::string delimiter=" ")} {open return_type {std::vector<std::string>}
+Function {make_vec(std::string string_to_become_vector,std::string delimiter=" ")} {return_type {std::vector<std::string>}
 } {
   code {std::vector<std::string> Vector;
 std::string original,preComma,postComma;

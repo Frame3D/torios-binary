@@ -9,7 +9,6 @@
 #include <FL/Fl.H>
 #include "lexertk.hpp"
 #include "../include/toolbar_icons.h"
-#include "keywords.h"
 #include <algorithm>
 #include <sstream>
 #include <dirent.h>
@@ -388,9 +387,6 @@ public:
   void wordwrap();
 };
 int main(int argc, char **argv);
-int compare_keywords(const void *a, const void *b);
-void c_style(const char* text, char* style, int length);
-void style_highlighter(const char* text, char* style, int length, const void * keys, const void* types ,char diectiveChar ,const char* lineComment,bool hasBlockComments=false, const char* blockCommentOpen=NULL, const char* blockCommentClose=NULL, bool hasDirectives=true);
 std::vector<std::string> make_vec(std::string string_to_become_vector,std::string delimiter=" ");
 void trace(std::string MSG, int n = 0);
 std::string get(std::string header, std::string line);
