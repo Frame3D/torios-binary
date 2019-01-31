@@ -323,8 +323,7 @@ else
   char* RES = const_cast <char*> (res.c_str());
   stylebuffer->text(RES);
 }
-redisplay_range(0,stylebuffer->length());} {selected
-    }
+redisplay_range(0,stylebuffer->length());} {}
   }
   Function {set_type(std::string fname)} {open
   } {
@@ -732,83 +731,157 @@ Fl_Text_Editor::kf_select_all(0,textor);}
       } {}
     }
   }
-  Function {pref_window()} {} {
+  Function {pref_window()} {open
+  } {
     Fl_Window pref_win {
-      label Preferences
-      xywh {291 182 310 400} type Double color 47 hide xclass flpad
+      label Preferences open
+      xywh {265 238 310 460} type Double color 46 xclass flpad visible
     } {
-      Fl_Browser font_b {
-        label Font
-        callback {int F = o->value();
+      Fl_Tabs pref_tabs {open
+        xywh {0 0 310 420} box FLAT_BOX
+      } {
+        Fl_Group gen {
+          label General open selected
+          xywh {0 25 310 395} selection_color 43
+        } {
+          Fl_Browser font_b {
+            label Font
+            callback {int F = o->value();
 font_save->value(F);
 const char* fonty = o->text(F);
 if(fonty==NULL){return;}
 font_show->value(fonty);
 font_show->textfont(F);
 font_show->redraw();}
-        xywh {5 20 290 175} type Hold box FLAT_BOX selection_color 80 align 5
-        code0 {font_populate(o);}
-        code1 {o->value(FONT_TEXT);}
-      }
-      Fl_Output font_show {
-        xywh {5 205 255 30} box FLAT_BOX color 17 selection_color 80
-        code0 {const char* F = font_b->text(font_b->value());}
-        code1 {if( F!=NULL){o->value(F);}}
-      }
-      Fl_Value_Output font_save {
-        tooltip {Font Numeric for use in config file} xywh {265 205 30 30} box FLAT_BOX color 35 textcolor 7
-        code0 {o->value(font_b->value());}
-      }
-      Fl_Check_Button tool_color {
-        label {Toolbar Button Color}
-        callback {int val=o->value();
+            tooltip {Browse system installed fonts} xywh {5 55 290 175} type Hold box FLAT_BOX selection_color 80 align 5
+            code0 {font_populate(o);}
+            code1 {o->value(FONT_TEXT);}
+          }
+          Fl_Output font_show {
+            tooltip {Sample text to show font} xywh {5 240 255 30} box FLAT_BOX selection_color 80
+            code0 {const char* F = font_b->text(font_b->value());}
+            code1 {if( F!=NULL){o->value(F);}}
+          }
+          Fl_Value_Output font_save {
+            tooltip {Font Numeric for use in config file} xywh {265 240 30 30} box BORDER_BOX color 35 textcolor 7
+            code0 {o->value(font_b->value());}
+          }
+          Fl_Check_Button tool_color {
+            label {Toolbar Button Color}
+            callback {int val=o->value();
 button_style(val);}
-        xywh {10 235 175 30} down_box GTK_DOWN_BOX value 1 selection_color 63 align 52
-        code0 {o->value(BUTTON_COLOR);}
-      }
-      Fl_Button tExt {
-        label Color
-        callback {choose_a_color(o);}
-        xywh {15 280 55 30} box FLAT_BOX color 23 align 1
-        code0 {o->color(FOREGROUND_TEXT);}
-      }
-      Fl_Slider f_s {
-        label {Font Size}
-        callback {fsout->value(o->value());}
-        xywh {115 275 135 30} type Horizontal box GTK_DOWN_BOX color 38 align 1 minimum 2 maximum 128 step 1
-        code0 {o->value( SIZE_TEXT );}
-      }
-      Fl_Value_Input fsout {
-        callback {f_s->value(o->value());}
-        xywh {260 275 30 30} box FLAT_BOX color 17 selection_color 80
-        code0 {o->value( SIZE_TEXT );}
-      }
-      Fl_Slider l_s {
-        label {Line Number Size}
-        callback {lsout->value(o->value());}
-        tooltip {0 hides line numbers} xywh {115 320 135 30} type Horizontal box GTK_DOWN_BOX color 38 align 1 maximum 128 step 1
-        code0 {o->value(LINE_NUMBERS);}
-      }
-      Fl_Value_Input lsout {
-        callback {l_s->value(o->value());}
-        xywh {260 320 30 30} box FLAT_BOX color 17 selection_color 80
-        code0 {o->value(LINE_NUMBERS);}
-      }
-      Fl_Button bg {
-        label {Background Color}
-        callback {choose_a_color(o);}
-        xywh {15 345 55 30} box FLAT_BOX color 23 align 129
-        code0 {o->color(BACKGROUND_TEXT);}
-      }
-      Fl_Button {} {
-        label Syntax
-        callback {syntax_window()->show();}
-        xywh {80 360 70 30} box FLAT_BOX color 17
+            tooltip {Use color in the tool bar icons?} xywh {5 270 175 30} down_box GTK_DOWN_BOX value 1 selection_color 63 align 52
+            code0 {o->value(BUTTON_COLOR);}
+          }
+          Fl_Button tExt {
+            label Color
+            callback {choose_a_color(o);}
+            tooltip {Text color} xywh {25 315 55 30} box BORDER_BOX color 23 align 1
+            code0 {o->color(FOREGROUND_TEXT);}
+          }
+          Fl_Slider f_s {
+            label {Font Size}
+            callback {fsout->value(o->value());}
+            tooltip {Size of the text} xywh {115 310 135 30} type Horizontal box GTK_DOWN_BOX color 38 align 1 minimum 2 maximum 128 step 1
+            code0 {o->value( SIZE_TEXT );}
+          }
+          Fl_Value_Input fsout {
+            callback {f_s->value(o->value());}
+            tooltip {Size of the text} xywh {260 310 30 30} box FLAT_BOX selection_color 80
+            code0 {o->value( SIZE_TEXT );}
+          }
+          Fl_Slider l_s {
+            label {Line Number Size}
+            callback {lsout->value(o->value());}
+            tooltip {0 hides line numbers} xywh {115 355 135 30} type Horizontal box GTK_DOWN_BOX color 38 align 1 maximum 128 step 1
+            code0 {o->value(LINE_NUMBERS);}
+          }
+          Fl_Value_Input lsout {
+            callback {l_s->value(o->value());}
+            tooltip {0 hides line numbers} xywh {260 355 30 30} box FLAT_BOX selection_color 80
+            code0 {o->value(LINE_NUMBERS);}
+          }
+          Fl_Button bg {
+            label {Background Color}
+            callback {choose_a_color(o);}
+            tooltip {Editor background color} xywh {25 380 55 30} box BORDER_BOX color 23 align 129
+            code0 {o->color(BACKGROUND_TEXT);}
+          }
+        }
+        Fl_Group syntax {
+          label {Syntax Highlighting} open
+          xywh {0 25 310 395} selection_color 43 hide
+        } {
+          Fl_Button cm {
+            label Comments
+            callback {choose_a_color(o);}
+            tooltip {The color of comments} xywh {25 65 55 30} box BORDER_BOX color 23 align 129
+            code0 {o->color( COMMENT_TEXT );}
+          }
+          Fl_Button str {
+            label Strings
+            callback {choose_a_color(o);}
+            tooltip {The color of strings} xywh {105 65 55 30} box BORDER_BOX color 23 align 129
+            code0 {o->color( STRING_TEXT );}
+          }
+          Fl_Button directives {
+            label Symbols
+            callback {choose_a_color(o);}
+            tooltip {The color of symbols} xywh {25 115 55 30} box BORDER_BOX color 23 align 129
+            code0 {o->color( DIRECTIVE_TEXT );}
+          }
+          Fl_Button typezz {
+            label Types
+            callback {choose_a_color(o);}
+            tooltip {The color of types} xywh {105 115 55 30} box BORDER_BOX color 23 align 129
+            code0 {o->color( TYPE_TEXT );}
+          }
+          Fl_Button keywordz {
+            label Keywords
+            callback {choose_a_color(o);}
+            tooltip {The color of keywords} xywh {25 170 55 30} box BORDER_BOX color 23 align 129
+            code0 {o->color( KEYWORD_TEXT );}
+          }
+          Fl_Button numbers {
+            label Numbers
+            callback {choose_a_color(o);}
+            tooltip {The color of numbers} xywh {105 170 55 30} box BORDER_BOX color 23 align 129
+            code0 {o->color( NUMBER_TEXT );}
+          }
+          Fl_Menu_Button {} {
+            label Theme open
+            xywh {25 210 135 30} box BORDER_BOX color 23 selection_color 72
+          } {
+            MenuItem {} {
+              label {Light Background}
+              callback {default_theme();
+colorize_syntax_buttons();}
+              xywh {5 5 100 20}
+            }
+            MenuItem {} {
+              label {Dark Background}
+              callback {dark_theme();
+colorize_syntax_buttons();}
+              xywh {5 5 100 20}
+            }
+            MenuItem {} {
+              label None
+              callback {none_theme();
+colorize_syntax_buttons();}
+              xywh {15 15 100 20}
+            }
+          }
+          Fl_Check_Button plain_text {
+            label {Highlight Plain text?}
+            tooltip {Highlight quotes, numbers, brackets, etc... on plain text} xywh {25 250 25 25} down_box GTK_DOWN_BOX color 55 selection_color 63
+            code0 {o->value(HIGHLIGHT_PLAIN);}
+          }
+        }
       }
       Fl_Button {} {
         label Cancel
         callback {o->parent()->hide();}
-        xywh {155 360 65 30} box FLAT_BOX color 80 labelcolor 7
+        xywh {170 425 65 30} box FLAT_BOX color 80 labelcolor 7
       }
       Fl_Button {} {
         label SAVE
@@ -818,66 +891,7 @@ SIZE_TEXT=f_s->value();
 LINE_NUMBERS=l_s->value();
 FONT_TEXT=font_save->value();
 BUTTON_COLOR=tool_color->value();
-if(!save_preferences())
-{
-  return;
-}
-refresh_all();
-o->parent()->hide();}
-        xywh {225 360 65 30} box FLAT_BOX color 62 labelcolor 7
-      }
-    }
-  }
-  Function {syntax_window()} {open
-  } {
-    Fl_Window syntax_win {
-      label {Syntax Colors} open
-      xywh {893 146 170 275} type Double hide xclass flpad
-    } {
-      Fl_Button cm {
-        label Comments
-        callback {choose_a_color(o);}
-        tooltip {The color of comments} xywh {20 20 55 30} box FLAT_BOX color 23 align 129
-        code0 {o->color( COMMENT_TEXT );}
-      }
-      Fl_Button str {
-        label Strings
-        callback {choose_a_color(o);}
-        tooltip {The color of strings} xywh {100 20 55 30} box FLAT_BOX color 23 align 129
-        code0 {o->color( STRING_TEXT );}
-      }
-      Fl_Button directives {
-        label Symbols
-        callback {choose_a_color(o);}
-        tooltip {The color of symbols} xywh {20 70 55 30} box FLAT_BOX color 23 align 129
-        code0 {o->color( DIRECTIVE_TEXT );}
-      }
-      Fl_Button typezz {
-        label Types
-        callback {choose_a_color(o);}
-        tooltip {The color of types} xywh {100 70 55 30} box FLAT_BOX color 23 align 129
-        code0 {o->color( TYPE_TEXT );}
-      }
-      Fl_Button keywordz {
-        label Keywords
-        callback {choose_a_color(o);}
-        tooltip {The color of keywords} xywh {20 125 55 30} box FLAT_BOX color 23 align 129
-        code0 {o->color( KEYWORD_TEXT );}
-      }
-      Fl_Button numbers {
-        label Numbers
-        callback {choose_a_color(o);}
-        tooltip {The color of numbers} xywh {100 125 55 30} box FLAT_BOX color 23 align 129
-        code0 {o->color( NUMBER_TEXT );}
-      }
-      Fl_Button {} {
-        label Cancel
-        callback {syntax_win->hide();}
-        xywh {15 235 65 30} box FLAT_BOX color 80 labelcolor 7
-      }
-      Fl_Button {} {
-        label SAVE
-        callback {COMMENT_TEXT=cm->color();
+COMMENT_TEXT=cm->color();
 STRING_TEXT=str->color();
 DIRECTIVE_TEXT=directives->color();
 TYPE_TEXT=typezz->color();
@@ -888,36 +902,9 @@ if(!save_preferences())
 {
   trace("Failed to save preferences");
 }
-syntax_win->hide();}
-        xywh {95 235 65 30} box FLAT_BOX color 62 labelcolor 7
-      }
-      Fl_Menu_Button {} {
-        label Theme open
-        xywh {25 165 115 30} box FLAT_BOX color 23 selection_color 72
-      } {
-        MenuItem {} {
-          label {Light Background}
-          callback {default_theme();
-colorize_syntax_buttons();}
-          xywh {0 0 100 20}
-        }
-        MenuItem {} {
-          label {Dark Background}
-          callback {dark_theme();
-colorize_syntax_buttons();}
-          xywh {0 0 100 20}
-        }
-        MenuItem {} {
-          label None
-          callback {none_theme();
-colorize_syntax_buttons();}
-          xywh {10 10 100 20}
-        }
-      }
-      Fl_Check_Button plain_text {
-        label {Highlight Plain text?}
-        tooltip {Highlight quotes, numbers, brackets, etc... on plain text} xywh {5 200 25 25} down_box GTK_DOWN_BOX color 55 selection_color 63
-        code0 {o->value(HIGHLIGHT_PLAIN);}
+refresh_all();
+o->parent()->hide();}
+        xywh {240 425 65 30} box FLAT_BOX color 62 labelcolor 7
       }
     }
   }
@@ -1148,7 +1135,8 @@ else
 
 tabs->redraw();} {}
   }
-  Function {colorize_syntax_buttons()} {} {
+  Function {colorize_syntax_buttons()} {open
+  } {
     code {cm->color(COMMENT_TEXT);
 cm->redraw();
 str->color(STRING_TEXT);
@@ -1162,7 +1150,7 @@ keywordz->redraw();
 numbers->color(NUMBER_TEXT);
 numbers->redraw();
 pref_win->show();
-syntax_win->show();
+pref_tabs->value(syntax);
 tExt->color(FOREGROUND_TEXT);
 bg->color(BACKGROUND_TEXT);
 tExt->redraw();

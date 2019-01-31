@@ -601,7 +601,7 @@ font_show->textfont(F);
 font_show->redraw();
 }
 void UI::cb_font_b(Fl_Browser* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_font_b_i(o,v);
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_font_b_i(o,v);
 }
 
 void UI::cb_tool_color_i(Fl_Check_Button* o, void*) {
@@ -609,57 +609,124 @@ void UI::cb_tool_color_i(Fl_Check_Button* o, void*) {
 button_style(val);
 }
 void UI::cb_tool_color(Fl_Check_Button* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_tool_color_i(o,v);
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_tool_color_i(o,v);
 }
 
 void UI::cb_tExt_i(Fl_Button* o, void*) {
   choose_a_color(o);
 }
 void UI::cb_tExt(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_tExt_i(o,v);
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_tExt_i(o,v);
 }
 
 void UI::cb_f_s_i(Fl_Slider* o, void*) {
   fsout->value(o->value());
 }
 void UI::cb_f_s(Fl_Slider* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_f_s_i(o,v);
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_f_s_i(o,v);
 }
 
 void UI::cb_fsout_i(Fl_Value_Input* o, void*) {
   f_s->value(o->value());
 }
 void UI::cb_fsout(Fl_Value_Input* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_fsout_i(o,v);
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_fsout_i(o,v);
 }
 
 void UI::cb_l_s_i(Fl_Slider* o, void*) {
   lsout->value(o->value());
 }
 void UI::cb_l_s(Fl_Slider* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_l_s_i(o,v);
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_l_s_i(o,v);
 }
 
 void UI::cb_lsout_i(Fl_Value_Input* o, void*) {
   l_s->value(o->value());
 }
 void UI::cb_lsout(Fl_Value_Input* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_lsout_i(o,v);
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_lsout_i(o,v);
 }
 
 void UI::cb_bg_i(Fl_Button* o, void*) {
   choose_a_color(o);
 }
 void UI::cb_bg(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_bg_i(o,v);
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_bg_i(o,v);
 }
 
-void UI::cb_Syntax_i(Fl_Button*, void*) {
-  syntax_window()->show();
+void UI::cb_cm_i(Fl_Button* o, void*) {
+  choose_a_color(o);
 }
-void UI::cb_Syntax(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_Syntax_i(o,v);
+void UI::cb_cm(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_cm_i(o,v);
 }
+
+void UI::cb_str_i(Fl_Button* o, void*) {
+  choose_a_color(o);
+}
+void UI::cb_str(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_str_i(o,v);
+}
+
+void UI::cb_directives_i(Fl_Button* o, void*) {
+  choose_a_color(o);
+}
+void UI::cb_directives(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_directives_i(o,v);
+}
+
+void UI::cb_typezz_i(Fl_Button* o, void*) {
+  choose_a_color(o);
+}
+void UI::cb_typezz(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_typezz_i(o,v);
+}
+
+void UI::cb_keywordz_i(Fl_Button* o, void*) {
+  choose_a_color(o);
+}
+void UI::cb_keywordz(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_keywordz_i(o,v);
+}
+
+void UI::cb_numbers_i(Fl_Button* o, void*) {
+  choose_a_color(o);
+}
+void UI::cb_numbers(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_numbers_i(o,v);
+}
+
+void UI::cb_Light_i(Fl_Menu_*, void*) {
+  default_theme();
+colorize_syntax_buttons();
+}
+void UI::cb_Light(Fl_Menu_* o, void* v) {
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_Light_i(o,v);
+}
+
+void UI::cb_Dark_i(Fl_Menu_*, void*) {
+  dark_theme();
+colorize_syntax_buttons();
+}
+void UI::cb_Dark(Fl_Menu_* o, void* v) {
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_Dark_i(o,v);
+}
+
+void UI::cb_None_i(Fl_Menu_*, void*) {
+  none_theme();
+colorize_syntax_buttons();
+}
+void UI::cb_None(Fl_Menu_* o, void* v) {
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_None_i(o,v);
+}
+
+unsigned char UI::menu_Theme_i18n_done = 0;
+Fl_Menu_Item UI::menu_Theme[] = {
+ {"Light Background", 0,  (Fl_Callback*)UI::cb_Light, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"Dark Background", 0,  (Fl_Callback*)UI::cb_Dark, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"None", 0,  (Fl_Callback*)UI::cb_None, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {0,0,0,0,0,0,0,0,0}
+};
 
 void UI::cb_Cancel_i(Fl_Button* o, void*) {
   o->parent()->hide();
@@ -675,68 +742,7 @@ SIZE_TEXT=f_s->value();
 LINE_NUMBERS=l_s->value();
 FONT_TEXT=font_save->value();
 BUTTON_COLOR=tool_color->value();
-if(!save_preferences())
-{
-  return;
-}
-refresh_all();
-o->parent()->hide();
-}
-void UI::cb_SAVE(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_SAVE_i(o,v);
-}
-
-void UI::cb_cm_i(Fl_Button* o, void*) {
-  choose_a_color(o);
-}
-void UI::cb_cm(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_cm_i(o,v);
-}
-
-void UI::cb_str_i(Fl_Button* o, void*) {
-  choose_a_color(o);
-}
-void UI::cb_str(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_str_i(o,v);
-}
-
-void UI::cb_directives_i(Fl_Button* o, void*) {
-  choose_a_color(o);
-}
-void UI::cb_directives(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_directives_i(o,v);
-}
-
-void UI::cb_typezz_i(Fl_Button* o, void*) {
-  choose_a_color(o);
-}
-void UI::cb_typezz(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_typezz_i(o,v);
-}
-
-void UI::cb_keywordz_i(Fl_Button* o, void*) {
-  choose_a_color(o);
-}
-void UI::cb_keywordz(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_keywordz_i(o,v);
-}
-
-void UI::cb_numbers_i(Fl_Button* o, void*) {
-  choose_a_color(o);
-}
-void UI::cb_numbers(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_numbers_i(o,v);
-}
-
-void UI::cb_Cancel1_i(Fl_Button*, void*) {
-  syntax_win->hide();
-}
-void UI::cb_Cancel1(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_Cancel1_i(o,v);
-}
-
-void UI::cb_SAVE1_i(Fl_Button*, void*) {
-  COMMENT_TEXT=cm->color();
+COMMENT_TEXT=cm->color();
 STRING_TEXT=str->color();
 DIRECTIVE_TEXT=directives->color();
 TYPE_TEXT=typezz->color();
@@ -747,43 +753,12 @@ if(!save_preferences())
 {
   trace("Failed to save preferences");
 }
-syntax_win->hide();
+refresh_all();
+o->parent()->hide();
 }
-void UI::cb_SAVE1(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_SAVE1_i(o,v);
+void UI::cb_SAVE(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->user_data()))->cb_SAVE_i(o,v);
 }
-
-void UI::cb_Light_i(Fl_Menu_*, void*) {
-  default_theme();
-colorize_syntax_buttons();
-}
-void UI::cb_Light(Fl_Menu_* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_Light_i(o,v);
-}
-
-void UI::cb_Dark_i(Fl_Menu_*, void*) {
-  dark_theme();
-colorize_syntax_buttons();
-}
-void UI::cb_Dark(Fl_Menu_* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_Dark_i(o,v);
-}
-
-void UI::cb_None_i(Fl_Menu_*, void*) {
-  none_theme();
-colorize_syntax_buttons();
-}
-void UI::cb_None(Fl_Menu_* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_None_i(o,v);
-}
-
-unsigned char UI::menu_Theme_i18n_done = 0;
-Fl_Menu_Item UI::menu_Theme[] = {
- {"Light Background", 0,  (Fl_Callback*)UI::cb_Light, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"Dark Background", 0,  (Fl_Callback*)UI::cb_Dark, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"None", 0,  (Fl_Callback*)UI::cb_None, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {0,0,0,0,0,0,0,0,0}
-};
 
 UI::UI() {
   get_preferences();
@@ -1039,102 +1014,183 @@ Fl_Double_Window* UI::make_window() {
 }
 
 Fl_Double_Window* UI::pref_window() {
-  { pref_win = new Fl_Double_Window(310, 400, gettext("Preferences"));
-    pref_win->color(FL_DARK1);
+  { pref_win = new Fl_Double_Window(310, 460, gettext("Preferences"));
+    pref_win->color((Fl_Color)46);
     pref_win->user_data((void*)(this));
-    { Fl_Browser* o = font_b = new Fl_Browser(5, 20, 290, 175, gettext("Font"));
-      font_b->type(2);
-      font_b->box(FL_FLAT_BOX);
-      font_b->selection_color((Fl_Color)80);
-      font_b->callback((Fl_Callback*)cb_font_b);
-      font_b->align(Fl_Align(FL_ALIGN_TOP_LEFT));
-      font_populate(o);
-      o->value(FONT_TEXT);
-    } // Fl_Browser* font_b
-    { Fl_Output* o = font_show = new Fl_Output(5, 205, 255, 30);
-      font_show->box(FL_FLAT_BOX);
-      font_show->color((Fl_Color)17);
-      font_show->selection_color((Fl_Color)80);
-      const char* F = font_b->text(font_b->value());
-      if( F!=NULL){o->value(F);}
-    } // Fl_Output* font_show
-    { Fl_Value_Output* o = font_save = new Fl_Value_Output(265, 205, 30, 30);
-      font_save->tooltip(gettext("Font Numeric for use in config file"));
-      font_save->box(FL_FLAT_BOX);
-      font_save->color((Fl_Color)35);
-      font_save->textcolor(FL_BACKGROUND2_COLOR);
-      o->value(font_b->value());
-    } // Fl_Value_Output* font_save
-    { Fl_Check_Button* o = tool_color = new Fl_Check_Button(10, 235, 175, 30, gettext("Toolbar Button Color"));
-      tool_color->down_box(FL_GTK_DOWN_BOX);
-      tool_color->value(1);
-      tool_color->selection_color(FL_GREEN);
-      tool_color->callback((Fl_Callback*)cb_tool_color);
-      tool_color->align(Fl_Align(36|FL_ALIGN_INSIDE));
-      o->value(BUTTON_COLOR);
-    } // Fl_Check_Button* tool_color
-    { Fl_Button* o = tExt = new Fl_Button(15, 280, 55, 30, gettext("Color"));
-      tExt->box(FL_FLAT_BOX);
-      tExt->color((Fl_Color)23);
-      tExt->callback((Fl_Callback*)cb_tExt);
-      tExt->align(Fl_Align(FL_ALIGN_TOP));
-      o->color(FOREGROUND_TEXT);
-    } // Fl_Button* tExt
-    { Fl_Slider* o = f_s = new Fl_Slider(115, 275, 135, 30, gettext("Font Size"));
-      f_s->type(1);
-      f_s->box(FL_GTK_DOWN_BOX);
-      f_s->color((Fl_Color)38);
-      f_s->minimum(2);
-      f_s->maximum(128);
-      f_s->step(1);
-      f_s->callback((Fl_Callback*)cb_f_s);
-      f_s->align(Fl_Align(FL_ALIGN_TOP));
-      o->value( SIZE_TEXT );
-    } // Fl_Slider* f_s
-    { Fl_Value_Input* o = fsout = new Fl_Value_Input(260, 275, 30, 30);
-      fsout->box(FL_FLAT_BOX);
-      fsout->color((Fl_Color)17);
-      fsout->selection_color((Fl_Color)80);
-      fsout->callback((Fl_Callback*)cb_fsout);
-      o->value( SIZE_TEXT );
-    } // Fl_Value_Input* fsout
-    { Fl_Slider* o = l_s = new Fl_Slider(115, 320, 135, 30, gettext("Line Number Size"));
-      l_s->tooltip(gettext("0 hides line numbers"));
-      l_s->type(1);
-      l_s->box(FL_GTK_DOWN_BOX);
-      l_s->color((Fl_Color)38);
-      l_s->maximum(128);
-      l_s->step(1);
-      l_s->callback((Fl_Callback*)cb_l_s);
-      l_s->align(Fl_Align(FL_ALIGN_TOP));
-      o->value(LINE_NUMBERS);
-    } // Fl_Slider* l_s
-    { Fl_Value_Input* o = lsout = new Fl_Value_Input(260, 320, 30, 30);
-      lsout->box(FL_FLAT_BOX);
-      lsout->color((Fl_Color)17);
-      lsout->selection_color((Fl_Color)80);
-      lsout->callback((Fl_Callback*)cb_lsout);
-      o->value(LINE_NUMBERS);
-    } // Fl_Value_Input* lsout
-    { Fl_Button* o = bg = new Fl_Button(15, 345, 55, 30, gettext("Background Color"));
-      bg->box(FL_FLAT_BOX);
-      bg->color((Fl_Color)23);
-      bg->callback((Fl_Callback*)cb_bg);
-      bg->align(Fl_Align(129));
-      o->color(BACKGROUND_TEXT);
-    } // Fl_Button* bg
-    { Fl_Button* o = new Fl_Button(80, 360, 70, 30, gettext("Syntax"));
-      o->box(FL_FLAT_BOX);
-      o->color((Fl_Color)17);
-      o->callback((Fl_Callback*)cb_Syntax);
-    } // Fl_Button* o
-    { Fl_Button* o = new Fl_Button(155, 360, 65, 30, gettext("Cancel"));
+    { pref_tabs = new Fl_Tabs(0, 0, 310, 420);
+      pref_tabs->box(FL_FLAT_BOX);
+      { gen = new Fl_Group(0, 25, 310, 395, gettext("General"));
+        gen->selection_color((Fl_Color)43);
+        { Fl_Browser* o = font_b = new Fl_Browser(5, 55, 290, 175, gettext("Font"));
+          font_b->tooltip(gettext("Browse system installed fonts"));
+          font_b->type(2);
+          font_b->box(FL_FLAT_BOX);
+          font_b->selection_color((Fl_Color)80);
+          font_b->callback((Fl_Callback*)cb_font_b);
+          font_b->align(Fl_Align(FL_ALIGN_TOP_LEFT));
+          font_populate(o);
+          o->value(FONT_TEXT);
+        } // Fl_Browser* font_b
+        { Fl_Output* o = font_show = new Fl_Output(5, 240, 255, 30);
+          font_show->tooltip(gettext("Sample text to show font"));
+          font_show->box(FL_FLAT_BOX);
+          font_show->selection_color((Fl_Color)80);
+          const char* F = font_b->text(font_b->value());
+          if( F!=NULL){o->value(F);}
+        } // Fl_Output* font_show
+        { Fl_Value_Output* o = font_save = new Fl_Value_Output(265, 240, 30, 30);
+          font_save->tooltip(gettext("Font Numeric for use in config file"));
+          font_save->box(FL_BORDER_BOX);
+          font_save->color((Fl_Color)35);
+          font_save->textcolor(FL_BACKGROUND2_COLOR);
+          o->value(font_b->value());
+        } // Fl_Value_Output* font_save
+        { Fl_Check_Button* o = tool_color = new Fl_Check_Button(5, 270, 175, 30, gettext("Toolbar Button Color"));
+          tool_color->tooltip(gettext("Use color in the tool bar icons?"));
+          tool_color->down_box(FL_GTK_DOWN_BOX);
+          tool_color->value(1);
+          tool_color->selection_color(FL_GREEN);
+          tool_color->callback((Fl_Callback*)cb_tool_color);
+          tool_color->align(Fl_Align(36|FL_ALIGN_INSIDE));
+          o->value(BUTTON_COLOR);
+        } // Fl_Check_Button* tool_color
+        { Fl_Button* o = tExt = new Fl_Button(25, 315, 55, 30, gettext("Color"));
+          tExt->tooltip(gettext("Text color"));
+          tExt->box(FL_BORDER_BOX);
+          tExt->color((Fl_Color)23);
+          tExt->callback((Fl_Callback*)cb_tExt);
+          tExt->align(Fl_Align(FL_ALIGN_TOP));
+          o->color(FOREGROUND_TEXT);
+        } // Fl_Button* tExt
+        { Fl_Slider* o = f_s = new Fl_Slider(115, 310, 135, 30, gettext("Font Size"));
+          f_s->tooltip(gettext("Size of the text"));
+          f_s->type(1);
+          f_s->box(FL_GTK_DOWN_BOX);
+          f_s->color((Fl_Color)38);
+          f_s->minimum(2);
+          f_s->maximum(128);
+          f_s->step(1);
+          f_s->callback((Fl_Callback*)cb_f_s);
+          f_s->align(Fl_Align(FL_ALIGN_TOP));
+          o->value( SIZE_TEXT );
+        } // Fl_Slider* f_s
+        { Fl_Value_Input* o = fsout = new Fl_Value_Input(260, 310, 30, 30);
+          fsout->tooltip(gettext("Size of the text"));
+          fsout->box(FL_FLAT_BOX);
+          fsout->selection_color((Fl_Color)80);
+          fsout->callback((Fl_Callback*)cb_fsout);
+          o->value( SIZE_TEXT );
+        } // Fl_Value_Input* fsout
+        { Fl_Slider* o = l_s = new Fl_Slider(115, 355, 135, 30, gettext("Line Number Size"));
+          l_s->tooltip(gettext("0 hides line numbers"));
+          l_s->type(1);
+          l_s->box(FL_GTK_DOWN_BOX);
+          l_s->color((Fl_Color)38);
+          l_s->maximum(128);
+          l_s->step(1);
+          l_s->callback((Fl_Callback*)cb_l_s);
+          l_s->align(Fl_Align(FL_ALIGN_TOP));
+          o->value(LINE_NUMBERS);
+        } // Fl_Slider* l_s
+        { Fl_Value_Input* o = lsout = new Fl_Value_Input(260, 355, 30, 30);
+          lsout->tooltip(gettext("0 hides line numbers"));
+          lsout->box(FL_FLAT_BOX);
+          lsout->selection_color((Fl_Color)80);
+          lsout->callback((Fl_Callback*)cb_lsout);
+          o->value(LINE_NUMBERS);
+        } // Fl_Value_Input* lsout
+        { Fl_Button* o = bg = new Fl_Button(25, 380, 55, 30, gettext("Background Color"));
+          bg->tooltip(gettext("Editor background color"));
+          bg->box(FL_BORDER_BOX);
+          bg->color((Fl_Color)23);
+          bg->callback((Fl_Callback*)cb_bg);
+          bg->align(Fl_Align(129));
+          o->color(BACKGROUND_TEXT);
+        } // Fl_Button* bg
+        gen->end();
+      } // Fl_Group* gen
+      { syntax = new Fl_Group(0, 25, 310, 395, gettext("Syntax Highlighting"));
+        syntax->selection_color((Fl_Color)43);
+        syntax->hide();
+        { Fl_Button* o = cm = new Fl_Button(25, 65, 55, 30, gettext("Comments"));
+          cm->tooltip(gettext("The color of comments"));
+          cm->box(FL_BORDER_BOX);
+          cm->color((Fl_Color)23);
+          cm->callback((Fl_Callback*)cb_cm);
+          cm->align(Fl_Align(129));
+          o->color( COMMENT_TEXT );
+        } // Fl_Button* cm
+        { Fl_Button* o = str = new Fl_Button(105, 65, 55, 30, gettext("Strings"));
+          str->tooltip(gettext("The color of strings"));
+          str->box(FL_BORDER_BOX);
+          str->color((Fl_Color)23);
+          str->callback((Fl_Callback*)cb_str);
+          str->align(Fl_Align(129));
+          o->color( STRING_TEXT );
+        } // Fl_Button* str
+        { Fl_Button* o = directives = new Fl_Button(25, 115, 55, 30, gettext("Symbols"));
+          directives->tooltip(gettext("The color of symbols"));
+          directives->box(FL_BORDER_BOX);
+          directives->color((Fl_Color)23);
+          directives->callback((Fl_Callback*)cb_directives);
+          directives->align(Fl_Align(129));
+          o->color( DIRECTIVE_TEXT );
+        } // Fl_Button* directives
+        { Fl_Button* o = typezz = new Fl_Button(105, 115, 55, 30, gettext("Types"));
+          typezz->tooltip(gettext("The color of types"));
+          typezz->box(FL_BORDER_BOX);
+          typezz->color((Fl_Color)23);
+          typezz->callback((Fl_Callback*)cb_typezz);
+          typezz->align(Fl_Align(129));
+          o->color( TYPE_TEXT );
+        } // Fl_Button* typezz
+        { Fl_Button* o = keywordz = new Fl_Button(25, 170, 55, 30, gettext("Keywords"));
+          keywordz->tooltip(gettext("The color of keywords"));
+          keywordz->box(FL_BORDER_BOX);
+          keywordz->color((Fl_Color)23);
+          keywordz->callback((Fl_Callback*)cb_keywordz);
+          keywordz->align(Fl_Align(129));
+          o->color( KEYWORD_TEXT );
+        } // Fl_Button* keywordz
+        { Fl_Button* o = numbers = new Fl_Button(105, 170, 55, 30, gettext("Numbers"));
+          numbers->tooltip(gettext("The color of numbers"));
+          numbers->box(FL_BORDER_BOX);
+          numbers->color((Fl_Color)23);
+          numbers->callback((Fl_Callback*)cb_numbers);
+          numbers->align(Fl_Align(129));
+          o->color( NUMBER_TEXT );
+        } // Fl_Button* numbers
+        { Fl_Menu_Button* o = new Fl_Menu_Button(25, 210, 135, 30, gettext("Theme"));
+          o->box(FL_BORDER_BOX);
+          o->color((Fl_Color)23);
+          o->selection_color(FL_DARK_RED);
+          if (!menu_Theme_i18n_done) {
+            int i=0;
+            for ( ; i<3; i++)
+              if (menu_Theme[i].label())
+                menu_Theme[i].label(gettext(menu_Theme[i].label()));
+            menu_Theme_i18n_done = 1;
+          }
+          o->menu(menu_Theme);
+        } // Fl_Menu_Button* o
+        { Fl_Check_Button* o = plain_text = new Fl_Check_Button(25, 250, 25, 25, gettext("Highlight Plain text?"));
+          plain_text->tooltip(gettext("Highlight quotes, numbers, brackets, etc... on plain text"));
+          plain_text->down_box(FL_GTK_DOWN_BOX);
+          plain_text->color((Fl_Color)55);
+          plain_text->selection_color(FL_GREEN);
+          o->value(HIGHLIGHT_PLAIN);
+        } // Fl_Check_Button* plain_text
+        syntax->end();
+      } // Fl_Group* syntax
+      pref_tabs->end();
+    } // Fl_Tabs* pref_tabs
+    { Fl_Button* o = new Fl_Button(170, 425, 65, 30, gettext("Cancel"));
       o->box(FL_FLAT_BOX);
       o->color((Fl_Color)80);
       o->labelcolor(FL_BACKGROUND2_COLOR);
       o->callback((Fl_Callback*)cb_Cancel);
     } // Fl_Button* o
-    { Fl_Button* o = new Fl_Button(225, 360, 65, 30, gettext("SAVE"));
+    { Fl_Button* o = new Fl_Button(240, 425, 65, 30, gettext("SAVE"));
       o->box(FL_FLAT_BOX);
       o->color((Fl_Color)62);
       o->labelcolor(FL_BACKGROUND2_COLOR);
@@ -1144,95 +1200,6 @@ Fl_Double_Window* UI::pref_window() {
     pref_win->end();
   } // Fl_Double_Window* pref_win
   return pref_win;
-}
-
-Fl_Double_Window* UI::syntax_window() {
-  { syntax_win = new Fl_Double_Window(170, 275, gettext("Syntax Colors"));
-    syntax_win->user_data((void*)(this));
-    { Fl_Button* o = cm = new Fl_Button(20, 20, 55, 30, gettext("Comments"));
-      cm->tooltip(gettext("The color of comments"));
-      cm->box(FL_FLAT_BOX);
-      cm->color((Fl_Color)23);
-      cm->callback((Fl_Callback*)cb_cm);
-      cm->align(Fl_Align(129));
-      o->color( COMMENT_TEXT );
-    } // Fl_Button* cm
-    { Fl_Button* o = str = new Fl_Button(100, 20, 55, 30, gettext("Strings"));
-      str->tooltip(gettext("The color of strings"));
-      str->box(FL_FLAT_BOX);
-      str->color((Fl_Color)23);
-      str->callback((Fl_Callback*)cb_str);
-      str->align(Fl_Align(129));
-      o->color( STRING_TEXT );
-    } // Fl_Button* str
-    { Fl_Button* o = directives = new Fl_Button(20, 70, 55, 30, gettext("Symbols"));
-      directives->tooltip(gettext("The color of symbols"));
-      directives->box(FL_FLAT_BOX);
-      directives->color((Fl_Color)23);
-      directives->callback((Fl_Callback*)cb_directives);
-      directives->align(Fl_Align(129));
-      o->color( DIRECTIVE_TEXT );
-    } // Fl_Button* directives
-    { Fl_Button* o = typezz = new Fl_Button(100, 70, 55, 30, gettext("Types"));
-      typezz->tooltip(gettext("The color of types"));
-      typezz->box(FL_FLAT_BOX);
-      typezz->color((Fl_Color)23);
-      typezz->callback((Fl_Callback*)cb_typezz);
-      typezz->align(Fl_Align(129));
-      o->color( TYPE_TEXT );
-    } // Fl_Button* typezz
-    { Fl_Button* o = keywordz = new Fl_Button(20, 125, 55, 30, gettext("Keywords"));
-      keywordz->tooltip(gettext("The color of keywords"));
-      keywordz->box(FL_FLAT_BOX);
-      keywordz->color((Fl_Color)23);
-      keywordz->callback((Fl_Callback*)cb_keywordz);
-      keywordz->align(Fl_Align(129));
-      o->color( KEYWORD_TEXT );
-    } // Fl_Button* keywordz
-    { Fl_Button* o = numbers = new Fl_Button(100, 125, 55, 30, gettext("Numbers"));
-      numbers->tooltip(gettext("The color of numbers"));
-      numbers->box(FL_FLAT_BOX);
-      numbers->color((Fl_Color)23);
-      numbers->callback((Fl_Callback*)cb_numbers);
-      numbers->align(Fl_Align(129));
-      o->color( NUMBER_TEXT );
-    } // Fl_Button* numbers
-    { Fl_Button* o = new Fl_Button(15, 235, 65, 30, gettext("Cancel"));
-      o->box(FL_FLAT_BOX);
-      o->color((Fl_Color)80);
-      o->labelcolor(FL_BACKGROUND2_COLOR);
-      o->callback((Fl_Callback*)cb_Cancel1);
-    } // Fl_Button* o
-    { Fl_Button* o = new Fl_Button(95, 235, 65, 30, gettext("SAVE"));
-      o->box(FL_FLAT_BOX);
-      o->color((Fl_Color)62);
-      o->labelcolor(FL_BACKGROUND2_COLOR);
-      o->callback((Fl_Callback*)cb_SAVE1);
-    } // Fl_Button* o
-    { Fl_Menu_Button* o = new Fl_Menu_Button(25, 165, 115, 30, gettext("Theme"));
-      o->box(FL_FLAT_BOX);
-      o->color((Fl_Color)23);
-      o->selection_color(FL_DARK_RED);
-      if (!menu_Theme_i18n_done) {
-        int i=0;
-        for ( ; i<3; i++)
-          if (menu_Theme[i].label())
-            menu_Theme[i].label(gettext(menu_Theme[i].label()));
-        menu_Theme_i18n_done = 1;
-      }
-      o->menu(menu_Theme);
-    } // Fl_Menu_Button* o
-    { Fl_Check_Button* o = plain_text = new Fl_Check_Button(5, 200, 25, 25, gettext("Highlight Plain text?"));
-      plain_text->tooltip(gettext("Highlight quotes, numbers, brackets, etc... on plain text"));
-      plain_text->down_box(FL_GTK_DOWN_BOX);
-      plain_text->color((Fl_Color)55);
-      plain_text->selection_color(FL_GREEN);
-      o->value(HIGHLIGHT_PLAIN);
-    } // Fl_Check_Button* plain_text
-    syntax_win->xclass("flpad");
-    syntax_win->end();
-  } // Fl_Double_Window* syntax_win
-  return syntax_win;
 }
 
 void UI::add_tab(bool LOAD, bool NEW ) {
@@ -1480,7 +1447,7 @@ void UI::colorize_syntax_buttons() {
   numbers->color(NUMBER_TEXT);
   numbers->redraw();
   pref_win->show();
-  syntax_win->show();
+  pref_tabs->value(syntax);
   tExt->color(FOREGROUND_TEXT);
   bg->color(BACKGROUND_TEXT);
   tExt->redraw();

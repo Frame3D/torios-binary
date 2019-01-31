@@ -241,6 +241,8 @@ private:
 public:
   Fl_Double_Window* pref_window();
   Fl_Double_Window *pref_win;
+  Fl_Tabs *pref_tabs;
+  Fl_Group *gen;
   Fl_Browser *font_b;
 private:
   inline void cb_font_b_i(Fl_Browser*, void*);
@@ -282,15 +284,8 @@ public:
 private:
   inline void cb_bg_i(Fl_Button*, void*);
   static void cb_bg(Fl_Button*, void*);
-  inline void cb_Syntax_i(Fl_Button*, void*);
-  static void cb_Syntax(Fl_Button*, void*);
-  inline void cb_Cancel_i(Fl_Button*, void*);
-  static void cb_Cancel(Fl_Button*, void*);
-  inline void cb_SAVE_i(Fl_Button*, void*);
-  static void cb_SAVE(Fl_Button*, void*);
 public:
-  Fl_Double_Window* syntax_window();
-  Fl_Double_Window *syntax_win;
+  Fl_Group *syntax;
   Fl_Button *cm;
 private:
   inline void cb_cm_i(Fl_Button*, void*);
@@ -320,10 +315,6 @@ public:
 private:
   inline void cb_numbers_i(Fl_Button*, void*);
   static void cb_numbers(Fl_Button*, void*);
-  inline void cb_Cancel1_i(Fl_Button*, void*);
-  static void cb_Cancel1(Fl_Button*, void*);
-  inline void cb_SAVE1_i(Fl_Button*, void*);
-  static void cb_SAVE1(Fl_Button*, void*);
   static unsigned char menu_Theme_i18n_done;
   static Fl_Menu_Item menu_Theme[];
   inline void cb_Light_i(Fl_Menu_*, void*);
@@ -334,6 +325,12 @@ private:
   static void cb_None(Fl_Menu_*, void*);
 public:
   Fl_Check_Button *plain_text;
+private:
+  inline void cb_Cancel_i(Fl_Button*, void*);
+  static void cb_Cancel(Fl_Button*, void*);
+  inline void cb_SAVE_i(Fl_Button*, void*);
+  static void cb_SAVE(Fl_Button*, void*);
+public:
   void add_tab(bool LOAD=true, bool NEW = true);
   int ask(std::string MSG, std::string yes="Yes", std::string no="No", std::string other="");
   static void ask_cb(Fl_Widget *o, long val);
