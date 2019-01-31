@@ -7,6 +7,7 @@
 #ifndef flpad_h
 #define flpad_h
 #include <FL/Fl.H>
+#include <netinet/in.h>
 #include "lexertk.hpp"
 #include "../include/toolbar_icons.h"
 #include <algorithm>
@@ -30,6 +31,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <unistd.h>
 int ret_val; 
 std::string return_value; 
 unsigned int EDIT_COLOR;
@@ -49,6 +51,18 @@ int LINE_NUMBERS;
 int BUTTON_COLOR;
 int HIGHLIGHT_PLAIN; 
 std::string SYNTAX_FILE; 
+
+class SingletonProcess {
+public:
+  SingletonProcess(uint16_t port0);
+  ~SingletonProcess();
+  bool operator()();
+  std::string GetLockFileName();
+private:
+  int socket_fd = -1;
+int rc;
+uint16_t port; 
+};
 
 class Fl_Syntax_Text_Editor : public Fl_Text_Editor {
 public:
@@ -337,10 +351,10 @@ public:
   void copy_cb();
   Fl_Syntax_Text_Editor * current_editor();
   void cut_cb();
-  void dark_theme();
   void default_theme();
   void delete_cb();
   void dnd_file(const char* items, bool NEW=true);
+  std::vector<std::string> dnd_vec(std::string in);
   void find_cb();
   void find2_cb();
   void font_populate(Fl_Browser *o);
@@ -356,7 +370,6 @@ public:
   void insert_cb();
   void load_file(std::string newfile, int ipos,bool NEW=true);
   void make_icon(Fl_Window *o);
-  void coffee_theme();
   void none_theme();
   void new_cb();
   void open_cb();

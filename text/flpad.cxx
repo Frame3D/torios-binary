@@ -7,6 +7,41 @@
 #include <libintl.h>
 #include "flpad.h"
 
+SingletonProcess::SingletonProcess(uint16_t port0): socket_fd(-1),rc(1),port(port0) {
+}
+
+SingletonProcess::~SingletonProcess() {
+  if (socket_fd != -1)
+  {
+    close(socket_fd);
+  }
+}
+
+bool SingletonProcess::operator()() {
+  if (socket_fd == -1 || rc)
+  {
+    socket_fd = -1;
+    rc        =  1;
+    if ((socket_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+    {
+      throw std::runtime_error(std::string("Could not create socket: ") +  strerror(errno));
+    }
+    else
+    {
+      struct sockaddr_in name;
+      name.sin_family = AF_INET;
+      name.sin_port = htons (port);
+      name.sin_addr.s_addr = htonl (INADDR_ANY);
+      rc = bind (socket_fd, (struct sockaddr *) &name, sizeof (name));
+    }
+  }
+  return (socket_fd != -1 && rc == 0);
+}
+
+std::string SingletonProcess::GetLockFileName() {
+  return "port " + std::to_string(port);
+}
+
 Fl_Syntax_Text_Editor::Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label ):Fl_Text_Editor(x,y,w,h,label) {
   this->resize(x,y,w,h);
   //this->label(label);
@@ -1448,24 +1483,6 @@ void UI::cut_cb() {
   Fl_Text_Editor::kf_cut(0,textor);
 }
 
-void UI::dark_theme() {
-  FOREGROUND_TEXT=4294967040;
-  BACKGROUND_TEXT=56;
-  SELECTION_TEXT=80;
-  FONT_TEXT=FL_COURIER;
-  SIZE_TEXT=14;
-  LINE_NUMBERS=0;
-  HIGHLIGHT_PLAIN=0;
-  //syntax
-  COMMENT_TEXT=3368601600;
-  STRING_TEXT=4291493888;
-  DIRECTIVE_TEXT=4286380544;
-  NUMBER_TEXT=4280754176;
-  KEYWORD_TEXT=1787232000;
-  TYPE_TEXT=385820928;
-  BUTTON_COLOR=1;
-}
-
 void UI::default_theme() {
   FOREGROUND_TEXT=FL_FOREGROUND_COLOR;
   BACKGROUND_TEXT=FL_BACKGROUND2_COLOR;
@@ -1494,23 +1511,35 @@ void UI::delete_cb() {
 void UI::dnd_file(const char* items, bool NEW) {
   if(items==NULL)
     return;
-  std::string s = items;
-  unsigned int URI = s.find("file:///");
-  if(URI==0)
+  std::string tmp = items;
+  std::vector<std::string> V = dnd_vec(tmp);
+  for( std::vector<std::string>::iterator itr = V.begin();
+                                          itr!=V.end();
+                                        ++itr)
   {
-    s = s.substr(7,std::string::npos);
-  }
-  URI = s.find("\n");
-  if(URI<s.length())
-  {
-    s=s.substr(0,URI);
-  }
-  char *ch = strdup(s.c_str());
-  fl_decode_uri(ch);
-  s=ch;
+    std::string s = *itr;
   
-  load_file(s,-1,NEW);
-  free(ch);
+    unsigned int URI = s.find("file:///");
+    if(URI==0)
+    {
+      s = s.substr(7,std::string::npos);
+    }
+    URI = s.find("\n");
+    if(URI<s.length())
+    {
+      s=s.substr(0,URI);
+    }
+    char *ch = strdup(s.c_str());
+    fl_decode_uri(ch);
+    s=ch;
+  
+    load_file(s,-1,NEW);
+    free(ch);
+  }
+}
+
+std::vector<std::string> UI::dnd_vec(std::string in) {
+  return make_vec(in,"\n");
 }
 
 void UI::find_cb() {
@@ -1855,24 +1884,6 @@ void UI::make_icon(Fl_Window *o) {
   const Fl_Pixmap * flpad_xpm_icon = &f;
   const Fl_RGB_Image *img = new Fl_RGB_Image(flpad_xpm_icon,FL_GRAY);
   o->icon(img);
-}
-
-void UI::coffee_theme() {
-  FOREGROUND_TEXT=4294967040;
-  BACKGROUND_TEXT=1044004352;
-  SELECTION_TEXT=80;
-  FONT_TEXT=FL_COURIER;
-  SIZE_TEXT=14;
-  LINE_NUMBERS=42;
-  HIGHLIGHT_PLAIN=0;
-  //syntax
-  COMMENT_TEXT=2896997376;
-  STRING_TEXT=4291493888;
-  DIRECTIVE_TEXT=4286380544;
-  NUMBER_TEXT=4280754176;
-  KEYWORD_TEXT=1787232000;
-  TYPE_TEXT=385820928;
-  BUTTON_COLOR=1;
 }
 
 void UI::none_theme() {
@@ -2357,8 +2368,8 @@ void UI::theme_menu_cb(Fl_Widget* o, void* v) {
 void UI::make_theme_menu() {
   std::vector<std::string> V = get_themes();
   for( std::vector<std::string>::iterator itr = V.begin();
-                                                itr!=V.end();
-                                                ++itr)
+                                          itr!=V.end();
+                                        ++itr)
   {
     std::string tmp = *itr;
     theme_button->add(tmp.c_str(),0,theme_menu_cb,this,0);
@@ -2693,7 +2704,14 @@ std::vector <std::string> keywords(std::string header) {
 int main(int argc, char **argv) {
   NORMAL_COLOR=FL_BLACK;
   EDIT_COLOR=FL_RED;
+  SingletonProcess singleton(7777);
+  if (!singleton())
+  {
+    std::cerr<< "process running already. See " << singleton.GetLockFileName() << std::endl;
+    return 1;
+  }
   UI *ui = new UI();
+  bool new_tab=false;
   try
   {
     ui->get_preferences();
@@ -2708,7 +2726,8 @@ int main(int argc, char **argv) {
         if(charchar1 != NULL)
         {
           std::string fname = charchar1;
-          ui->dnd_file(fname.c_str(),false);
+          ui->dnd_file(fname.c_str(),new_tab);
+          new_tab=true;
         }
       }
     }

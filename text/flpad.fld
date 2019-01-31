@@ -11,6 +11,9 @@ created from the FLTK tutorial using FLUID to design the UI
 created as part of the ToriOS project} {in_source in_header
 }
 
+decl {\#include <netinet/in.h>} {public global
+}
+
 decl {\#include "lexertk.hpp"} {public global
 }
 
@@ -80,6 +83,9 @@ decl {\#include <cstdlib>} {public global
 decl {\#include <string>} {public global
 }
 
+decl {\#include <unistd.h>} {public global
+}
+
 decl {int ret_val;} {public global
 }
 
@@ -107,6 +113,49 @@ int HIGHLIGHT_PLAIN;} {public global
 }
 
 decl {std::string SYNTAX_FILE;} {public global
+}
+
+class SingletonProcess {} {
+  Function {SingletonProcess(uint16_t port0): socket_fd(-1),rc(1),port(port0)} {open
+  } {
+    code {} {}
+  }
+  Function {~SingletonProcess()} {open
+  } {
+    code {if (socket_fd != -1)
+{
+  close(socket_fd);
+}} {}
+  }
+  Function {operator()()} {return_type bool
+  } {
+    code {if (socket_fd == -1 || rc)
+{
+  socket_fd = -1;
+  rc        =  1;
+  if ((socket_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+  {
+    throw std::runtime_error(std::string("Could not create socket: ") +  strerror(errno));
+  }
+  else
+  {
+    struct sockaddr_in name;
+    name.sin_family = AF_INET;
+    name.sin_port = htons (port);
+    name.sin_addr.s_addr = htonl (INADDR_ANY);
+    rc = bind (socket_fd, (struct sockaddr *) &name, sizeof (name));
+  }
+}
+return (socket_fd != -1 && rc == 0);} {}
+  }
+  Function {GetLockFileName()} {return_type {std::string}
+  } {
+    code {return "port " + std::to_string(port);} {}
+  }
+  decl {int socket_fd = -1;
+int rc;
+uint16_t port;} {private local
+  }
 }
 
 class Fl_Syntax_Text_Editor {open : {public Fl_Text_Editor}
@@ -277,8 +326,7 @@ switch(event)
 }
 return Fl_Text_Editor::handle(event);} {}
   }
-  Function {init_highlight()} {open
-  } {
+  Function {init_highlight()} {} {
     code {Fl_Text_Display::Style_Table_Entry A; //  Plain
 get_styletable(A,0);
 
@@ -326,8 +374,7 @@ else
 }
 redisplay_range(0,stylebuffer->length());} {}
   }
-  Function {set_type(std::string fname)} {open
-  } {
+  Function {set_type(std::string fname)} {} {
     code {std::string dir=fname;
 unsigned int find = dir.rfind("/");
 
@@ -370,7 +417,7 @@ else
 }
 return "A";} {}
   }
-  Function {style_update(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL, void *cbArg = NULL)} {open return_type {static void}
+  Function {style_update(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL, void *cbArg = NULL)} {return_type {static void}
   } {
     code {Fl_Syntax_Text_Editor * ED = (Fl_Syntax_Text_Editor *)cbArg;
 if(ED==NULL)
@@ -384,8 +431,7 @@ ED->modify_cb(pos, nInserted, nDeleted, unused, nada);} {}
   } {
     code {} {}
   }
-  Function {theme_editor(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size,int linenum )} {open
-  } {
+  Function {theme_editor(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size,int linenum )} {} {
     code {textcolor(FG);
 cursor_color(FG);
 color(BG);
@@ -422,8 +468,7 @@ get_styletable(H,7);
 //highlight_data(stylebuffer, styletable, sizeof(styletable) / sizeof(styletable[0]), 'A', style_unfinished_cb, 0);
 modify_cb();} {}
   }
-  Function {refresh()} {open
-  } {
+  Function {refresh()} {} {
     code {style_update(0,0,0,0,NULL,this);
 redisplay_range(0,textbuffer->length());
 redraw();} {}
@@ -725,8 +770,7 @@ Fl_Text_Editor::kf_select_all(0,textor);}
       } {}
     }
   }
-  Function {pref_window()} {open
-  } {
+  Function {pref_window()} {} {
     Fl_Window pref_win {
       label Preferences open
       xywh {265 238 310 460} type Double color 46 hide xclass flpad
@@ -884,8 +928,7 @@ o->parent()->hide();}
       }
     }
   }
-  Function {add_tab(bool LOAD=true, bool NEW = true)} {open
-  } {
+  Function {add_tab(bool LOAD=true, bool NEW = true)} {} {
     code {int y = menu->y()+tabs->y()+add_button->y();
 int h = tabs->h();
 int w = tabs->w();
@@ -1012,8 +1055,7 @@ cp_button->redraw();
 p_button->redraw();
 cut_button->redraw();} {}
   }
-  Function {change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line)} {open
-  } {
+  Function {change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line)} {} {
     code {FOREGROUND_TEXT=FG;
 BACKGROUND_TEXT=BG;
 SELECTION_TEXT=selection;
@@ -1171,25 +1213,7 @@ if(textor==NULL)
   return;
 Fl_Text_Editor::kf_cut(0,textor);} {}
   }
-  Function {dark_theme()} {} {
-    code {FOREGROUND_TEXT=4294967040;
-BACKGROUND_TEXT=56;
-SELECTION_TEXT=80;
-FONT_TEXT=FL_COURIER;
-SIZE_TEXT=14;
-LINE_NUMBERS=0;
-HIGHLIGHT_PLAIN=0;
-//syntax
-COMMENT_TEXT=3368601600;
-STRING_TEXT=4291493888;
-DIRECTIVE_TEXT=4286380544;
-NUMBER_TEXT=4280754176;
-KEYWORD_TEXT=1787232000;
-TYPE_TEXT=385820928;
-BUTTON_COLOR=1;} {}
-  }
-  Function {default_theme()} {open
-  } {
+  Function {default_theme()} {} {
     code {FOREGROUND_TEXT=FL_FOREGROUND_COLOR;
 BACKGROUND_TEXT=FL_BACKGROUND2_COLOR;
 SELECTION_TEXT=80;
@@ -1212,26 +1236,40 @@ if(textor==NULL)
   return;
 textor->buffer()->remove_selection();} {}
   }
-  Function {dnd_file(const char* items, bool NEW=true)} {} {
+  Function {dnd_file(const char* items, bool NEW=true)} {open
+  } {
     code {if(items==NULL)
   return;
-std::string s = items;
-unsigned int URI = s.find("file:///");
-if(URI==0)
+std::string tmp = items;
+std::vector<std::string> V = dnd_vec(tmp);
+for( std::vector<std::string>::iterator itr = V.begin();
+                                        itr!=V.end();
+                                      ++itr)
 {
-  s = s.substr(7,std::string::npos);
-}
-URI = s.find("\\n");
-if(URI<s.length())
-{
-  s=s.substr(0,URI);
-}
-char *ch = strdup(s.c_str());
-fl_decode_uri(ch);
-s=ch;
+  std::string s = *itr;
 
-load_file(s,-1,NEW);
-free(ch);} {}
+  unsigned int URI = s.find("file:///");
+  if(URI==0)
+  {
+    s = s.substr(7,std::string::npos);
+  }
+  URI = s.find("\\n");
+  if(URI<s.length())
+  {
+    s=s.substr(0,URI);
+  }
+  char *ch = strdup(s.c_str());
+  fl_decode_uri(ch);
+  s=ch;
+
+  load_file(s,-1,NEW);
+  free(ch);
+}} {selected
+    }
+  }
+  Function {dnd_vec(std::string in)} {return_type {std::vector<std::string>}
+  } {
+    code {return make_vec(in,"\\n");} {}
   }
   Function {find_cb()} {} {
     code {std::string val;
@@ -1568,23 +1606,6 @@ const Fl_Pixmap * flpad_xpm_icon = &f;
 const Fl_RGB_Image *img = new Fl_RGB_Image(flpad_xpm_icon,FL_GRAY);
 o->icon(img);} {}
   }
-  Function {coffee_theme()} {} {
-    code {FOREGROUND_TEXT=4294967040;
-BACKGROUND_TEXT=1044004352;
-SELECTION_TEXT=80;
-FONT_TEXT=FL_COURIER;
-SIZE_TEXT=14;
-LINE_NUMBERS=42;
-HIGHLIGHT_PLAIN=0;
-//syntax
-COMMENT_TEXT=2896997376;
-STRING_TEXT=4291493888;
-DIRECTIVE_TEXT=4286380544;
-NUMBER_TEXT=4280754176;
-KEYWORD_TEXT=1787232000;
-TYPE_TEXT=385820928;
-BUTTON_COLOR=1;} {}
-  }
   Function {none_theme()} {} {
     code {FOREGROUND_TEXT=FL_FOREGROUND_COLOR;
 BACKGROUND_TEXT=FL_BACKGROUND2_COLOR;
@@ -1832,8 +1853,7 @@ int height = win->h() - (buttons->h() +buttons->x());
 o->size(width,height);
 o->redraw();} {}
   }
-  Function {refresh_all()} {open
-  } {
+  Function {refresh_all()} {} {
     code {change_theme(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);} {}
   }
   Function {save_cb(void)} {} {
@@ -1991,8 +2011,7 @@ else
   E->wrap_mode(Fl_Text_Display::WRAP_AT_BOUNDS, 0);
 }} {}
   }
-  Function {get_theme_from_config(std::string theme)} {open
-  } {
+  Function {get_theme_from_config(std::string theme)} {} {
     code {trace("theme="+theme);
 //COLORS
 FOREGROUND_TEXT=get_theme(theme,"foreground");
@@ -2035,7 +2054,7 @@ l_s->value(LINE_NUMBERS);
 lsout->value(LINE_NUMBERS);
 tool_color->value(BUTTON_COLOR);} {}
   }
-  Function {theme_menu_cb(Fl_Widget* o, void* v)} {open return_type {static void}
+  Function {theme_menu_cb(Fl_Widget* o, void* v)} {return_type {static void}
   } {
     code {Fl_Menu_Button *m = (Fl_Menu_Button*)o;
 const Fl_Menu_Item *p = m->mvalue();
@@ -2049,8 +2068,8 @@ trace(txt);
   } {
     code {std::vector<std::string> V = get_themes();
 for( std::vector<std::string>::iterator itr = V.begin();
-                                              itr!=V.end();
-                                              ++itr)
+                                        itr!=V.end();
+                                      ++itr)
 {
   std::string tmp = *itr;
   theme_button->add(tmp.c_str(),0,theme_menu_cb,this,0);
@@ -2132,7 +2151,7 @@ if(inputFileStrem.is_open())
 return "";} {}
 }
 
-Function {get_syntax_file()} {open return_type {std::string}
+Function {get_syntax_file()} {return_type {std::string}
 } {
   code {std::string base_name = "flpad/styles.flpad";
 if(SYNTAX_FILE.compare("")!=0)
@@ -2178,7 +2197,7 @@ if(SYNTAX_FILE.compare("")==0)
 return SYNTAX_FILE;} {}
 }
 
-Function {get_theme_file()} {open return_type {std::string}
+Function {get_theme_file()} {return_type {std::string}
 } {
   code {std::string base_name = "flpad/themes.flpad";
 std::string tmp;
@@ -2220,11 +2239,10 @@ else
 }
 if(tmp.compare("")==0)
   trace("No THEME file found...");
-return tmp;} {selected
-  }
+return tmp;} {}
 }
 
-Function {get_type(std::string fname)} {open return_type {std::string}
+Function {get_type(std::string fname)} {return_type {std::string}
 } {
   code {if(!test_file(fname))
 {
@@ -2312,7 +2330,7 @@ if(EXT.compare("bash")==0)
 return "";} {}
 }
 
-Function {get_themes()} {open return_type {std::vector<std::string>}
+Function {get_themes()} {return_type {std::vector<std::string>}
 } {
   code {std::vector<std::string> THEMES;
 std::string filename = get_theme_file();
@@ -2341,7 +2359,7 @@ if(inputFileStrem.is_open())
 return THEMES;} {}
 }
 
-Function {get_theme(std::string theme, std::string item)} {open return_type int
+Function {get_theme(std::string theme, std::string item)} {return_type int
 } {
   code {std::string filename = get_theme_file();
 if(filename.compare("")==0){return 0;}
@@ -2398,7 +2416,14 @@ Function {main(int argc, char **argv)} {return_type int
 } {
   code {NORMAL_COLOR=FL_BLACK;
 EDIT_COLOR=FL_RED;
+SingletonProcess singleton(7777);
+if (!singleton())
+{
+  std::cerr<< "process running already. See " << singleton.GetLockFileName() << std::endl;
+  return 1;
+}
 UI *ui = new UI();
+bool new_tab=false;
 try
 {
   ui->get_preferences();
@@ -2413,7 +2438,8 @@ try
       if(charchar1 != NULL)
       {
         std::string fname = charchar1;
-        ui->dnd_file(fname.c_str(),false);
+        ui->dnd_file(fname.c_str(),new_tab);
+        new_tab=true;
       }
     }
   }
