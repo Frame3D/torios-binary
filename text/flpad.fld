@@ -277,7 +277,8 @@ switch(event)
 }
 return Fl_Text_Editor::handle(event);} {}
   }
-  Function {init_highlight()} {} {
+  Function {init_highlight()} {open
+  } {
     code {Fl_Text_Display::Style_Table_Entry A; //  Plain
 get_styletable(A,0);
 
@@ -305,7 +306,7 @@ get_styletable(H,7);
 highlight_data(stylebuffer, styletable, sizeof(styletable) / sizeof(styletable[0]), 'A', style_unfinished_cb, 0);
 textbuffer->add_modify_callback(style_update, (void*) this);} {}
   }
-  Function {modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL)} {open return_type void
+  Function {modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL)} {return_type void
   } {
     code {std::string thisLine;
 if ( (HIGHLIGHT_PLAIN==0)&& (STYLE_HEADER.compare("")==0) )
@@ -353,7 +354,7 @@ generator.set_keywords(KEYWORDS);
 generator.set_types(TYPES);
 trace("set syntax type for: "+fname+" to:"+STYLE_HEADER);} {}
   }
-  Function {style_line(std::string thisLine)} {open return_type {std::string}
+  Function {style_line(std::string thisLine)} {return_type {std::string}
   } {
     code {if(!generator.process(thisLine))
   trace("error processing text:"+thisLine);
@@ -418,15 +419,8 @@ get_styletable(G,6);
 Fl_Text_Display::Style_Table_Entry H; // Numbers
 get_styletable(H,7);
 
-highlight_data(stylebuffer, styletable, sizeof(styletable) / sizeof(styletable[0]), 'A', style_unfinished_cb, 0);
-
-
-char *style = stylebuffer->text();
-char *text = textbuffer->text();
-modify_cb();
-//style_parse(text, style, textbuffer->length(),12);
-delete[] style;
-free(text);} {}
+//highlight_data(stylebuffer, styletable, sizeof(styletable) / sizeof(styletable[0]), 'A', style_unfinished_cb, 0);
+modify_cb();} {}
   }
   Function {refresh()} {open
   } {
@@ -735,13 +729,13 @@ Fl_Text_Editor::kf_select_all(0,textor);}
   } {
     Fl_Window pref_win {
       label Preferences open
-      xywh {265 238 310 460} type Double color 46 xclass flpad visible
+      xywh {265 238 310 460} type Double color 46 hide xclass flpad
     } {
       Fl_Tabs pref_tabs {open
         xywh {0 0 310 420} box FLAT_BOX
       } {
         Fl_Group gen {
-          label General open selected
+          label General open
           xywh {0 25 310 395} selection_color 43
         } {
           Fl_Browser font_b {
@@ -848,29 +842,11 @@ button_style(val);}
             tooltip {The color of numbers} xywh {105 170 55 30} box BORDER_BOX color 23 align 129
             code0 {o->color( NUMBER_TEXT );}
           }
-          Fl_Menu_Button {} {
+          Fl_Menu_Button theme_button {
             label Theme open
             xywh {25 210 135 30} box BORDER_BOX color 23 selection_color 72
-          } {
-            MenuItem {} {
-              label {Light Background}
-              callback {default_theme();
-colorize_syntax_buttons();}
-              xywh {5 5 100 20}
-            }
-            MenuItem {} {
-              label {Dark Background}
-              callback {dark_theme();
-colorize_syntax_buttons();}
-              xywh {5 5 100 20}
-            }
-            MenuItem {} {
-              label None
-              callback {none_theme();
-colorize_syntax_buttons();}
-              xywh {15 15 100 20}
-            }
-          }
+            code0 {make_theme_menu();}
+          } {}
           Fl_Check_Button plain_text {
             label {Highlight Plain text?}
             tooltip {Highlight quotes, numbers, brackets, etc... on plain text} xywh {25 250 25 25} down_box GTK_DOWN_BOX color 55 selection_color 63
@@ -908,7 +884,8 @@ o->parent()->hide();}
       }
     }
   }
-  Function {add_tab(bool LOAD=true, bool NEW = true)} {} {
+  Function {add_tab(bool LOAD=true, bool NEW = true)} {open
+  } {
     code {int y = menu->y()+tabs->y()+add_button->y();
 int h = tabs->h();
 int w = tabs->w();
@@ -1035,7 +1012,8 @@ cp_button->redraw();
 p_button->redraw();
 cut_button->redraw();} {}
   }
-  Function {change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line)} {} {
+  Function {change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line)} {open
+  } {
     code {FOREGROUND_TEXT=FG;
 BACKGROUND_TEXT=BG;
 SELECTION_TEXT=selection;
@@ -1135,8 +1113,7 @@ else
 
 tabs->redraw();} {}
   }
-  Function {colorize_syntax_buttons()} {open
-  } {
+  Function {colorize_syntax_buttons()} {} {
     code {cm->color(COMMENT_TEXT);
 cm->redraw();
 str->color(STRING_TEXT);
@@ -1155,14 +1132,6 @@ tExt->color(FOREGROUND_TEXT);
 bg->color(BACKGROUND_TEXT);
 tExt->redraw();
 bg->redraw();} {}
-  }
-  Function {convert(std::string num)} {return_type {unsigned int}
-  } {
-    code {unsigned int NUM=0;
-try{NUM=std::stoul(num);}
-catch(const std::invalid_argument e){return 0;}
-catch(const std::out_of_range e){return 0;}
-return NUM;} {}
   }
   Function {copy_cb()} {} {
     code {Fl_Syntax_Text_Editor * textor = current_editor();
@@ -1219,7 +1188,8 @@ KEYWORD_TEXT=1787232000;
 TYPE_TEXT=385820928;
 BUTTON_COLOR=1;} {}
   }
-  Function {default_theme()} {} {
+  Function {default_theme()} {open
+  } {
     code {FOREGROUND_TEXT=FL_FOREGROUND_COLOR;
 BACKGROUND_TEXT=FL_BACKGROUND2_COLOR;
 SELECTION_TEXT=80;
@@ -1336,7 +1306,7 @@ for (i=1;i!=a;++i){
   o->add(v.c_str());
 }} {}
   }
-  Function {get_filename()} {open return_type {std::string}
+  Function {get_filename()} {return_type {std::string}
   } {
     code {const char* xdg_config_home=getenv("XDG_CONFIG_HOME");
 std::string fname="";
@@ -1598,8 +1568,24 @@ const Fl_Pixmap * flpad_xpm_icon = &f;
 const Fl_RGB_Image *img = new Fl_RGB_Image(flpad_xpm_icon,FL_GRAY);
 o->icon(img);} {}
   }
-  Function {none_theme()} {open
-  } {
+  Function {coffee_theme()} {} {
+    code {FOREGROUND_TEXT=4294967040;
+BACKGROUND_TEXT=1044004352;
+SELECTION_TEXT=80;
+FONT_TEXT=FL_COURIER;
+SIZE_TEXT=14;
+LINE_NUMBERS=42;
+HIGHLIGHT_PLAIN=0;
+//syntax
+COMMENT_TEXT=2896997376;
+STRING_TEXT=4291493888;
+DIRECTIVE_TEXT=4286380544;
+NUMBER_TEXT=4280754176;
+KEYWORD_TEXT=1787232000;
+TYPE_TEXT=385820928;
+BUTTON_COLOR=1;} {}
+  }
+  Function {none_theme()} {} {
     code {FOREGROUND_TEXT=FL_FOREGROUND_COLOR;
 BACKGROUND_TEXT=FL_BACKGROUND2_COLOR;
 SELECTION_TEXT=80;
@@ -1846,7 +1832,8 @@ int height = win->h() - (buttons->h() +buttons->x());
 o->size(width,height);
 o->redraw();} {}
   }
-  Function {refresh_all()} {} {
+  Function {refresh_all()} {open
+  } {
     code {change_theme(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);} {}
   }
   Function {save_cb(void)} {} {
@@ -2004,6 +1991,407 @@ else
   E->wrap_mode(Fl_Text_Display::WRAP_AT_BOUNDS, 0);
 }} {}
   }
+  Function {get_theme_from_config(std::string theme)} {open
+  } {
+    code {trace("theme="+theme);
+//COLORS
+FOREGROUND_TEXT=get_theme(theme,"foreground");
+BACKGROUND_TEXT=get_theme(theme,"background");
+COMMENT_TEXT=get_theme(theme,"comments");
+STRING_TEXT=get_theme(theme,"strings");
+NUMBER_TEXT=get_theme(theme,"numbers");
+KEYWORD_TEXT=get_theme(theme,"keywords");
+DIRECTIVE_TEXT=get_theme(theme,"symbol");
+TYPE_TEXT=get_theme(theme,"types");
+SELECTION_TEXT=get_theme(theme,"selection");
+//ETC
+FONT_TEXT=get_theme(theme,"font");
+SIZE_TEXT=get_theme(theme,"font_size");
+LINE_NUMBERS=get_theme(theme,"line_number_size");
+HIGHLIGHT_PLAIN=get_theme(theme,"highlight_plain_text");
+BUTTON_COLOR=get_theme(theme,"button_color");
+
+//modify the window
+cm->color(COMMENT_TEXT);
+cm->redraw();
+str->color(STRING_TEXT);
+str->redraw();
+directives->color(DIRECTIVE_TEXT);
+directives->redraw();
+typezz->color(TYPE_TEXT);
+typezz->redraw();
+keywordz->color(KEYWORD_TEXT);
+keywordz->redraw();
+numbers->color(NUMBER_TEXT);
+numbers->redraw();
+plain_text->value(HIGHLIGHT_PLAIN);
+bg->color(BACKGROUND_TEXT);
+bg->redraw();
+tExt->color(FOREGROUND_TEXT);
+tExt->redraw();
+f_s->value(SIZE_TEXT);
+fsout->value(SIZE_TEXT);
+l_s->value(LINE_NUMBERS);
+lsout->value(LINE_NUMBERS);
+tool_color->value(BUTTON_COLOR);} {}
+  }
+  Function {theme_menu_cb(Fl_Widget* o, void* v)} {open return_type {static void}
+  } {
+    code {Fl_Menu_Button *m = (Fl_Menu_Button*)o;
+const Fl_Menu_Item *p = m->mvalue();
+const char* txt=p->label();
+if(txt==NULL)
+  return;
+trace(txt);
+((UI*)(p->user_data()))->get_theme_from_config(txt);} {}
+  }
+  Function {make_theme_menu()} {open
+  } {
+    code {std::vector<std::string> V = get_themes();
+for( std::vector<std::string>::iterator itr = V.begin();
+                                              itr!=V.end();
+                                              ++itr)
+{
+  std::string tmp = *itr;
+  theme_button->add(tmp.c_str(),0,theme_menu_cb,this,0);
+}
+theme_button->redraw();} {}
+  }
+}
+
+Function {comma_line(std::string lang,std::string field)} {return_type {std::vector<std::string>}
+} {
+  code {//get the line from the file
+std::string LINE=get(lang,field);
+//return a vector from the string delimited by commas
+return make_vec(LINE,",");} {}
+}
+
+Function {convert(std::string num)} {return_type {unsigned int}
+} {
+  code {unsigned int NUM=0;
+try{NUM=std::stoul(num);}
+catch(const std::invalid_argument e){return 0;}
+catch(const std::out_of_range e){return 0;}
+return NUM;} {}
+}
+
+Function {get(std::string header, std::string line)} {return_type {std::string}
+} {
+  code {if(line.compare("")==0){return "";}
+if(header.compare("")==0){return "";}
+std::string filename = get_syntax_file();
+if(filename.compare("")==0){return "";}
+if(!test_file(filename))
+{
+  trace("No file sent in\\n"+filename+","+line);
+  return "";
+}
+std::string find_header=header;
+unsigned int open=header.find("[");
+unsigned int close=header.find("]");
+unsigned int header_length=header.length();
+if(open>header_length){find_header="["+find_header;}
+if(close>header_length){find_header=find_header+"]";}
+
+bool found_after_this=false;
+std::string this_line;
+int lengthofARGS = line.length();
+std::string subString;
+std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
+/** check if the input file stream is open */
+if(inputFileStrem.is_open())
+{
+  while (getline(inputFileStrem,this_line))
+  {
+    subString=this_line.substr(0,lengthofARGS);
+    if(this_line.find("[")<=1)
+    {
+      found_after_this=false;
+    }
+    if(this_line.find(find_header)<this_line.length())
+    {
+      //trace("FOUND:"+find_header);
+      found_after_this=true;
+    }
+    /** if found return it immediately */
+    if(found_after_this)
+    {
+      if(this_line.find(line)<this_line.length())
+      {
+        unsigned int eq = this_line.find("=");
+        if(eq<this_line.length())
+        {
+          this_line=this_line.substr(eq+1,std::string::npos);
+        }
+        return this_line;
+      }
+    }
+  }
+}
+return "";} {}
+}
+
+Function {get_syntax_file()} {open return_type {std::string}
+} {
+  code {std::string base_name = "flpad/styles.flpad";
+if(SYNTAX_FILE.compare("")!=0)
+  return SYNTAX_FILE;
+//testing
+std::string home_tester;
+const char* home_config = getenv("XDG_CONFIG_HOME");
+if(home_config == NULL)
+{
+  home_config = getenv("HOME");
+  if(home_config != NULL)
+  {
+    home_tester=home_config;
+    home_tester =home_tester + "/.config/" + base_name;
+  }
+}
+else
+{
+  home_tester = home_config;
+  home_tester = home_tester + "/" + base_name;
+}
+trace(home_tester);
+if(test_file(home_tester))
+{
+  SYNTAX_FILE=home_tester;
+}
+else
+{
+  std::string tester = "/usr/share/";
+  if(test_file(tester+base_name))
+  {
+    SYNTAX_FILE=tester+base_name;
+  }
+  else
+  {
+    tester = "/usr/local/share/";
+    if(test_file(tester+base_name))
+      SYNTAX_FILE=tester+base_name;
+  }
+}
+if(SYNTAX_FILE.compare("")==0)
+  trace("No syntax file found...");
+return SYNTAX_FILE;} {}
+}
+
+Function {get_theme_file()} {open return_type {std::string}
+} {
+  code {std::string base_name = "flpad/themes.flpad";
+std::string tmp;
+//testing
+std::string home_tester;
+const char* home_config = getenv("XDG_CONFIG_HOME");
+if(home_config == NULL)
+{
+  home_config = getenv("HOME");
+  if(home_config != NULL)
+  {
+    home_tester=home_config;
+    home_tester =home_tester + "/.config/" + base_name;
+  }
+}
+else
+{
+  home_tester = home_config;
+  home_tester = home_tester + "/" + base_name;
+}
+trace(home_tester);
+if(test_file(home_tester))
+{
+  tmp=home_tester;
+}
+else
+{
+  std::string tester = "/usr/share/";
+  if(test_file(tester+base_name))
+  {
+    tmp=tester+base_name;
+  }
+  else
+  {
+    tester = "/usr/local/share/";
+    if(test_file(tester+base_name))
+      tmp=tester+base_name;
+  }
+}
+if(tmp.compare("")==0)
+  trace("No THEME file found...");
+return tmp;} {selected
+  }
+}
+
+Function {get_type(std::string fname)} {open return_type {std::string}
+} {
+  code {if(!test_file(fname))
+{
+  trace("No file sent in\\n"+fname);
+  return "";
+}
+
+const char* ext = fl_filename_ext(fname.c_str());
+
+/// get the shebang
+std::string thisLine;
+std::ifstream inputFileStream(fname.c_str(), std::ifstream::in);
+if(inputFileStream.is_open())
+{
+  getline(inputFileStream,thisLine);
+}
+
+// shell scripts don't always constain an extention... but the shebang tells
+if(thisLine.find("\#!")==0)
+{
+  std::string tmp=thisLine;
+  unsigned int find = tmp.rfind("/");
+  if(find<tmp.length())
+  {
+    tmp=tmp.substr(find+1,std::string::npos);
+    tmp="."+tmp;
+    ext=tmp.c_str();
+  }
+}
+
+//nothing?  lets leave then...
+if(ext == NULL)
+  return "";
+
+std::string EXT=ext;
+unsigned int f_dot = EXT.find(".");
+if(f_dot<EXT.length())
+  EXT=EXT.substr(f_dot+1,std::string::npos);
+//trace("extention="+EXT);
+//get the syntax highlighter file
+std::string filename = get_syntax_file();
+if(filename.compare("")==0){return "";}
+
+//this is the line we are looking for
+std::string line="ext=";
+
+//parse the syntax highlighter file
+std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
+/** check if the input file stream is open */
+if(inputFileStrem.is_open())
+{
+  std::string this_line;
+  std::string HEADER="";
+  while (getline(inputFileStrem,this_line))
+  {
+    
+    if(this_line.find("[")<=1)
+    {
+       unsigned int open_bracket=this_line.find("[");
+       unsigned int close_bracket=this_line.find("]");
+       HEADER=this_line.substr(open_bracket+1,close_bracket-1);
+       trace("["+HEADER+"]");
+    }
+    unsigned int eq = this_line.find("=");
+    if(this_line.find(line)<this_line.length())
+    {
+      this_line=this_line.substr(eq+1,std::string::npos);
+      trace(this_line+"::"+EXT);
+      std::vector<std::string> V = make_vec(this_line,",");
+      for( std::vector<std::string>::iterator itr = V.begin();
+                                              itr!=V.end();
+                                              ++itr)
+      {
+        std::string tmp=*itr;
+        //trace(tmp+"=="+EXT);
+        if(tmp.compare(EXT)==0)
+          return HEADER;
+      }
+    }
+  }
+}
+
+if(EXT.compare("bash")==0)
+  return "sh";
+return "";} {}
+}
+
+Function {get_themes()} {open return_type {std::vector<std::string>}
+} {
+  code {std::vector<std::string> THEMES;
+std::string filename = get_theme_file();
+if(filename.compare("")==0){return THEMES;}
+
+
+//parse the syntax highlighter file
+std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
+/** check if the input file stream is open */
+if(inputFileStrem.is_open())
+{
+  std::string this_line;
+  std::string HEADER="";
+  while (getline(inputFileStrem,this_line))
+  {
+    
+    if(this_line.find("[")<=1)
+    {
+       unsigned int open_bracket=this_line.find("[");
+       unsigned int close_bracket=this_line.find("]");
+       HEADER=this_line.substr(open_bracket+1,close_bracket-1);
+       THEMES.push_back(HEADER);
+    }
+  }
+}
+return THEMES;} {}
+}
+
+Function {get_theme(std::string theme, std::string item)} {open return_type int
+} {
+  code {std::string filename = get_theme_file();
+if(filename.compare("")==0){return 0;}
+
+//this is the line we are looking for
+std::string line=item;
+
+trace(item);
+//parse the syntax highlighter file
+std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
+/** check if the input file stream is open */
+bool ready=false;
+if(inputFileStrem.is_open())
+{
+  std::string this_line;
+  std::string HEADER="";
+  while (getline(inputFileStrem,this_line))
+  {
+    
+    if(this_line.find("[")<=1)
+    {
+       unsigned int open_bracket=this_line.find("[");
+       unsigned int close_bracket=this_line.find("]");
+       HEADER=this_line.substr(open_bracket+1,close_bracket-1);
+       if(theme.compare(HEADER)==0)
+         ready=true;
+    }
+    if(ready)
+    {
+      unsigned int eq = this_line.find("=");
+      if(this_line.find(line)<eq)
+      {
+        this_line=this_line.substr(eq+1,std::string::npos);
+        trace("color="+this_line);
+        return convert(this_line);
+      }
+    }
+  }
+}
+return 0;} {}
+}
+
+Function {is_space(const char x)} {return_type bool
+} {
+  code {return std::isspace(x);} {}
+}
+
+Function {keywords(std::string header)} {return_type {std::vector <std::string>}
+} {
+  code {return comma_line(header, "keywords");} {}
 }
 
 Function {main(int argc, char **argv)} {return_type int
@@ -2083,62 +2471,6 @@ if(n!=0)
 std::cout<<std::endl;} {}
 }
 
-Function {get(std::string header, std::string line)} {return_type {std::string}
-} {
-  code {if(line.compare("")==0){return "";}
-if(header.compare("")==0){return "";}
-std::string filename = get_syntax_file();
-if(filename.compare("")==0){return "";}
-if(!test_file(filename))
-{
-  trace("No file sent in\\n"+filename+","+line);
-  return "";
-}
-std::string find_header=header;
-unsigned int open=header.find("[");
-unsigned int close=header.find("]");
-unsigned int header_length=header.length();
-if(open>header_length){find_header="["+find_header;}
-if(close>header_length){find_header=find_header+"]";}
-
-bool found_after_this=false;
-std::string this_line;
-int lengthofARGS = line.length();
-std::string subString;
-std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
-/** check if the input file stream is open */
-if(inputFileStrem.is_open())
-{
-  while (getline(inputFileStrem,this_line))
-  {
-    subString=this_line.substr(0,lengthofARGS);
-    if(this_line.find("[")<=1)
-    {
-      found_after_this=false;
-    }
-    if(this_line.find(find_header)<this_line.length())
-    {
-      //trace("FOUND:"+find_header);
-      found_after_this=true;
-    }
-    /** if found return it immediately */
-    if(found_after_this)
-    {
-      if(this_line.find(line)<this_line.length())
-      {
-        unsigned int eq = this_line.find("=");
-        if(eq<this_line.length())
-        {
-          this_line=this_line.substr(eq+1,std::string::npos);
-        }
-        return this_line;
-      }
-    }
-  }
-}
-return "";} {}
-}
-
 Function {test_file(std::string file)} {return_type bool
 } {
   code {//if empty it doesn't exist
@@ -2198,159 +2530,7 @@ if(mydir!=NULL)
 return false;} {}
 }
 
-Function {get_syntax_file()} {open return_type {std::string}
-} {
-  code {std::string base_name = "flpad/styles.flpad";
-if(SYNTAX_FILE.compare("")!=0)
-  return SYNTAX_FILE;
-//testing
-std::string home_tester;
-const char* home_config = getenv("XDG_CONFIG_HOME");
-if(home_config == NULL)
-{
-  home_config = getenv("HOME");
-  if(home_config != NULL)
-  {
-    home_tester=home_config;
-    home_tester =home_tester + "/.config/" + base_name;
-  }
-}
-else
-{
-  home_tester = home_config;
-  home_tester = home_tester + "/" + base_name;
-}
-trace(home_tester);
-if(test_file(home_tester))
-{
-  SYNTAX_FILE=home_tester;
-}
-else
-{
-  std::string tester = "/usr/share/";
-  if(test_file(tester+base_name))
-  {
-    SYNTAX_FILE=tester+base_name;
-  }
-  else
-  {
-    tester = "/usr/local/share/";
-    if(test_file(tester+base_name))
-      SYNTAX_FILE=tester+base_name;
-  }
-}
-if(SYNTAX_FILE.compare("")==0)
-  trace("No syntax file found...");
-return SYNTAX_FILE;} {}
-}
-
-Function {comma_line(std::string lang,std::string field)} {return_type {std::vector<std::string>}
-} {
-  code {//get the line from the file
-std::string LINE=get(lang,field);
-//return a vector from the string delimited by commas
-return make_vec(LINE,",");} {}
-}
-
-Function {keywords(std::string header)} {return_type {std::vector <std::string>}
-} {
-  code {return comma_line(header, "keywords");} {}
-}
-
 Function {types(std::string header)} {return_type {std::vector <std::string>}
 } {
   code {return comma_line(header, "types");} {}
-}
-
-Function {is_space(const char x)} {return_type bool
-} {
-  code {return std::isspace(x);} {}
-}
-
-Function {get_type(std::string fname)} {return_type {std::string}
-} {
-  code {if(!test_file(fname))
-{
-  trace("No file sent in\\n"+fname);
-  return "";
-}
-
-const char* ext = fl_filename_ext(fname.c_str());
-
-/// get the shebang
-std::string thisLine;
-std::ifstream inputFileStream(fname.c_str(), std::ifstream::in);
-if(inputFileStream.is_open())
-{
-  getline(inputFileStream,thisLine);
-}
-
-// shell scripts don't always constain an extention... but the shebang tells
-if(thisLine.find("\#!")==0)
-{
-  std::string tmp=thisLine;
-  unsigned int find = tmp.rfind("/");
-  if(find<tmp.length())
-  {
-    tmp=tmp.substr(find+1,std::string::npos);
-    tmp="."+tmp;
-    ext=tmp.c_str();
-  }
-}
-
-//nothing?  lets leave then...
-if(ext == NULL)
-  return "";
-
-std::string EXT=ext;
-unsigned int f_dot = EXT.find(".");
-if(f_dot<EXT.length())
-  EXT=EXT.substr(f_dot+1,std::string::npos);
-//trace("extention="+EXT);
-//get the syntax highlighter file
-std::string filename = get_syntax_file();
-if(filename.compare("")==0){return "";}
-
-//this is the line we are looking for
-std::string line="ext=";
-
-//parse the syntax highlighter file
-std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
-/** check if the input file stream is open */
-if(inputFileStrem.is_open())
-{
-  std::string this_line;
-  std::string HEADER="";
-  while (getline(inputFileStrem,this_line))
-  {
-    
-    if(this_line.find("[")<=1)
-    {
-       unsigned int open_bracket=this_line.find("[");
-       unsigned int close_bracket=this_line.find("]");
-       HEADER=this_line.substr(open_bracket+1,close_bracket-1);
-       //trace("["+HEADER+"]");
-    }
-    unsigned int eq = this_line.find("=");
-    if(this_line.find(line)<this_line.length())
-    {
-      this_line=this_line.substr(eq+1,std::string::npos);
-      trace(this_line+"::"+EXT);
-      std::vector<std::string> V = make_vec(this_line,",");
-      for( std::vector<std::string>::iterator itr = V.begin();
-                                              itr!=V.end();
-                                              ++itr)
-      {
-        std::string tmp=*itr;
-        //trace(tmp+"=="+EXT);
-        if(tmp.compare(EXT)==0)
-          return HEADER;
-      }
-    }
-  }
-}
-
-if(EXT.compare("bash")==0)
-  return "sh";
-return "";} {}
 }

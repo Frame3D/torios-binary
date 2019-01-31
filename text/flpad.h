@@ -315,15 +315,8 @@ public:
 private:
   inline void cb_numbers_i(Fl_Button*, void*);
   static void cb_numbers(Fl_Button*, void*);
-  static unsigned char menu_Theme_i18n_done;
-  static Fl_Menu_Item menu_Theme[];
-  inline void cb_Light_i(Fl_Menu_*, void*);
-  static void cb_Light(Fl_Menu_*, void*);
-  inline void cb_Dark_i(Fl_Menu_*, void*);
-  static void cb_Dark(Fl_Menu_*, void*);
-  inline void cb_None_i(Fl_Menu_*, void*);
-  static void cb_None(Fl_Menu_*, void*);
 public:
+  Fl_Menu_Button *theme_button;
   Fl_Check_Button *plain_text;
 private:
   inline void cb_Cancel_i(Fl_Button*, void*);
@@ -341,7 +334,6 @@ public:
   static void choose_doc(Fl_Widget* o, void* v);
   void close_tab();
   void colorize_syntax_buttons();
-  unsigned int convert(std::string num);
   void copy_cb();
   Fl_Syntax_Text_Editor * current_editor();
   void cut_cb();
@@ -364,6 +356,7 @@ public:
   void insert_cb();
   void load_file(std::string newfile, int ipos,bool NEW=true);
   void make_icon(Fl_Window *o);
+  void coffee_theme();
   void none_theme();
   void new_cb();
   void open_cb();
@@ -387,16 +380,23 @@ public:
   void show_line_numbers(int width=0);
   void undo_cb();
   void wordwrap();
+  void get_theme_from_config(std::string theme);
+  static void theme_menu_cb(Fl_Widget* o, void* v);
+  void make_theme_menu();
 };
+std::vector<std::string> comma_line(std::string lang,std::string field);
+unsigned int convert(std::string num);
+std::string get(std::string header, std::string line);
+std::string get_syntax_file();
+std::string get_theme_file();
+std::string get_type(std::string fname);
+std::vector<std::string> get_themes();
+int get_theme(std::string theme, std::string item);
+bool is_space(const char x);
+std::vector <std::string> keywords(std::string header);
 int main(int argc, char **argv);
 std::vector<std::string> make_vec(std::string string_to_become_vector,std::string delimiter=" ");
 void trace(std::string MSG, int n = 0);
-std::string get(std::string header, std::string line);
 bool test_file(std::string file);
-std::string get_syntax_file();
-std::vector<std::string> comma_line(std::string lang,std::string field);
-std::vector <std::string> keywords(std::string header);
 std::vector <std::string> types(std::string header);
-bool is_space(const char x);
-std::string get_type(std::string fname);
 #endif

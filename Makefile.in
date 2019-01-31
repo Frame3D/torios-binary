@@ -1,6 +1,7 @@
 STYLES_CONFIG = styles.flpad
-obj      = $(askpass:.c=.o) $(about:.c=.o) $(pm_dialogs:.c=.o)
-TARGET   = torios-binary
+THEME_CONFIG  = themes.flpad
+obj           = $(askpass:.c=.o) $(about:.c=.o) $(pm_dialogs:.c=.o)
+TARGET        = torios-binary
 $(TARGET):
 	$(MAKE) -C askpass/
 	$(MAKE) -C about/
@@ -42,6 +43,7 @@ install: $(TARGET)
 #CONFIG
 	mkdir -p $(DESTDIR)$(PREFIX)/flpad/
 	cp text/$(STYLES_CONFIG) $(DESTDIR)$(PREFIX)/flpad/$(STYLES_CONFIG)
+	cp text/$(THEME_CONFIG) $(DESTDIR)$(PREFIX)/flpad/$(THEME_CONFIG)
 
 .PHONY: uninstall
 uninstall:
@@ -66,3 +68,4 @@ uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/flwelcome.desktop
 #Config
 	rm -f $(DESTDIR)$(PREFIX)/flpad/$(STYLES_CONFIG)
+	rm -f $(DESTDIR)$(PREFIX)/flpad/$(THEME_CONFIG)

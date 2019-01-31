@@ -58,6 +58,7 @@ For shell scripts it will read the shebang line and look for the header, ex
 
 You can also turn syntax highlighting on for regular text files to have all quotes highlighted, numbers colored, as well as brackets, etc...
 
+themes can be added and configured just like syntax highlighting see [themes.flpad](https://github.com/Israel-D/torios-binary/blob/master/text/themes.flpad)
 
 This can make editing plain text more fun :smile:
 
