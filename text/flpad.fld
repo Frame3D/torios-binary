@@ -115,49 +115,6 @@ int HIGHLIGHT_PLAIN;} {public global
 decl {std::string SYNTAX_FILE;} {public global
 }
 
-class SingletonProcess {} {
-  Function {SingletonProcess(uint16_t port0): socket_fd(-1),rc(1),port(port0)} {open
-  } {
-    code {} {}
-  }
-  Function {~SingletonProcess()} {open
-  } {
-    code {if (socket_fd != -1)
-{
-  close(socket_fd);
-}} {}
-  }
-  Function {operator()()} {return_type bool
-  } {
-    code {if (socket_fd == -1 || rc)
-{
-  socket_fd = -1;
-  rc        =  1;
-  if ((socket_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
-  {
-    throw std::runtime_error(std::string("Could not create socket: ") +  strerror(errno));
-  }
-  else
-  {
-    struct sockaddr_in name;
-    name.sin_family = AF_INET;
-    name.sin_port = htons (port);
-    name.sin_addr.s_addr = htonl (INADDR_ANY);
-    rc = bind (socket_fd, (struct sockaddr *) &name, sizeof (name));
-  }
-}
-return (socket_fd != -1 && rc == 0);} {}
-  }
-  Function {GetLockFileName()} {return_type {std::string}
-  } {
-    code {return "port " + std::to_string(port);} {}
-  }
-  decl {int socket_fd = -1;
-int rc;
-uint16_t port;} {private local
-  }
-}
-
 class Fl_Syntax_Text_Editor {open : {public Fl_Text_Editor}
 } {
   Function {Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0):Fl_Text_Editor(x,y,w,h,label)} {open
@@ -1236,8 +1193,7 @@ if(textor==NULL)
   return;
 textor->buffer()->remove_selection();} {}
   }
-  Function {dnd_file(const char* items, bool NEW=true)} {open
-  } {
+  Function {dnd_file(const char* items, bool NEW=true)} {} {
     code {if(items==NULL)
   return;
 std::string tmp = items;
@@ -1264,8 +1220,7 @@ for( std::vector<std::string>::iterator itr = V.begin();
 
   load_file(s,-1,NEW);
   free(ch);
-}} {selected
-    }
+}} {}
   }
   Function {dnd_vec(std::string in)} {return_type {std::vector<std::string>}
   } {
@@ -2412,18 +2367,13 @@ Function {keywords(std::string header)} {return_type {std::vector <std::string>}
   code {return comma_line(header, "keywords");} {}
 }
 
-Function {main(int argc, char **argv)} {return_type int
+Function {main(int argc, char **argv)} {open return_type int
 } {
-  code {NORMAL_COLOR=FL_BLACK;
-EDIT_COLOR=FL_RED;
-SingletonProcess singleton(7777);
-if (!singleton())
-{
-  std::cerr<< "process running already. See " << singleton.GetLockFileName() << std::endl;
-  return 1;
-}
-UI *ui = new UI();
-bool new_tab=false;
+  code {//Set some default colors
+NORMAL_COLOR = FL_BLACK;
+EDIT_COLOR   = FL_RED;
+UI  *ui      = new UI();
+bool new_tab = false;
 try
 {
   ui->get_preferences();

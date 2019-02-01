@@ -1,26 +1,29 @@
 # data file for the Fltk User Interface Designer (fluid)
-version 1.0303 
-i18n_type 1 
-i18n_include <libintl.h> 
-i18n_function gettext 
-header_name {.h} 
+version 1.0304
+i18n_type 1
+i18n_include <libintl.h>
+i18n_function gettext
+header_name {.h}
 code_name {.cxx}
+decl {\#include "../include/single.h"} {public global
+}
+
 decl {\#include "../include/toolbar_icons.h"} {public global
-} 
+}
 
 decl {\#include <FL/Fl_JPEG_Image.H>
 \#include <FL/Fl_PNG_Image.H>
 \#include <FL/Fl_XBM_Image.H>
 \#include <FL/Fl_XPM_Image.H>
 \#include <FL/Fl_GIF_Image.H>} {public global
-} 
+}
 
 decl {\#define NANOSVG_ALL_COLOR_KEYWORDS
 \#define NANOSVG_IMPLEMENTATION
 \#include "../include/nanosvg.h"
 \#define NANOSVGRAST_IMPLEMENTATION
 \#include "../include/nanosvgrast.h"} {private local
-} 
+}
 
 decl {\#include <stdexcept>
 \#include <string>
@@ -47,7 +50,7 @@ decl {\#include <stdexcept>
 \#include <locale.h>
 \#include <unistd.h>
 \#include <signal.h>} {public global
-} 
+}
 
 class UI {open
 } {
@@ -401,10 +404,9 @@ for(std::string::size_type pathPosition =0;(pathPosition!=std::string::npos);pat
      howmany = howmany.substr(0,find);
   }
 }
-return howmany;} {selected
-    }
+return howmany;} {}
   }
-} 
+}
 
 Function {main(int argc, char *argv[])} {open return_type int
 } {
@@ -412,6 +414,14 @@ Function {main(int argc, char *argv[])} {open return_type int
 Fl::visual(FL_RGB);
 unsigned int TYPE=0;
 bool YES=false;
+
+SingletonProcess singleton(7777);
+if (!singleton())
+{
+  trace("already running");
+  return 1;
+}
+
 UI* ui = new UI();
 try
 {
@@ -458,12 +468,13 @@ catch (...)
   std::cerr << "Unknown exception!" << std::endl;
   return EXIT_FAILURE;
 }
-return -1;} {}
-} 
+return -1;} {selected
+  }
+}
 
 Function {trace(std::string msg)} {} {
   code {//std::cout<<msg<<std::endl;} {}
-} 
+}
 
 Function {usage(char* name)} {return_type int
 } {
@@ -476,4 +487,4 @@ Function {usage(char* name)} {return_type int
 "  --restart restart computer"<<std::endl<<
 "  --exit exit JWM\\n"<<std::endl<<
 "  --yes | -y | -f | --force Do not show dialog"<<std::endl;} {}
-} 
+}

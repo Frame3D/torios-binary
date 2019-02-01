@@ -3,6 +3,7 @@
 #ifndef flpower_h
 #define flpower_h
 #include <FL/Fl.H>
+#include "../include/single.h"
 #include "../include/toolbar_icons.h"
 #include <FL/Fl_JPEG_Image.H>
 #include <FL/Fl_PNG_Image.H>

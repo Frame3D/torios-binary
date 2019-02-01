@@ -52,18 +52,6 @@ int BUTTON_COLOR;
 int HIGHLIGHT_PLAIN; 
 std::string SYNTAX_FILE; 
 
-class SingletonProcess {
-public:
-  SingletonProcess(uint16_t port0);
-  ~SingletonProcess();
-  bool operator()();
-  std::string GetLockFileName();
-private:
-  int socket_fd = -1;
-int rc;
-uint16_t port; 
-};
-
 class Fl_Syntax_Text_Editor : public Fl_Text_Editor {
 public:
   Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0);

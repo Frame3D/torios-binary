@@ -1,24 +1,24 @@
 # data file for the Fltk User Interface Designer (fluid)
-version 1.0303 
-i18n_type 1 
-i18n_include <libintl.h> 
-i18n_function gettext 
-header_name {.h} 
+version 1.0304
+i18n_type 1
+i18n_include <libintl.h>
+i18n_function gettext
+header_name {.h}
 code_name {.cxx}
 decl {\#include "../include/toolbar_icons.h"} {private global
-} 
+}
 
 decl {\#include "StaticText.h"} {public local
-} 
+}
 
 decl {\#include <stdio.h>} {private local
-} 
+}
 
 decl {\#include "math.h"} {private local
-} 
+}
 
 decl {//extern "C" char *strcat(const char *,char *);} {private local
-} 
+}
 
 Function {gammaln(double xx)} {private return_type double
 } {
@@ -37,7 +37,7 @@ static double cof[6] = {76.18009172947146,
 	ser = 1.000000000190015;
 	for (j=0;j<6;j++) ser += cof[j]/++y;
 	return -tmp+log(2.5066282746310005*ser/x);} {}
-} 
+}
 
 Function {truncf(double x)} {private return_type double
 } {
@@ -46,7 +46,7 @@ Function {truncf(double x)} {private return_type double
 	else
 		x = floor(x);
 	return x;} {}
-} 
+}
 
 class SciCalc {open
 } {
@@ -99,7 +99,7 @@ class SciCalc {open
   } {
     Fl_Window win {
       label flCalc open
-      private xywh {438 97 241 497} type Double xclass flcalc visible
+      private xywh {438 97 241 497} type Double hide xclass flcalc
     } {
       Fl_Box leddisplay {
         callback {o->value("0 ");}
@@ -322,7 +322,7 @@ else
         }
         Fl_Button but_leftbr {
           label {[}
-          callback {add_left_bracket();}
+          callback {add_left_bracket();} selected
           private xywh {10 219 35 35} box FLAT_BOX shortcut 0x28 color 17 labelsize 11
         }
         Fl_Button but_rightbr {
@@ -477,7 +477,7 @@ else
           label C
           callback {init_value(top); 
 set_display(0.0,NORM);}
-          private tooltip {Resets the calculator without resetting the memory} xywh {155 321 35 35} box FLAT_BOX color 80 labelfont 1 labelsize 16 labelcolor 7
+          private tooltip {Resets the calculator without resetting the memory} xywh {155 321 35 35} box FLAT_BOX shortcut 0xff08 color 80 labelfont 1 labelsize 16 labelcolor 7
         }
         Fl_Button but_AC {
           label AC
@@ -486,7 +486,7 @@ set_display(0.0,NORM);
 currentbrkt = 0;
 box_bracket->value("");
 box_bracket->redraw();}
-          private tooltip {Reset the calculator and reset the memory} xywh {195 321 35 35} box FLAT_BOX color 80 labelfont 1 labelsize 16 labelcolor 7
+          private tooltip {Reset the calculator and reset the memory} xywh {195 321 35 35} box FLAT_BOX shortcut 0xffff color 80 labelfont 1 labelsize 16 labelcolor 7
         }
         Fl_Button but_X {
           label x
@@ -509,14 +509,14 @@ box_bracket->redraw();}
           private tooltip Subtract xywh {194 404 35 35} box FLAT_BOX shortcut 0x2d color 190 selection_color 221 labelfont 1 labelsize 16
         }
         Fl_Button but_pi {
-          callback {exponent_pi();} selected
+          callback {exponent_pi();}
           private tooltip Pi xywh {155 446 35 35} box FLAT_BOX color 190 selection_color 221 labelfont 12 labelsize 17
           code0 {o->copy_label("e/Π");//avoid localization}
         }
         Fl_Button but_eval {
           label {=}
           callback {handle_operator(EVAL);}
-          private tooltip Equal xywh {194 446 35 35} box FLAT_BOX shortcut 0x3d color 190 selection_color 221 labelfont 1 labelsize 16
+          private tooltip Equal xywh {194 446 35 35} box FLAT_BOX shortcut 0xff0d color 190 selection_color 221 labelfont 1 labelsize 16
         }
       }
       Fl_Button but_eval_hidden {
@@ -1062,4 +1062,4 @@ const Fl_Pixmap * flpad_xpm_icon = &f;
 const Fl_RGB_Image *img = new Fl_RGB_Image(flpad_xpm_icon,FL_GRAY);
 o->icon(img);} {}
   }
-} 
+}

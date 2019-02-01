@@ -3,6 +3,7 @@
 #ifndef flscreenie_h
 #define flscreenie_h
 #include <FL/Fl.H>
+#include "../include/single.h"
 #include <FL/Fl_PNG_Image.H>
 #include <FL/Fl_File_Chooser.H>
 #include <string>

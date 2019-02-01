@@ -7,41 +7,6 @@
 #include <libintl.h>
 #include "flpad.h"
 
-SingletonProcess::SingletonProcess(uint16_t port0): socket_fd(-1),rc(1),port(port0) {
-}
-
-SingletonProcess::~SingletonProcess() {
-  if (socket_fd != -1)
-  {
-    close(socket_fd);
-  }
-}
-
-bool SingletonProcess::operator()() {
-  if (socket_fd == -1 || rc)
-  {
-    socket_fd = -1;
-    rc        =  1;
-    if ((socket_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
-    {
-      throw std::runtime_error(std::string("Could not create socket: ") +  strerror(errno));
-    }
-    else
-    {
-      struct sockaddr_in name;
-      name.sin_family = AF_INET;
-      name.sin_port = htons (port);
-      name.sin_addr.s_addr = htonl (INADDR_ANY);
-      rc = bind (socket_fd, (struct sockaddr *) &name, sizeof (name));
-    }
-  }
-  return (socket_fd != -1 && rc == 0);
-}
-
-std::string SingletonProcess::GetLockFileName() {
-  return "port " + std::to_string(port);
-}
-
 Fl_Syntax_Text_Editor::Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label ):Fl_Text_Editor(x,y,w,h,label) {
   this->resize(x,y,w,h);
   //this->label(label);
@@ -2702,16 +2667,11 @@ std::vector <std::string> keywords(std::string header) {
 }
 
 int main(int argc, char **argv) {
-  NORMAL_COLOR=FL_BLACK;
-  EDIT_COLOR=FL_RED;
-  SingletonProcess singleton(7777);
-  if (!singleton())
-  {
-    std::cerr<< "process running already. See " << singleton.GetLockFileName() << std::endl;
-    return 1;
-  }
-  UI *ui = new UI();
-  bool new_tab=false;
+  //Set some default colors
+  NORMAL_COLOR = FL_BLACK;
+  EDIT_COLOR   = FL_RED;
+  UI  *ui      = new UI();
+  bool new_tab = false;
   try
   {
     ui->get_preferences();

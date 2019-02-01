@@ -96,6 +96,11 @@ Fl_Double_Window* UI::sizer_window() {
 }
 
 int main(int argc, char*argv[]) {
+  SingletonProcess singleton(5678);
+  if (!singleton())
+  {
+    return 1;
+  }
   UI *ui = new UI();
   ui->make_window()->show();
   return Fl::run();

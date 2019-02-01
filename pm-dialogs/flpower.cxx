@@ -370,6 +370,14 @@ int main(int argc, char *argv[]) {
   Fl::visual(FL_RGB);
   unsigned int TYPE=0;
   bool YES=false;
+  
+  SingletonProcess singleton(7777);
+  if (!singleton())
+  {
+    trace("already running");
+    return 1;
+  }
+  
   UI* ui = new UI();
   try
   {

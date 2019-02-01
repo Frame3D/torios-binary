@@ -1,30 +1,33 @@
 # data file for the Fltk User Interface Designer (fluid)
-version 1.0303 
-i18n_type 1 
-i18n_include <libintl.h> 
-i18n_function gettext 
-header_name {.h} 
+version 1.0304
+i18n_type 1
+i18n_include <libintl.h>
+i18n_function gettext
+header_name {.h}
 code_name {.cxx}
+decl {\#include "../include/single.h"} {public local
+}
+
 decl {\#include <FL/Fl_PNG_Image.H>} {public global
-} 
+}
 
 decl {\#include <FL/Fl_File_Chooser.H>} {public global
-} 
+}
 
 decl {\#include <string>} {public global
-} 
+}
 
 decl {\#include <fstream>} {public global
-} 
+}
 
 decl {\#include <iostream>} {public global
-} 
+}
 
 decl {\#include <FL/fl_draw.H>} {public global
-} 
+}
 
 decl {\#include <png.h>} {public global
-} 
+}
 
 class UI {open
 } {
@@ -83,19 +86,25 @@ screenshot(s_win->w(),s_win->h(),s_win->x(),s_win->y(),false);}
       }
     }
   }
-} 
+}
 
 Function {main(int argc, char*argv[])} {open return_type int
 } {
-  code {UI *ui = new UI();
+  code {SingletonProcess singleton(5678);
+if (!singleton())
+{
+  return 1;
+}
+UI *ui = new UI();
 ui->make_window()->show();
-return Fl::run();} {}
-} 
+return Fl::run();} {selected
+  }
+}
 
 Function {trace(std::string msg)} {open
 } {
   code {std::cout<<msg<<std::endl;} {}
-} 
+}
 
 class Screenie {open : {public Fl_Window}
 } {
@@ -125,8 +134,7 @@ preview_image()->show();
 previewer->size(w,h);
 Fl_Image* image = new Fl_PNG_Image(fileName);
 previewer->image(image->copy());
-previewer->show();} {selected
-    }
+previewer->show();} {}
   }
   Function {save_file()} {open
   } {
@@ -201,4 +209,4 @@ png_destroy_write_struct(&png, &info);
 fclose(fp);
 return 0;} {}
   }
-} 
+}
