@@ -849,6 +849,8 @@ namespace lexertk
       {
          token_t t;
          const char* begin = s_itr_;
+
+        /*
          while (!is_end(s_itr_) && details::is_digit(*s_itr_))
          {
            ++s_itr_;
@@ -856,8 +858,8 @@ namespace lexertk
          t.set_numeric(begin,s_itr_,base_itr_);
          token_list_.push_back(t);
          return;
-         /*
-            Attempt to match a valid numeric value in one of the following formats:
+         */
+           /* Attempt to match a valid numeric value in one of the following formats:
             01. 123456
             02. 123.456
             03. 123.456e3
