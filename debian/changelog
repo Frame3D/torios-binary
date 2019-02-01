@@ -1,3 +1,27 @@
+torios-binary (0.5.0ubuntu1) UNRELEASED; urgency=medium
+  * flpad
+    - user configurable themes via themes.flpad
+    - user configurable styles via styles.flpad
+    - open dnd/cli/desktop file multiple files in tabs
+    - open documents list menu that works correctly
+    - syntax highlighting that works for anything
+  * flcalc
+    - now single process
+    - Enter is = (equal)
+    - Backspace is C (clear)
+    - Delete is AC (all clear)
+  * flrun
+    - now single process
+   * screenie
+    - now single process
+   * flpower
+    - now single process
+   * flaskpass
+    - now single process
+    - Enter now does cout /exit
+
+ -- Israel Dahl <israeldahl@gmail.com>  Fri, 01 Feb 2019 06:56:12 -0600
+
 torios-binary (0.2.0ubuntu1) UNRELEASED; urgency=medium
   * flpad
     - light/dark theme

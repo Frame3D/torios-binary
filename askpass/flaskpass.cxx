@@ -5,6 +5,8 @@
 
 void UI::cb_password_i(Fl_Input*, void*) {
   Fl::focus(ok);
+std::cout<<password->value()<<std::endl;
+exit(0);
 }
 void UI::cb_password(Fl_Input* o, void* v) {
   ((UI*)(o->parent()->user_data()))->cb_password_i(o,v);
@@ -34,6 +36,7 @@ Fl_Double_Window* UI::make_window() {
       password->box(FL_FLAT_BOX);
       password->callback((Fl_Callback*)cb_password);
       password->align(Fl_Align(257));
+      password->when(FL_WHEN_ENTER_KEY);
     } // Fl_Input* password
     { ok = new Fl_Button(175, 75, 75, 30, gettext("Ok"));
       ok->box(FL_FLAT_BOX);

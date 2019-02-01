@@ -29,8 +29,10 @@ class UI {open
     } {
       Fl_Input password {
         label Password
-        callback {Fl::focus(ok);}
-        xywh {45 30 200 35} type Secret box FLAT_BOX align 257
+        callback {Fl::focus(ok);
+std::cout<<password->value()<<std::endl;
+exit(0);} selected
+        xywh {45 30 200 35} type Secret box FLAT_BOX align 257 when 8
       }
       Fl_Button ok {
         label Ok
