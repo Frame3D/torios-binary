@@ -79,12 +79,12 @@ protected:
 public:
   void init_highlight();
   void modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL);
+  void refresh();
   void set_type(std::string fname);
   std::string style_line(std::string thisLine);
   static void style_update(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL, void *cbArg = NULL);
   static void style_unfinished_cb(int, void*);
   void theme_editor(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size,int linenum );
-  void refresh();
 };
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Button.H>
@@ -352,6 +352,7 @@ public:
   void font_populate(Fl_Browser *o);
   std::string get_filename();
   void get_preferences();
+  void get_theme_from_config(std::string theme);
   void goto_cb();
   void goto_line(int pos);
 protected:
@@ -363,6 +364,7 @@ public:
   void load_file(std::string newfile, int ipos,bool NEW=true);
   void make_icon(Fl_Window *o);
   void none_theme();
+  void make_theme_menu();
   void new_cb();
   void open_cb();
   void open_file(bool NEW=true);
@@ -383,11 +385,9 @@ public:
   void save_file(std::string newfile);
   void set_title(Fl_Widget* g);
   void show_line_numbers(int width=0);
+  static void theme_menu_cb(Fl_Widget* o, void* v);
   void undo_cb();
   void wordwrap();
-  void get_theme_from_config(std::string theme);
-  static void theme_menu_cb(Fl_Widget* o, void* v);
-  void make_theme_menu();
 };
 std::vector<std::string> comma_line(std::string lang,std::string field);
 unsigned int convert(std::string num);

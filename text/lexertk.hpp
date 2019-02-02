@@ -78,9 +78,12 @@ namespace lexertk
       static inline bool define_start(const char c0, const char c1)
       {
         const char* def = DEFINES.c_str();
-        if(strlen(def) > 1)
+             int length = strlen(def);
+        if( length > 1)
           return ( (def[0]==c0) && (def[1]==c1) );
-         return (def[0]==c0);
+        if(length==0)
+          return false;
+        return (def[0]==c0);
       }
 
       inline bool is_whitespace(const char c)

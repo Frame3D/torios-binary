@@ -21,6 +21,7 @@ blockclose=*/
 defines=#
 [flpad]
 ext=flpad
+comments=#
 keywords=ext,keywords,types,blockopen,blockclose,defines,comments,foreground,background,comments,strings,numbers,font,font_size,line_number_size,selection,highlight_plain_text,symbol,button_color,directives
 [python]
 ext=py
@@ -50,3 +51,7 @@ ext=xml
 ext=html,htm
 keywords=html,head,meta,link,title,body,div,br
 types=href,class,rel,icon,type,media
+[fld]
+comments=#
+ext=fl,fld
+keywords=decl,public global,Function

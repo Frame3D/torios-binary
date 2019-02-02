@@ -196,6 +196,12 @@ void Fl_Syntax_Text_Editor::modify_cb(int pos, int nInserted, int nDeleted, int 
   redisplay_range(0,stylebuffer->length());
 }
 
+void Fl_Syntax_Text_Editor::refresh() {
+  style_update(0,0,0,0,NULL,this);
+  redisplay_range(0,textbuffer->length());
+  redraw();
+}
+
 void Fl_Syntax_Text_Editor::set_type(std::string fname) {
   std::string dir=fname;
   unsigned int find = dir.rfind("/");
@@ -299,12 +305,6 @@ void Fl_Syntax_Text_Editor::theme_editor(unsigned int FG,unsigned int BG, unsign
   
   //highlight_data(stylebuffer, styletable, sizeof(styletable) / sizeof(styletable[0]), 'A', style_unfinished_cb, 0);
   modify_cb();
-}
-
-void Fl_Syntax_Text_Editor::refresh() {
-  style_update(0,0,0,0,NULL,this);
-  redisplay_range(0,textbuffer->length());
-  redraw();
 }
 
 void UI::cb_Close_i(Fl_Button*, void*) {
@@ -1727,6 +1727,53 @@ void UI::get_preferences() {
   }
 }
 
+void UI::get_theme_from_config(std::string theme) {
+  trace("theme="+theme);
+  //COLORS
+  FOREGROUND_TEXT=get_theme(theme,"foreground");
+  BACKGROUND_TEXT=get_theme(theme,"background");
+  COMMENT_TEXT=get_theme(theme,"comments");
+  STRING_TEXT=get_theme(theme,"strings");
+  NUMBER_TEXT=get_theme(theme,"numbers");
+  KEYWORD_TEXT=get_theme(theme,"keywords");
+  SYMBOLS_TEXT=get_theme(theme,"symbol");
+  DIRECTIVE_TEXT=get_theme(theme,"directives");
+  TYPE_TEXT=get_theme(theme,"types");
+  SELECTION_TEXT=get_theme(theme,"selection");
+  //ETC
+  FONT_TEXT=get_theme(theme,"font");
+  SIZE_TEXT=get_theme(theme,"font_size");
+  LINE_NUMBERS=get_theme(theme,"line_number_size");
+  HIGHLIGHT_PLAIN=get_theme(theme,"highlight_plain_text");
+  BUTTON_COLOR=get_theme(theme,"button_color");
+  
+  //modify the window
+  cm->color(COMMENT_TEXT);
+  cm->redraw();
+  str->color(STRING_TEXT);
+  str->redraw();
+  symbols->color(SYMBOLS_TEXT);
+  symbols->redraw();
+  directives->color(DIRECTIVE_TEXT);
+  directives->redraw();
+  typezz->color(TYPE_TEXT);
+  typezz->redraw();
+  keywordz->color(KEYWORD_TEXT);
+  keywordz->redraw();
+  numbers->color(NUMBER_TEXT);
+  numbers->redraw();
+  plain_text->value(HIGHLIGHT_PLAIN);
+  bg->color(BACKGROUND_TEXT);
+  bg->redraw();
+  tExt->color(FOREGROUND_TEXT);
+  tExt->redraw();
+  f_s->value(SIZE_TEXT);
+  fsout->value(SIZE_TEXT);
+  l_s->value(LINE_NUMBERS);
+  lsout->value(LINE_NUMBERS);
+  tool_color->value(BUTTON_COLOR);
+}
+
 void UI::goto_cb() {
   const char * val;
   val = fl_input("Go to line #:","");
@@ -1899,6 +1946,18 @@ void UI::none_theme() {
   KEYWORD_TEXT=FL_FOREGROUND_COLOR;
   TYPE_TEXT=FL_FOREGROUND_COLOR;
   BUTTON_COLOR=1;
+}
+
+void UI::make_theme_menu() {
+  std::vector<std::string> V = get_themes();
+  for( std::vector<std::string>::iterator itr = V.begin();
+                                          itr!=V.end();
+                                        ++itr)
+  {
+    std::string tmp = *itr;
+    theme_button->add(tmp.c_str(),0,theme_menu_cb,this,0);
+  }
+  theme_button->redraw();
 }
 
 void UI::new_cb() {
@@ -2283,6 +2342,16 @@ void UI::show_line_numbers(int width) {
   }
 }
 
+void UI::theme_menu_cb(Fl_Widget* o, void* v) {
+  Fl_Menu_Button *m = (Fl_Menu_Button*)o;
+  const Fl_Menu_Item *p = m->mvalue();
+  const char* txt=p->label();
+  if(txt==NULL)
+    return;
+  trace(txt);
+  ((UI*)(p->user_data()))->get_theme_from_config(txt);
+}
+
 void UI::undo_cb() {
   Fl_Syntax_Text_Editor * textor = current_editor();
   if(textor==NULL)
@@ -2307,75 +2376,6 @@ void UI::wordwrap() {
     E->WRAPPED=true;
     E->wrap_mode(Fl_Text_Display::WRAP_AT_BOUNDS, 0);
   }
-}
-
-void UI::get_theme_from_config(std::string theme) {
-  trace("theme="+theme);
-  //COLORS
-  FOREGROUND_TEXT=get_theme(theme,"foreground");
-  BACKGROUND_TEXT=get_theme(theme,"background");
-  COMMENT_TEXT=get_theme(theme,"comments");
-  STRING_TEXT=get_theme(theme,"strings");
-  NUMBER_TEXT=get_theme(theme,"numbers");
-  KEYWORD_TEXT=get_theme(theme,"keywords");
-  SYMBOLS_TEXT=get_theme(theme,"symbol");
-  DIRECTIVE_TEXT=get_theme(theme,"directives");
-  TYPE_TEXT=get_theme(theme,"types");
-  SELECTION_TEXT=get_theme(theme,"selection");
-  //ETC
-  FONT_TEXT=get_theme(theme,"font");
-  SIZE_TEXT=get_theme(theme,"font_size");
-  LINE_NUMBERS=get_theme(theme,"line_number_size");
-  HIGHLIGHT_PLAIN=get_theme(theme,"highlight_plain_text");
-  BUTTON_COLOR=get_theme(theme,"button_color");
-  
-  //modify the window
-  cm->color(COMMENT_TEXT);
-  cm->redraw();
-  str->color(STRING_TEXT);
-  str->redraw();
-  symbols->color(SYMBOLS_TEXT);
-  symbols->redraw();
-  directives->color(DIRECTIVE_TEXT);
-  directives->redraw();
-  typezz->color(TYPE_TEXT);
-  typezz->redraw();
-  keywordz->color(KEYWORD_TEXT);
-  keywordz->redraw();
-  numbers->color(NUMBER_TEXT);
-  numbers->redraw();
-  plain_text->value(HIGHLIGHT_PLAIN);
-  bg->color(BACKGROUND_TEXT);
-  bg->redraw();
-  tExt->color(FOREGROUND_TEXT);
-  tExt->redraw();
-  f_s->value(SIZE_TEXT);
-  fsout->value(SIZE_TEXT);
-  l_s->value(LINE_NUMBERS);
-  lsout->value(LINE_NUMBERS);
-  tool_color->value(BUTTON_COLOR);
-}
-
-void UI::theme_menu_cb(Fl_Widget* o, void* v) {
-  Fl_Menu_Button *m = (Fl_Menu_Button*)o;
-  const Fl_Menu_Item *p = m->mvalue();
-  const char* txt=p->label();
-  if(txt==NULL)
-    return;
-  trace(txt);
-  ((UI*)(p->user_data()))->get_theme_from_config(txt);
-}
-
-void UI::make_theme_menu() {
-  std::vector<std::string> V = get_themes();
-  for( std::vector<std::string>::iterator itr = V.begin();
-                                          itr!=V.end();
-                                        ++itr)
-  {
-    std::string tmp = *itr;
-    theme_button->add(tmp.c_str(),0,theme_menu_cb,this,0);
-  }
-  theme_button->redraw();
 }
 
 std::vector<std::string> comma_line(std::string lang,std::string field) {
@@ -2433,7 +2433,7 @@ std::string get(std::string header, std::string line) {
       /** if found return it immediately */
       if(found_after_this)
       {
-        if(this_line.find(line)<this_line.length())
+        if(this_line.find(line)==0)
         {
           unsigned int eq = this_line.find("=");
           if(eq<this_line.length())
