@@ -2115,7 +2115,7 @@ if(inputFileStrem.is_open())
     }
     if(this_line.find(find_header)<this_line.length())
     {
-      //trace("FOUND:"+find_header);
+      trace("FOUND:"+find_header);
       found_after_this=true;
     }
     /** if found return it immediately */
@@ -2133,7 +2133,8 @@ if(inputFileStrem.is_open())
     }
   }
 }
-return "";} {}
+return "";} {selected
+  }
 }
 
 Function {get_syntax_file()} {return_type {std::string}
@@ -2342,8 +2343,7 @@ if(inputFileStrem.is_open())
 
 if(EXT.compare("bash")==0)
   return "sh";
-return "";} {selected
-  }
+return "";} {}
 }
 
 Function {get_themes()} {open return_type {std::vector<std::string>}

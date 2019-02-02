@@ -1,3 +1,25 @@
+#*
+  *               styles.flpad
+  *  Public Domain 2019 Israel Dahl <israeldahl@gmail.com>
+  *
+  * This file is simple to use with a very simple syntax highlighter
+  * Format is:
+
+[type]       * the header.  if it is an XML type file, set this to the file extention
+ext=         * file extention list comma separated
+keywords=    * specific keywords or reserved words, or elements (i.e. in XML)
+types=       * specific words that are data types, or attributes (i.e. in XML)
+comments=    * single line comments
+blockopen=   * the opening of block comment line
+blockclose=  * the closing of block comment line
+defines=     * defines or declarations
+
+  * See the included examples below.
+  * to modify this copy it to $XDG_CONFIG_HOME/flpad/ and then edit
+  * XDG_CONFIG_HOME is ~/.config
+  * please contribute any new styles upstream!!
+  * https://github.com/Israel-D/torios-binary
+  *#
 [c]
 ext=cxx,cpp,c,h,hpp,xpm
 keywords=alignas, alignof, and, and_eq, asm, bitand, bitor, break, case, catch, class, compl, constexpr, continue, default, delete, do, dynamic_cast, else, explicit, export, extern, false, for, friend, goto, if, inline, new, noexcept, not, not_eq, operator, or, or_eq, private, protected, public, register, reinterpret_cast, return, sizeof, struct, switch, template, this, thread_local, throw, true, try, typedef, typeid, typename, union, using, while, xor, xor_eq
@@ -22,6 +44,7 @@ defines=#
 [flpad]
 ext=flpad
 comments=#
+## NOTE if editing this in flpad... you will see the block comment
 blockopen=#*
 blockclose=*#
 keywords=ext,keywords,types,blockopen,blockclose,defines,comments,foreground,background,comments,strings,numbers,font,font_size,line_number_size,selection,highlight_plain_text,symbol,button_color,directives
@@ -47,6 +70,12 @@ ext=conf,config,ini
 ext=js
 keywords=abstract,arguments,await,boolean,break,byte,case,catch,char,class,const,continue,debugger,default,delete,do,export,extends,false,final,finally,float,for,function,goto,if,implements,import,in,instanceof,int,interface,let,long,native,new,null,package,private,protected,public,return,short,static,super,switch,synchronized,this,throw,throws,transient,true,try,typeof,void,volatile,while,with,yield,
 types=var
+[tmx]
+defines=<?
+blockopen=<!--
+blockclose=-->
+keywords=map,tileset,layer,image,properties,property,data,objectgroup,object,polyline,tile,animation,frame
+types=version,orientation,renderorder,width,height,encoding,name,value,firstgid,tilewidth,tileheight,tilecount,x,y,type,id,points,source,trans,compression,opacity,tileid,duration,draworder
 [svg]
 ext=svg
 defines=<?

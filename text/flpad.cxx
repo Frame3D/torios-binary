@@ -2427,7 +2427,7 @@ std::string get(std::string header, std::string line) {
       }
       if(this_line.find(find_header)<this_line.length())
       {
-        //trace("FOUND:"+find_header);
+        trace("FOUND:"+find_header);
         found_after_this=true;
       }
       /** if found return it immediately */
