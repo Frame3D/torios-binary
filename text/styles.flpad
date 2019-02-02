@@ -1,5 +1,5 @@
 [c]
-ext=cxx,cpp,c,h,hpp
+ext=cxx,cpp,c,h,hpp,xpm
 keywords=alignas, alignof, and, and_eq, asm, bitand, bitor, break, case, catch, class, compl, constexpr, continue, default, delete, do, dynamic_cast, else, explicit, export, extern, false, for, friend, goto, if, inline, new, noexcept, not, not_eq, operator, or, or_eq, private, protected, public, register, reinterpret_cast, return, sizeof, struct, switch, template, this, thread_local, throw, true, try, typedef, typeid, typename, union, using, while, xor, xor_eq
 types=auto, bool, char, char16_t, char32_t, class, const, const_cast, decltype, double, dynamic_cast, enum, explicit, extern, float, friend, inline, int, long, mutable, namespace, nullptr_t, private, protected, public, register, short, signed, sizeof, static, static_assert, static_cast, string, struct, template, typedef, typename, union, unsigned, virtual, vector, void, volatile, wchar_t
 comments=//
@@ -21,7 +21,7 @@ blockclose=*/
 defines=#
 [flpad]
 ext=flpad
-keywords=ext,keywords,types,blockopen,blockclose,defines,comments,foreground,background,comments,strings,numbers,font,font_size,line_number_size,selection,highlight_plain_text,symbol,button_color
+keywords=ext,keywords,types,blockopen,blockclose,defines,comments,foreground,background,comments,strings,numbers,font,font_size,line_number_size,selection,highlight_plain_text,symbol,button_color,directives
 [python]
 ext=py
 keywords=False,None,True,and,as,assert,break,class,continue,def,del,elif,else,except,finally,for,from,global,if,import,in,is,lambda,nonlocal,not,or,pass,raise,return,try,while,with,yield
@@ -42,3 +42,11 @@ ext=es
 ext=conf,config,ini
 [javascript]
 ext=js
+keywords=abstract,arguments,await,boolean,break,byte,case,catch,char,class,const,continue,debugger,default,delete,do,export,extends,false,final,finally,float,for,function,goto,if,implements,import,in,instanceof,int,interface,let,long,native,new,null,package,private,protected,public,return,short,static,super,switch,synchronized,this,throw,throws,transient,true,try,typeof,void,volatile,while,with,yield,
+types=var
+[xml]
+ext=xml
+[html]
+ext=html,htm
+keywords=html,head,meta,link,title,body,div,br
+types=href,class,rel,icon,type,media

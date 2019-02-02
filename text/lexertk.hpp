@@ -66,8 +66,22 @@ Copyright 2019  Israel Dahl
 namespace lexertk
 {
    inline void trace(std::string msg){std::cout<<msg<<std::endl;}
+
+//global comment characters
+   std::string OPEN    = "";
+   std::string CLOSE   = "";
+   std::string SINGLE  = "";
+   std::string DEFINES = "";
    namespace details
    {
+
+      static inline bool define_start(const char c0, const char c1)
+      {
+        const char* def = DEFINES.c_str();
+        if(strlen(def) > 1)
+          return ( (def[0]==c0) && (def[1]==c1) );
+         return (def[0]==c0);
+      }
 
       inline bool is_whitespace(const char c)
       {
@@ -264,20 +278,26 @@ namespace lexertk
       static inline bool comment_start(const char c0, const char c1, int& mode, int& incr)
       {
          mode = 0;
-              if ('#' == c0)    { mode = 1; incr = 1; }
-         else if ('/' == c0)
-         {
-                if ('/' == c1) { mode = 1; incr = 2; }
-           else if ('*' == c1) { mode = 2; incr = 2; }
-         }
-         return (mode != 0);
+         const char* single = SINGLE.c_str();
+         const char* open = OPEN.c_str();
+              if ( ( open[0] == c0 ) && ( open[1] == c1 ) )
+                 {
+                   mode = 2;
+                   incr = strlen(open);
+                 }
+         else if ( single[0] == c0 ) { mode = 1; incr = 1; }
+         else if ( single[1] == c1 ) { mode = 1; incr = strlen(single); }
+
+         return ( mode != 0 );
       }
 
       static inline bool comment_end(const char c0, const char c1, const int mode)
       {
+         const char* close = CLOSE.c_str();
          return ((1 == mode) && ('\n' == c0)) ||
-                ((2 == mode) && ( '*' == c0) && ('/' == c1));
+                ((2 == mode) && ( close[0] == c0) && (close[1] == c1));
       }
+
     };
    struct token
    {
@@ -297,7 +317,8 @@ namespace lexertk
          e_mod         = '%', e_pow         = '^', e_colon       = ':',
          e_comment     = 777, e_err_comment = 888, e_whitespace  = 999,
          e_type        = 778, e_keyword     = 889, e_newline     ='\n',
-         e_return      = '\r',e_tab         ='\t', e_bracket     = 998
+         e_return      = '\r',e_tab         ='\t', e_bracket     = 998,
+         e_define      = 997
       };
 
       token()
@@ -410,7 +431,7 @@ namespace lexertk
             position = std::distance(base_begin,begin);
          return *this;
       }
-
+      template <typename Iterator>
       inline token& set_comment(const std::string& s, const std::size_t p)
       {
          type     = e_comment;
@@ -418,7 +439,15 @@ namespace lexertk
          position = p;
          return *this;
       }
-
+      template <typename Iterator>
+      inline token& set_define(const Iterator begin, const Iterator end, const Iterator base_begin = Iterator(0))
+      {
+         type = e_define;
+         value.assign(begin,end);
+         if (base_begin)
+            position = std::distance(base_begin,begin);
+         return *this;
+      }
       template <typename Iterator>
       inline token& set_error(const token_type et, const Iterator begin, const Iterator end, const Iterator base_begin = Iterator(0))
       {
@@ -492,6 +521,7 @@ namespace lexertk
             case e_whitespace  : return "WHITESPACE";
             case e_type        : return "TYPE";
             case e_keyword     : return "KEYWORD";
+            case e_define      : return "DEFINE";
             default            : return "UNKNOWN";
          }
       }
@@ -499,32 +529,31 @@ namespace lexertk
       {
          const char* PLAIN_TEXT = "A";
          const char* COMMENT_TEXT = "B";
-         const char* BLOCK_COMMENT = "C";
+         const char* DIRECTIVE_TEXT = "C";
          const char* STRING_TEXT = "D";
-         const char* DIRECTIVE_TEXT = "E";
+         const char* SYMBOL_TEXT = "E";
          const char* TYPE_TEXT = "F";
          const char* KEYWORD_TEXT = "G";
          const char* NUMBER_TEXT = "H";
-         const char* BRACKET     = "G";
          switch (t)
          {
             case e_number      : return NUMBER_TEXT;
-            case e_symbol      : return PLAIN_TEXT;
             case e_string      : return STRING_TEXT;
             case e_keyword     : return KEYWORD_TEXT;
             case e_type        : return TYPE_TEXT;
-            case e_rbracket    : return BRACKET;
-            case e_lbracket    : return BRACKET;
-            case e_rsqrbracket : return BRACKET;
-            case e_lsqrbracket : return BRACKET;
-            case e_rcrlbracket : return BRACKET;
-            case e_lcrlbracket : return BRACKET;
-            case e_bracket     : return DIRECTIVE_TEXT;
+            case e_rbracket    : return SYMBOL_TEXT;
+            case e_lbracket    : return SYMBOL_TEXT;
+            case e_rsqrbracket : return SYMBOL_TEXT;
+            case e_lsqrbracket : return SYMBOL_TEXT;
+            case e_rcrlbracket : return SYMBOL_TEXT;
+            case e_lcrlbracket : return SYMBOL_TEXT;
+            case e_bracket     : return SYMBOL_TEXT;
             case e_comment     : return COMMENT_TEXT;
             case e_newline     : return "\n";
             case e_tab         : return "\t";
             case e_return      : return "\r";
-            case e_eq          : return DIRECTIVE_TEXT;
+            case e_eq          : return SYMBOL_TEXT;
+            case e_define      : return DIRECTIVE_TEXT;
             default            : return PLAIN_TEXT;
          }
       }
@@ -560,6 +589,18 @@ namespace lexertk
         s_end_(0)
       {
          clear();
+      }
+
+      inline void set_comments(std::string open, std::string close, std::string single)
+      {
+        OPEN=open;
+        CLOSE=close;
+        SINGLE=single;
+      }
+
+      inline void set_defines(const char* define)
+      {
+        DEFINES=define;
       }
 
       inline bool is_in_vector(std::string item_to_find, std::vector<std::string> vector_to_check)
@@ -727,6 +768,18 @@ namespace lexertk
          token_list_.push_back(t);
       }
 
+      inline void scan_defines()
+      {
+         token t;
+         const char* begin = s_itr_;
+         while (!is_end(s_itr_) && ('\n' != *s_itr_)) //!details::is_whitespace(*s_itr_))
+         {
+            ++s_itr_;
+         }
+         t.set_define(begin,s_itr_,base_itr_);
+         token_list_.push_back(t);
+      }
+
 //DONT SKIP... actually report comments
       inline void scan_comments()
       {
@@ -737,17 +790,17 @@ namespace lexertk
 
          if (is_end(s_itr_))
             return;
-         else if (!comment::comment_start(*s_itr_,*(s_itr_ + 1),mode,increment))
+         else if (!comment::comment_start(*s_itr_,*(s_itr_+1),mode,increment))
             return;
 
          const char* begin = s_itr_;
          s_itr_ += increment;
 
-         while (!is_end(s_itr_) && !comment::comment_end(*s_itr_,*(s_itr_ + 1),mode))
+         while (!is_end(s_itr_) && !comment::comment_end(*s_itr_,*(s_itr_ +1 ) ,mode))
          {
             ++s_itr_;
          }
-         
+
          t.set_comment(begin,s_itr_,base_itr_);
          token_list_.push_back(t);
 
@@ -765,6 +818,11 @@ namespace lexertk
 
          if (is_end(s_itr_))
          {
+            return;
+         }
+         else if ( details::define_start( *s_itr_,*(s_itr_+1) ) )
+         {
+            scan_defines();
             return;
          }
          else if ( ('\'' == (*s_itr_)) || ('\"' == (*s_itr_)) )
@@ -900,7 +958,7 @@ namespace lexertk
 
                continue;
             }
-            else if (details::imatch('e',(*s_itr_)))
+            else if ( (details::imatch('e',(*s_itr_))) && (!dot_found) )
             {
                const char& c = *(s_itr_ + 1);
 
@@ -920,6 +978,8 @@ namespace lexertk
                //commented out because of std::string .erase()
                   //t.set_error(token::e_err_number,begin,s_itr_,base_itr_);
                   //token_list_.push_back(t);
+                  t.set_numeric(begin,s_itr_,base_itr_);
+                  token_list_.push_back(t);
                   return;
                }
 

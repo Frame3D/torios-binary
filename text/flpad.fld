@@ -105,6 +105,7 @@ unsigned int DIRECTIVE_TEXT;
 unsigned int NUMBER_TEXT;
 unsigned int KEYWORD_TEXT;
 unsigned int TYPE_TEXT;
+unsigned int SYMBOLS_TEXT;
 int FONT_TEXT;
 int SIZE_TEXT;
 int LINE_NUMBERS;
@@ -205,7 +206,8 @@ str.assign((std::istreambuf_iterator<char>(t)),
             std::istreambuf_iterator<char>());
 return str;} {}
   }
-  Function {get_styletable(Fl_Text_Display::Style_Table_Entry &styles,int which)} {} {
+  Function {get_styletable(Fl_Text_Display::Style_Table_Entry &styles,int which)} {open
+  } {
     code {int font = FONT_TEXT;
 int bold = font + 1;
 int ital = bold + 1;
@@ -221,16 +223,16 @@ switch(which)
     whichtype="Line comments";
     break;
   case 2:
-    styles={ COMMENT_TEXT, ital, FL_NORMAL_SIZE }; // C - Block comments
-    whichtype="Block comments";
+    styles={ DIRECTIVE_TEXT, ital, FL_NORMAL_SIZE }; // C -Directives
+    whichtype="Directives";
     break;
   case 3:
     styles={ STRING_TEXT, font, FL_NORMAL_SIZE }; // D - Strings
     whichtype="Strings";
     break;
   case 4:
-    styles={ DIRECTIVE_TEXT, font, FL_NORMAL_SIZE }; // E - Directives
-    whichtype="Directives";
+    styles={ SYMBOLS_TEXT, font, FL_NORMAL_SIZE }; // E - Symbols
+    whichtype="Symbols";
     break;
   case 5:
     styles={ TYPE_TEXT, bold, FL_NORMAL_SIZE }; // F - Types
@@ -246,7 +248,8 @@ switch(which)
     break;
 }
 styletable[which] = styles; //  set
-//std::cout<<"Got style table for: "<<whichtype<<"\\nFONT="<<styles.font<<"\\tCOLOR="<<styles.color<<std::endl;} {}
+//std::cout<<"Got style table for: "<<whichtype<<"\\nFONT="<<styles.font<<"\\tCOLOR="<<styles.color<<std::endl;} {selected
+    }
   }
   Function {handle(int event)} {protected return_type int
   } {
@@ -354,8 +357,18 @@ if(fname.empty())
 STYLE_HEADER = get_type(fname);
 KEYWORDS=keywords(STYLE_HEADER);
 TYPES=types(STYLE_HEADER);
+//comments
+std::string c_open=get(STYLE_HEADER,"blockopen");
+std::string c_close=get(STYLE_HEADER,"blockclose");
+std::string c_single=get(STYLE_HEADER,"comments");
+std::string def=get(STYLE_HEADER,"defines");
+trace("open:"+c_open+" close:"+c_close+" single:"+c_single+" define:"+def);
+generator.set_comments(c_open,c_close,c_single);
+generator.set_defines(def.c_str());
+
 generator.set_keywords(KEYWORDS);
 generator.set_types(TYPES);
+
 trace("set syntax type for: "+fname+" to:"+STYLE_HEADER);} {}
   }
   Function {style_line(std::string thisLine)} {return_type {std::string}
@@ -727,7 +740,8 @@ Fl_Text_Editor::kf_select_all(0,textor);}
       } {}
     }
   }
-  Function {pref_window()} {} {
+  Function {pref_window()} {open
+  } {
     Fl_Window pref_win {
       label Preferences open
       xywh {265 238 310 460} type Double color 46 hide xclass flpad
@@ -736,7 +750,7 @@ Fl_Text_Editor::kf_select_all(0,textor);}
         xywh {0 0 310 420} box FLAT_BOX
       } {
         Fl_Group gen {
-          label General open
+          label General
           xywh {0 25 310 395} selection_color 43
         } {
           Fl_Browser font_b {
@@ -819,11 +833,11 @@ button_style(val);}
             tooltip {The color of strings} xywh {105 65 55 30} box BORDER_BOX color 23 align 129
             code0 {o->color( STRING_TEXT );}
           }
-          Fl_Button directives {
+          Fl_Button symbols {
             label Symbols
             callback {choose_a_color(o);}
             tooltip {The color of symbols} xywh {25 115 55 30} box BORDER_BOX color 23 align 129
-            code0 {o->color( DIRECTIVE_TEXT );}
+            code0 {o->color( SYMBOLS_TEXT );}
           }
           Fl_Button typezz {
             label Types
@@ -853,6 +867,12 @@ button_style(val);}
             tooltip {Highlight quotes, numbers, brackets, etc... on plain text} xywh {25 250 25 25} down_box GTK_DOWN_BOX color 55 selection_color 63
             code0 {o->value(HIGHLIGHT_PLAIN);}
           }
+          Fl_Button directives {
+            label Directives
+            callback {choose_a_color(o);}
+            tooltip {The color of strings} xywh {175 65 55 30} box BORDER_BOX color 23 align 129
+            code0 {o->color( DIRECTIVE_TEXT );}
+          }
         }
       }
       Fl_Button {} {
@@ -870,6 +890,7 @@ FONT_TEXT=font_save->value();
 BUTTON_COLOR=tool_color->value();
 COMMENT_TEXT=cm->color();
 STRING_TEXT=str->color();
+SYMBOLS_TEXT=symbols->color();
 DIRECTIVE_TEXT=directives->color();
 TYPE_TEXT=typezz->color();
 KEYWORD_TEXT=keywordz->color();
@@ -1170,7 +1191,8 @@ if(textor==NULL)
   return;
 Fl_Text_Editor::kf_cut(0,textor);} {}
   }
-  Function {default_theme()} {} {
+  Function {default_theme()} {open
+  } {
     code {FOREGROUND_TEXT=FL_FOREGROUND_COLOR;
 BACKGROUND_TEXT=FL_BACKGROUND2_COLOR;
 SELECTION_TEXT=80;
@@ -1185,6 +1207,7 @@ DIRECTIVE_TEXT=2050717696;
 NUMBER_TEXT=4280754176;
 KEYWORD_TEXT=1045337344;
 TYPE_TEXT=175444736;
+SYMBOLS_TEXT=FL_FOREGROUND_COLOR;
 BUTTON_COLOR=1;} {}
   }
   Function {delete_cb()} {} {
@@ -1316,7 +1339,8 @@ else
 fname+="/flpad/flpad.config";
 return fname;} {}
   }
-  Function {get_preferences()} {} {
+  Function {get_preferences()} {open
+  } {
     code {std::string fname=get_filename();
 if(fname.compare("")==0)
 {
@@ -1377,6 +1401,11 @@ if(inputFileStrem.is_open())
     {
       subString=line.substr(start,std::string::npos);
       DIRECTIVE_TEXT=convert(subString);
+    }
+    if(line.find("SY:")<line.length())
+    {
+      subString=line.substr(start,std::string::npos);
+      SYMBOLS_TEXT=convert(subString);
     }
     if(line.find("NM:")<line.length())
     {
@@ -1853,6 +1882,7 @@ out+=prefline("KY",KEYWORD_TEXT);
 out+=prefline("TT",TYPE_TEXT);
 out+=prefline("BC",BUTTON_COLOR);
 out+=prefline("PT",HIGHLIGHT_PLAIN);
+out+=prefline("SY",SYMBOLS_TEXT);
 std::ofstream dest;
 std::string fname=get_filename();
 dest.open(fname.c_str());
@@ -1966,7 +1996,8 @@ else
   E->wrap_mode(Fl_Text_Display::WRAP_AT_BOUNDS, 0);
 }} {}
   }
-  Function {get_theme_from_config(std::string theme)} {} {
+  Function {get_theme_from_config(std::string theme)} {open
+  } {
     code {trace("theme="+theme);
 //COLORS
 FOREGROUND_TEXT=get_theme(theme,"foreground");
@@ -1975,7 +2006,8 @@ COMMENT_TEXT=get_theme(theme,"comments");
 STRING_TEXT=get_theme(theme,"strings");
 NUMBER_TEXT=get_theme(theme,"numbers");
 KEYWORD_TEXT=get_theme(theme,"keywords");
-DIRECTIVE_TEXT=get_theme(theme,"symbol");
+SYMBOLS_TEXT=get_theme(theme,"symbol");
+DIRECTIVE_TEXT=get_theme(theme,"directives");
 TYPE_TEXT=get_theme(theme,"types");
 SELECTION_TEXT=get_theme(theme,"selection");
 //ETC
@@ -1990,6 +2022,8 @@ cm->color(COMMENT_TEXT);
 cm->redraw();
 str->color(STRING_TEXT);
 str->redraw();
+symbols->color(SYMBOLS_TEXT);
+symbols->redraw();
 directives->color(DIRECTIVE_TEXT);
 directives->redraw();
 typezz->color(TYPE_TEXT);
@@ -2019,8 +2053,7 @@ if(txt==NULL)
 trace(txt);
 ((UI*)(p->user_data()))->get_theme_from_config(txt);} {}
   }
-  Function {make_theme_menu()} {open
-  } {
+  Function {make_theme_menu()} {} {
     code {std::vector<std::string> V = get_themes();
 for( std::vector<std::string>::iterator itr = V.begin();
                                         itr!=V.end();
@@ -2197,7 +2230,7 @@ if(tmp.compare("")==0)
 return tmp;} {}
 }
 
-Function {get_type(std::string fname)} {return_type {std::string}
+Function {get_type(std::string fname)} {open return_type {std::string}
 } {
   code {if(!test_file(fname))
 {
@@ -2227,7 +2260,14 @@ if(thisLine.find("\#!")==0)
     ext=tmp.c_str();
   }
 }
-
+if(thisLine.find("<?xml")<thisLine.length())
+{
+  ext="xml";
+}
+if(thisLine.find("<!DOCTYPE html>")<thisLine.length())
+{
+  ext="html";
+}
 //nothing?  lets leave then...
 if(ext == NULL)
   return "";

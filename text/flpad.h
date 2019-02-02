@@ -45,6 +45,7 @@ unsigned int DIRECTIVE_TEXT;
 unsigned int NUMBER_TEXT;
 unsigned int KEYWORD_TEXT;
 unsigned int TYPE_TEXT;
+unsigned int SYMBOLS_TEXT;
 int FONT_TEXT;
 int SIZE_TEXT;
 int LINE_NUMBERS;
@@ -298,10 +299,10 @@ private:
   inline void cb_str_i(Fl_Button*, void*);
   static void cb_str(Fl_Button*, void*);
 public:
-  Fl_Button *directives;
+  Fl_Button *symbols;
 private:
-  inline void cb_directives_i(Fl_Button*, void*);
-  static void cb_directives(Fl_Button*, void*);
+  inline void cb_symbols_i(Fl_Button*, void*);
+  static void cb_symbols(Fl_Button*, void*);
 public:
   Fl_Button *typezz;
 private:
@@ -320,7 +321,10 @@ private:
 public:
   Fl_Menu_Button *theme_button;
   Fl_Check_Button *plain_text;
+  Fl_Button *directives;
 private:
+  inline void cb_directives_i(Fl_Button*, void*);
+  static void cb_directives(Fl_Button*, void*);
   inline void cb_Cancel_i(Fl_Button*, void*);
   static void cb_Cancel(Fl_Button*, void*);
   inline void cb_SAVE_i(Fl_Button*, void*);

@@ -84,16 +84,16 @@ void Fl_Syntax_Text_Editor::get_styletable(Fl_Text_Display::Style_Table_Entry &s
       whichtype="Line comments";
       break;
     case 2:
-      styles={ COMMENT_TEXT, ital, FL_NORMAL_SIZE }; // C - Block comments
-      whichtype="Block comments";
+      styles={ DIRECTIVE_TEXT, ital, FL_NORMAL_SIZE }; // C -Directives
+      whichtype="Directives";
       break;
     case 3:
       styles={ STRING_TEXT, font, FL_NORMAL_SIZE }; // D - Strings
       whichtype="Strings";
       break;
     case 4:
-      styles={ DIRECTIVE_TEXT, font, FL_NORMAL_SIZE }; // E - Directives
-      whichtype="Directives";
+      styles={ SYMBOLS_TEXT, font, FL_NORMAL_SIZE }; // E - Symbols
+      whichtype="Symbols";
       break;
     case 5:
       styles={ TYPE_TEXT, bold, FL_NORMAL_SIZE }; // F - Types
@@ -219,8 +219,18 @@ void Fl_Syntax_Text_Editor::set_type(std::string fname) {
   STYLE_HEADER = get_type(fname);
   KEYWORDS=keywords(STYLE_HEADER);
   TYPES=types(STYLE_HEADER);
+  //comments
+  std::string c_open=get(STYLE_HEADER,"blockopen");
+  std::string c_close=get(STYLE_HEADER,"blockclose");
+  std::string c_single=get(STYLE_HEADER,"comments");
+  std::string def=get(STYLE_HEADER,"defines");
+  trace("open:"+c_open+" close:"+c_close+" single:"+c_single+" define:"+def);
+  generator.set_comments(c_open,c_close,c_single);
+  generator.set_defines(def.c_str());
+  
   generator.set_keywords(KEYWORDS);
   generator.set_types(TYPES);
+  
   trace("set syntax type for: "+fname+" to:"+STYLE_HEADER);
 }
 
@@ -661,11 +671,11 @@ void UI::cb_str(Fl_Button* o, void* v) {
   ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_str_i(o,v);
 }
 
-void UI::cb_directives_i(Fl_Button* o, void*) {
+void UI::cb_symbols_i(Fl_Button* o, void*) {
   choose_a_color(o);
 }
-void UI::cb_directives(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_directives_i(o,v);
+void UI::cb_symbols(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_symbols_i(o,v);
 }
 
 void UI::cb_typezz_i(Fl_Button* o, void*) {
@@ -689,6 +699,13 @@ void UI::cb_numbers(Fl_Button* o, void* v) {
   ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_numbers_i(o,v);
 }
 
+void UI::cb_directives_i(Fl_Button* o, void*) {
+  choose_a_color(o);
+}
+void UI::cb_directives(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_directives_i(o,v);
+}
+
 void UI::cb_Cancel_i(Fl_Button* o, void*) {
   o->parent()->hide();
 }
@@ -705,6 +722,7 @@ FONT_TEXT=font_save->value();
 BUTTON_COLOR=tool_color->value();
 COMMENT_TEXT=cm->color();
 STRING_TEXT=str->color();
+SYMBOLS_TEXT=symbols->color();
 DIRECTIVE_TEXT=directives->color();
 TYPE_TEXT=typezz->color();
 KEYWORD_TEXT=keywordz->color();
@@ -1089,14 +1107,14 @@ Fl_Double_Window* UI::pref_window() {
           str->align(Fl_Align(129));
           o->color( STRING_TEXT );
         } // Fl_Button* str
-        { Fl_Button* o = directives = new Fl_Button(25, 115, 55, 30, gettext("Symbols"));
-          directives->tooltip(gettext("The color of symbols"));
-          directives->box(FL_BORDER_BOX);
-          directives->color((Fl_Color)23);
-          directives->callback((Fl_Callback*)cb_directives);
-          directives->align(Fl_Align(129));
-          o->color( DIRECTIVE_TEXT );
-        } // Fl_Button* directives
+        { Fl_Button* o = symbols = new Fl_Button(25, 115, 55, 30, gettext("Symbols"));
+          symbols->tooltip(gettext("The color of symbols"));
+          symbols->box(FL_BORDER_BOX);
+          symbols->color((Fl_Color)23);
+          symbols->callback((Fl_Callback*)cb_symbols);
+          symbols->align(Fl_Align(129));
+          o->color( SYMBOLS_TEXT );
+        } // Fl_Button* symbols
         { Fl_Button* o = typezz = new Fl_Button(105, 115, 55, 30, gettext("Types"));
           typezz->tooltip(gettext("The color of types"));
           typezz->box(FL_BORDER_BOX);
@@ -1134,6 +1152,14 @@ Fl_Double_Window* UI::pref_window() {
           plain_text->selection_color(FL_GREEN);
           o->value(HIGHLIGHT_PLAIN);
         } // Fl_Check_Button* plain_text
+        { Fl_Button* o = directives = new Fl_Button(175, 65, 55, 30, gettext("Directives"));
+          directives->tooltip(gettext("The color of strings"));
+          directives->box(FL_BORDER_BOX);
+          directives->color((Fl_Color)23);
+          directives->callback((Fl_Callback*)cb_directives);
+          directives->align(Fl_Align(129));
+          o->color( DIRECTIVE_TEXT );
+        } // Fl_Button* directives
         syntax->end();
       } // Fl_Group* syntax
       pref_tabs->end();
@@ -1463,6 +1489,7 @@ void UI::default_theme() {
   NUMBER_TEXT=4280754176;
   KEYWORD_TEXT=1045337344;
   TYPE_TEXT=175444736;
+  SYMBOLS_TEXT=FL_FOREGROUND_COLOR;
   BUTTON_COLOR=1;
 }
 
@@ -1661,6 +1688,11 @@ void UI::get_preferences() {
       {
         subString=line.substr(start,std::string::npos);
         DIRECTIVE_TEXT=convert(subString);
+      }
+      if(line.find("SY:")<line.length())
+      {
+        subString=line.substr(start,std::string::npos);
+        SYMBOLS_TEXT=convert(subString);
       }
       if(line.find("NM:")<line.length())
       {
@@ -2157,6 +2189,7 @@ bool UI::save_preferences() {
   out+=prefline("TT",TYPE_TEXT);
   out+=prefline("BC",BUTTON_COLOR);
   out+=prefline("PT",HIGHLIGHT_PLAIN);
+  out+=prefline("SY",SYMBOLS_TEXT);
   std::ofstream dest;
   std::string fname=get_filename();
   dest.open(fname.c_str());
@@ -2285,7 +2318,8 @@ void UI::get_theme_from_config(std::string theme) {
   STRING_TEXT=get_theme(theme,"strings");
   NUMBER_TEXT=get_theme(theme,"numbers");
   KEYWORD_TEXT=get_theme(theme,"keywords");
-  DIRECTIVE_TEXT=get_theme(theme,"symbol");
+  SYMBOLS_TEXT=get_theme(theme,"symbol");
+  DIRECTIVE_TEXT=get_theme(theme,"directives");
   TYPE_TEXT=get_theme(theme,"types");
   SELECTION_TEXT=get_theme(theme,"selection");
   //ETC
@@ -2300,6 +2334,8 @@ void UI::get_theme_from_config(std::string theme) {
   cm->redraw();
   str->color(STRING_TEXT);
   str->redraw();
+  symbols->color(SYMBOLS_TEXT);
+  symbols->redraw();
   directives->color(DIRECTIVE_TEXT);
   directives->redraw();
   typezz->color(TYPE_TEXT);
@@ -2530,7 +2566,14 @@ std::string get_type(std::string fname) {
       ext=tmp.c_str();
     }
   }
-  
+  if(thisLine.find("<?xml")<thisLine.length())
+  {
+    ext="xml";
+  }
+  if(thisLine.find("<!DOCTYPE html>")<thisLine.length())
+  {
+    ext="html";
+  }
   //nothing?  lets leave then...
   if(ext == NULL)
     return "";
