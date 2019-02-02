@@ -2411,7 +2411,7 @@ std::string get(std::string header, std::string line) {
   if(close>header_length){find_header=find_header+"]";}
   
   bool found_after_this=false;
-  std::string this_line;
+  std::string this_line="";
   int lengthofARGS = line.length();
   std::string subString;
   std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
@@ -2538,13 +2538,23 @@ std::string get_theme_file() {
 }
 
 std::string get_type(std::string fname) {
+  SYNTAX_HEADERS=get_syntax_headers();
   if(!test_file(fname))
   {
     trace("No file sent in\n"+fname);
     return "";
   }
   
-  const char* ext = fl_filename_ext(fname.c_str());
+  std::string ext;
+  unsigned int dot = fname.rfind(".");
+  if(dot<fname.length())
+  {
+    std::string tmp=fname;
+    tmp=tmp.substr(dot,std::string::npos);
+    trace("<"+tmp+">");
+    ext=tmp;
+    trace(ext);
+  }
   
   /// get the shebang
   std::string thisLine;
@@ -2563,11 +2573,24 @@ std::string get_type(std::string fname) {
     {
       tmp=tmp.substr(find+1,std::string::npos);
       tmp="."+tmp;
-      ext=tmp.c_str();
+      ext=tmp;
     }
   }
-  if(thisLine.find("<?xml")<thisLine.length())
+  if( (thisLine.find("<?xml")<thisLine.length()))
   {
+    for( std::vector<std::string>::iterator itr = SYNTAX_HEADERS.begin();
+                                                itr!=SYNTAX_HEADERS.end();
+                                                ++itr)
+    {
+      std::string tmp=*itr;
+      std::string c="."+tmp;
+      trace("compare:"+c+" with:"+ext);
+      if(c.compare(ext)==0)
+      {
+        return tmp;
+        
+      }
+    }
     ext="xml";
   }
   if(thisLine.find("<!DOCTYPE html>")<thisLine.length())
@@ -2575,7 +2598,7 @@ std::string get_type(std::string fname) {
     ext="html";
   }
   //nothing?  lets leave then...
-  if(ext == NULL)
+  if(ext.compare("")==0)
     return "";
   
   std::string EXT=ext;
@@ -2847,4 +2870,32 @@ bool test_file(std::string file) {
 
 std::vector <std::string> types(std::string header) {
   return comma_line(header, "types");
+}
+
+std::vector<std::string> get_syntax_headers() {
+  std::vector<std::string> V;
+  std::string filename = get_syntax_file();
+  if(filename.compare("")==0){return V;}
+  
+  
+  //parse the syntax highlighter file
+  std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
+  /** check if the input file stream is open */
+  if(inputFileStrem.is_open())
+  {
+    std::string this_line;
+    std::string h="";
+    while (getline(inputFileStrem,this_line))
+    {
+      
+      if(this_line.find("[")<=1)
+      {
+         unsigned int open_bracket=this_line.find("[");
+         unsigned int close_bracket=this_line.find("]");
+         h=this_line.substr(open_bracket+1,close_bracket-1);
+         V.push_back(h);
+      }
+    }
+  }
+  return V;
 }

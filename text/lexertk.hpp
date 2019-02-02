@@ -272,10 +272,7 @@ namespace lexertk
          s.resize(s.size() - removal_count);
       }
    }
-   //The following comment styles are supported:
-   // 1. // .... \n
-   // 2. #  .... \n
-   // 3. /* .... */
+
    struct comment
    {
       static inline bool comment_start(const char c0, const char c1, int& mode, int& incr)

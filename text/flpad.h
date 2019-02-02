@@ -51,6 +51,7 @@ int SIZE_TEXT;
 int LINE_NUMBERS;
 int BUTTON_COLOR;
 int HIGHLIGHT_PLAIN; 
+std::vector<std::string> SYNTAX_HEADERS; 
 std::string SYNTAX_FILE; 
 
 class Fl_Syntax_Text_Editor : public Fl_Text_Editor {
@@ -404,4 +405,5 @@ std::vector<std::string> make_vec(std::string string_to_become_vector,std::strin
 void trace(std::string MSG, int n = 0);
 bool test_file(std::string file);
 std::vector <std::string> types(std::string header);
+std::vector<std::string> get_syntax_headers();
 #endif

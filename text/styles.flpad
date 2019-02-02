@@ -22,6 +22,8 @@ defines=#
 [flpad]
 ext=flpad
 comments=#
+blockopen=#*
+blockclose=*#
 keywords=ext,keywords,types,blockopen,blockclose,defines,comments,foreground,background,comments,strings,numbers,font,font_size,line_number_size,selection,highlight_plain_text,symbol,button_color,directives
 [python]
 ext=py
@@ -45,8 +47,16 @@ ext=conf,config,ini
 ext=js
 keywords=abstract,arguments,await,boolean,break,byte,case,catch,char,class,const,continue,debugger,default,delete,do,export,extends,false,final,finally,float,for,function,goto,if,implements,import,in,instanceof,int,interface,let,long,native,new,null,package,private,protected,public,return,short,static,super,switch,synchronized,this,throw,throws,transient,true,try,typeof,void,volatile,while,with,yield,
 types=var
+[svg]
+ext=svg
+defines=<?
+blockopen=<!--
+blockclose=-->
+keywords=text,svg,defs,filter,metadata,g,path,ellipse,linearGradient,stop,rect,flowRoot
+types=width,height,id,transform,d,style,cx,cy,rx,ry,y1,x1,x2,y2,x,y,offset,href,gradientUnits,xml:space
 [xml]
 ext=xml
+defines=<?
 [html]
 ext=html,htm
 keywords=html,head,meta,link,title,body,div,br
@@ -55,3 +65,9 @@ types=href,class,rel,icon,type,media
 comments=#
 ext=fl,fld
 keywords=decl,public global,Function
+[jwmrc]
+ext=jwmrc
+keywords=JWM,RootMenu,Menu,Dynamic,Program,Separator,Desktops,SendTo,Stick,Maximize,Minimize,Shade,Move,Resize,Kill,Close,Restart,Exit,Tray,Clock,Dock,Pager,Spacer,Swallow,TaskList,TrayButton,Button,Include,Group,Name,Class,Option,WindowStyle,Font,Width,Height,Corner,Foreground,Background,Opacity,Outline,ClockStyle,TrayStyle,Active,TaskListStyle,PagerStyle,Text,IconPath,Mouse,Desktops,Background,ButtonClose,ButtonMax,ButtonMaxActivve,ButtonMenu,ButtonMin,DefaultIcon,DoubleClickDelta,DoubleClickSpeed,FocusModel,MoveMode,ResizeMode,RestartCommand,ShutdownCommand,SnapMode,StartupCommand
+types=onroot,width,height,label,labeled,dynamic,tooltip,icon,confirm,autohide,x,y,valign,halign,format,zone,name,maxwidth,popup,mask,decorations,group,list,delay,enabled,context,button,type,distance
+blockopen=<!--
+blockclose=-->

@@ -113,6 +113,9 @@ int BUTTON_COLOR;
 int HIGHLIGHT_PLAIN;} {public global
 }
 
+decl {std::vector<std::string> SYNTAX_HEADERS;} {public global
+}
+
 decl {std::string SYNTAX_FILE;} {public global
 }
 
@@ -444,8 +447,7 @@ modify_cb();} {}
   }
 }
 
-class UI {open
-} {
+class UI {} {
   decl {bool RELEASE;} {public local
   }
   Function {UI()} {} {
@@ -2097,7 +2099,7 @@ if(open>header_length){find_header="["+find_header;}
 if(close>header_length){find_header=find_header+"]";}
 
 bool found_after_this=false;
-std::string this_line;
+std::string this_line="";
 int lengthofARGS = line.length();
 std::string subString;
 std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
@@ -2131,8 +2133,7 @@ if(inputFileStrem.is_open())
     }
   }
 }
-return "";} {selected
-  }
+return "";} {}
 }
 
 Function {get_syntax_file()} {return_type {std::string}
@@ -2226,15 +2227,25 @@ if(tmp.compare("")==0)
 return tmp;} {}
 }
 
-Function {get_type(std::string fname)} {return_type {std::string}
+Function {get_type(std::string fname)} {open return_type {std::string}
 } {
-  code {if(!test_file(fname))
+  code {SYNTAX_HEADERS=get_syntax_headers();
+if(!test_file(fname))
 {
   trace("No file sent in\\n"+fname);
   return "";
 }
 
-const char* ext = fl_filename_ext(fname.c_str());
+std::string ext;
+unsigned int dot = fname.rfind(".");
+if(dot<fname.length())
+{
+  std::string tmp=fname;
+  tmp=tmp.substr(dot,std::string::npos);
+  trace("<"+tmp+">");
+  ext=tmp;
+  trace(ext);
+}
 
 /// get the shebang
 std::string thisLine;
@@ -2253,11 +2264,24 @@ if(thisLine.find("\#!")==0)
   {
     tmp=tmp.substr(find+1,std::string::npos);
     tmp="."+tmp;
-    ext=tmp.c_str();
+    ext=tmp;
   }
 }
-if(thisLine.find("<?xml")<thisLine.length())
+if( (thisLine.find("<?xml")<thisLine.length()))
 {
+  for( std::vector<std::string>::iterator itr = SYNTAX_HEADERS.begin();
+                                              itr!=SYNTAX_HEADERS.end();
+                                              ++itr)
+  {
+    std::string tmp=*itr;
+    std::string c="."+tmp;
+    trace("compare:"+c+" with:"+ext);
+    if(c.compare(ext)==0)
+    {
+      return tmp;
+      
+    }
+  }
   ext="xml";
 }
 if(thisLine.find("<!DOCTYPE html>")<thisLine.length())
@@ -2265,7 +2289,7 @@ if(thisLine.find("<!DOCTYPE html>")<thisLine.length())
   ext="html";
 }
 //nothing?  lets leave then...
-if(ext == NULL)
+if(ext.compare("")==0)
   return "";
 
 std::string EXT=ext;
@@ -2318,10 +2342,11 @@ if(inputFileStrem.is_open())
 
 if(EXT.compare("bash")==0)
   return "sh";
-return "";} {}
+return "";} {selected
+  }
 }
 
-Function {get_themes()} {return_type {std::vector<std::string>}
+Function {get_themes()} {open return_type {std::vector<std::string>}
 } {
   code {std::vector<std::string> THEMES;
 std::string filename = get_theme_file();
@@ -2545,4 +2570,33 @@ return false;} {}
 Function {types(std::string header)} {return_type {std::vector <std::string>}
 } {
   code {return comma_line(header, "types");} {}
+}
+
+Function {get_syntax_headers()} {open return_type {std::vector<std::string>}
+} {
+  code {std::vector<std::string> V;
+std::string filename = get_syntax_file();
+if(filename.compare("")==0){return V;}
+
+
+//parse the syntax highlighter file
+std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
+/** check if the input file stream is open */
+if(inputFileStrem.is_open())
+{
+  std::string this_line;
+  std::string h="";
+  while (getline(inputFileStrem,this_line))
+  {
+    
+    if(this_line.find("[")<=1)
+    {
+       unsigned int open_bracket=this_line.find("[");
+       unsigned int close_bracket=this_line.find("]");
+       h=this_line.substr(open_bracket+1,close_bracket-1);
+       V.push_back(h);
+    }
+  }
+}
+return V;} {}
 }
