@@ -125,7 +125,8 @@ class Fl_Syntax_Text_Editor {open : {public Fl_Text_Editor}
 } {
   Function {Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0):Fl_Text_Editor(x,y,w,h,label)} {open
   } {
-    code {this->resize(x,y,w,h);
+    code {IGNORE_SYNTAX_CASE=false;
+this->resize(x,y,w,h);
 //this->label(label);
 changed=0;
 loading=0;
@@ -152,8 +153,7 @@ theme_editor(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,
 //trace("add modify callback");
 textbuffer->add_modify_callback(changed_cb,(void *)this);
 //textbuffer->call_modify_callbacks();
-wrap_mode(Fl_Text_Display::WRAP_NONE, 0);} {selected
-    }
+wrap_mode(Fl_Text_Display::WRAP_NONE, 0);} {}
   }
   Function {~Fl_Syntax_Text_Editor()} {} {
     code {buffer(0);
@@ -161,6 +161,8 @@ textbuffer->remove_modify_callback(style_update, this);
 textbuffer->remove_modify_callback(changed_cb, this);} {}
   }
   decl {bool WRAPPED;} {public global
+  }
+  decl {bool IGNORE_SYNTAX_CASE;} {public local
   }
   decl {bool RELEASE;} {public local
   }
@@ -302,7 +304,7 @@ return Fl_Text_Editor::handle(event);} {}
 highlight_data(stylebuffer, styletable, sizeof(styletable) / sizeof(styletable[0]), 'A', style_unfinished_cb, 0);
 textbuffer->add_modify_callback(style_update, (void*) this);} {}
   }
-  Function {modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL)} {open return_type void
+  Function {modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL)} {return_type void
   } {
     code {if(stylebuffer->selected()!=0)
 {
@@ -332,7 +334,8 @@ redisplay_range(0,stylebuffer->length());} {}
 redisplay_range(0,textbuffer->length());
 redraw();} {}
   }
-  Function {set_type(std::string fname)} {} {
+  Function {set_type(std::string fname)} {open
+  } {
     code {std::string dir=fname;
 unsigned int find = dir.rfind("/");
 
@@ -354,8 +357,20 @@ if(fname.empty())
   return;
 
 STYLE_HEADER = get_type(fname);
-KEYWORDS     = keywords(STYLE_HEADER);
-TYPES        = types(STYLE_HEADER);
+//trace(STYLE_HEADER);
+std::string ignore_case   = get(STYLE_HEADER, "ignore_case");
+if(ignore_case.compare("")!=0)
+{
+  //trace("ignore_case="+ignore_case);
+  std::transform(ignore_case.begin(), ignore_case.end(), ignore_case.begin(), ::tolower);
+  if(ignore_case.compare("true")==0)
+    IGNORE_SYNTAX_CASE=true;
+  if(IGNORE_SYNTAX_CASE)
+    trace("ignoring syntax case for "+STYLE_HEADER+" files");
+}
+
+KEYWORDS     = keywords(STYLE_HEADER, IGNORE_SYNTAX_CASE);
+TYPES        = types(STYLE_HEADER, IGNORE_SYNTAX_CASE);
 
 //comments
 std::string c_open        = get(STYLE_HEADER,"blockopen");
@@ -366,6 +381,7 @@ std::string def           = get(STYLE_HEADER,"defines");
 //special
 std::string special_open  = get(STYLE_HEADER,"special_open");
 std::string special_close = get(STYLE_HEADER,"special_close");
+
 
 //Set everything in the generator
 generator.set_comments(c_open,c_close,c_single);
@@ -453,8 +469,7 @@ get_styletable(J,9);} {}
   }
 }
 
-class UI {open
-} {
+class UI {} {
   decl {bool RELEASE;} {public local
   }
   Function {UI()} {} {
@@ -728,7 +743,7 @@ Fl_Text_Editor::kf_select_all(0,textor);}
       }
       Fl_Tabs tabs {
         callback {set_title(o->value());} open
-        xywh {0 55 520 485} box FLAT_BOX selection_color 23 when 3
+        xywh {0 55 520 490} box FLAT_BOX selection_color 23 when 3
         code0 {add_tab(false);}
         code1 {button_style(BUTTON_COLOR);}
       } {}
@@ -914,8 +929,7 @@ o->parent()->hide();}
       }
     }
   }
-  Function {add_tab(bool LOAD=true, bool NEW = true)} {open
-  } {
+  Function {add_tab(bool LOAD=true, bool NEW = true)} {} {
     code {int y = menu->y()+tabs->y()+add_button->y();
 int h = tabs->h();
 int w = tabs->w();
@@ -1105,7 +1119,8 @@ if(txt==NULL)
 trace(txt);
 ((UI*)(p->user_data()))->pick_tab(txt);} {}
   }
-  Function {close_tab()} {} {
+  Function {close_tab()} {open
+  } {
     code {Fl_Widget * E = tabs->value();
 if(E==NULL)
 {
@@ -1115,21 +1130,21 @@ if(E==NULL)
 Fl_Group* curr = tabs->value()->as_group();
 if(!check_save())
   return;
-trace("Looking for correct tab");
+//trace("Looking for correct tab");
 Fl_Syntax_Text_Editor *T = NULL;
 for ( int i = 0;i<=curr->children();i++)
 {
   if(curr->child(i)!=NULL)
   {
-  trace("found a text editor!");
+  //trace("found a text editor!");
     T = (Fl_Syntax_Text_Editor *) curr->child(i);
     std::string tmp = T->filename;
     tmp = "Documents/"+ tmp;
-    trace("menu string ="+tmp);
+    //trace("menu string ="+tmp);
     int val = menu->find_index(tmp.c_str());
     if(val != -1)
     {
-      trace("removing document:"+tmp);
+      //trace("removing document:"+tmp);
       menu->remove(val);
     }
     menu->redraw();
@@ -1528,8 +1543,7 @@ if(val.compare("")!=0)
   goto_line(convert(val));
 }} {}
   }
-  Function {goto_line(int pos)} {open
-  } {
+  Function {goto_line(int pos)} {} {
     code {Fl_Text_Editor * E = current_editor();
 E->scroll(pos,0);
 E->take_focus();
@@ -1633,7 +1647,7 @@ Fl_Text_Editor::kf_insert(0,textor);} {}
 if(NEW)
 {
   add_tab(false);
-  trace("added tab");
+  //trace("added tab");
 }
 Fl_Syntax_Text_Editor * E = current_editor();
 if(E==NULL)
@@ -2073,7 +2087,7 @@ std::cout<<i<<std::endl;
   e->linenumber_width(width);
 }} {}
   }
-  Function {theme_menu_cb(Fl_Widget* o, void* v)} {open return_type {static void}
+  Function {theme_menu_cb(Fl_Widget* o, void* v)} {return_type {static void}
   } {
     code {Fl_Menu_Button *m = (Fl_Menu_Button*)o;
 const Fl_Menu_Item *p = m->mvalue();
@@ -2088,8 +2102,7 @@ if(textor==NULL)
   return;
 Fl_Text_Editor::kf_undo(0,textor);} {}
   }
-  Function {wordwrap()} {open
-  } {
+  Function {wordwrap()} {} {
     code {Fl_Syntax_Text_Editor * E = current_editor();
 std::string fname="";
 if(E==NULL)
@@ -2109,10 +2122,18 @@ else
   }
 }
 
-Function {comma_line(std::string lang,std::string field)} {return_type {std::vector<std::string>}
+Function {comma_line(std::string lang,std::string field, bool ignore_case = false)} {open return_type {std::vector<std::string>}
 } {
   code {//get the line from the file
 std::string LINE=get(lang,field);
+if(ignore_case)
+{
+  std::string lower  = LINE;
+  std::string upper = LINE;
+  std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+  std::transform(upper.begin(), upper.end(), upper.begin(), ::toupper);
+  LINE=lower+","+upper;
+}
 //return a vector from the string delimited by commas
 return make_vec(LINE,",");} {}
 }
@@ -2132,6 +2153,35 @@ try{NUM=std::stoul(num);}
 catch(const std::invalid_argument e){return default_value;}
 catch(const std::out_of_range e){return default_value;}
 return NUM;} {}
+}
+
+Function {dir_vector(std::string DIRECTORY)} {open return_type {std::vector<std::string>}
+} {
+  code {//trace("dir_vector:"+DIRECTORY);
+std::vector<std::string> myVector;
+if(!fl_filename_isdir(DIRECTORY.c_str()))
+  return myVector;
+DIR *mydir=NULL;
+struct dirent *entryPointer=NULL;
+mydir=opendir(DIRECTORY.c_str());
+if(DIRECTORY.rfind('/')!=DIRECTORY.length()-1){DIRECTORY+="/";}
+if(mydir!=NULL)
+{
+  while ((entryPointer=readdir(mydir))!=NULL)
+  {
+    if((entryPointer->d_type == DT_REG)&&(entryPointer->d_name[0]!='.'))
+    {
+      std::string fullpath=entryPointer->d_name;
+      //trace(fullpath);
+      myVector.push_back(fullpath);
+    }
+  }
+}
+std::vector<std::string>::iterator it;
+std::sort (myVector.begin(), myVector.end());
+it = std::unique (myVector.begin(), myVector.end());
+myVector.resize( std::distance(myVector.begin(),it) );
+return myVector;} {}
 }
 
 Function {get(std::string header, std::string line)} {return_type {std::string}
@@ -2308,7 +2358,7 @@ if(tmp.compare("")==0)
 return tmp;} {}
 }
 
-Function {get_type(std::string fname)} {return_type {std::string}
+Function {get_type(std::string fname)} {open return_type {std::string}
 } {
   code {SYNTAX_HEADERS=get_syntax_headers();
 if(!test_file(fname))
@@ -2318,6 +2368,7 @@ if(!test_file(fname))
 }
 
 std::string ext;
+
 unsigned int dot = fname.rfind(".");
 if(dot<fname.length())
 {
@@ -2325,7 +2376,9 @@ if(dot<fname.length())
   tmp=tmp.substr(dot,std::string::npos);
   ext=tmp;
 }
-
+std::string tmp = syntax_type_from_filename(fname);
+if (tmp.compare("")!=0)
+  return tmp;
 /// get the shebang
 std::string thisLine;
 std::ifstream inputFileStream(fname.c_str(), std::ifstream::in);
@@ -2399,6 +2452,20 @@ if(inputFileStrem.is_open())
        HEADER=this_line.substr(open_bracket+1,close_bracket-1);
     }
     unsigned int eq = this_line.find("=");
+    if(this_line.find("filename=")<this_line.length())
+    {
+      this_line=this_line.substr(eq+1,std::string::npos);
+      std::vector<std::string> V = make_vec(this_line,",");
+      for( std::vector<std::string>::iterator itr = V.begin();
+                                              itr!=V.end();
+                                              ++itr)
+      {
+        std::string tmp=*itr;
+        if(tmp.compare(fname)==0)
+          return HEADER;
+      }
+    }
+
     if(this_line.find(line)<this_line.length())
     {
       this_line=this_line.substr(eq+1,std::string::npos);
@@ -2495,9 +2562,18 @@ Function {is_space(const char x)} {return_type bool
   code {return std::isspace(x);} {}
 }
 
-Function {keywords(std::string header)} {return_type {std::vector <std::string>}
+Function {join_string_vectors(std::vector<std::string> vectorA,std::vector<std::string> vectorB)} {return_type {std::vector<std::string>}
 } {
-  code {return comma_line(header, "keywords");} {}
+  code {std::vector<std::string> bothVectors;
+bothVectors.reserve(vectorA.size()+vectorB.size());
+bothVectors.insert(bothVectors.end(),vectorA.begin(),vectorA.end());
+bothVectors.insert(bothVectors.end(),vectorB.begin(),vectorB.end());
+return bothVectors;} {}
+}
+
+Function {keywords(std::string header, bool ignore_case = false)} {return_type {std::vector <std::string>}
+} {
+  code {return comma_line(header, "keywords", ignore_case);} {}
 }
 
 Function {main(int argc, char **argv)} {return_type int
@@ -2572,6 +2648,49 @@ if(postComma.compare("")!=0){Vector.push_back(postComma);}
 return Vector;} {}
 }
 
+Function {syntax_type_from_filename(std::string fname)} {return_type {std::string}
+} {
+  code {unsigned int dot = fname.rfind("/");
+if(dot<fname.length())
+{
+  fname=fname.substr(dot+1,std::string::npos);
+}
+std::string filename = get_syntax_file();
+//parse the syntax highlighter file
+std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
+/** check if the input file stream is open */
+if(inputFileStrem.is_open())
+{
+  std::string this_line;
+  std::string HEADER="";
+  while (getline(inputFileStrem,this_line))
+  {
+    
+    if(this_line.find("[")<=1)
+    {
+       unsigned int open_bracket=this_line.find("[");
+       unsigned int close_bracket=this_line.find("]");
+       HEADER=this_line.substr(open_bracket+1,close_bracket-1);
+    }
+    unsigned int eq = this_line.find("=");
+    if(this_line.find("filename=")==0)
+    {
+      this_line=this_line.substr(eq+1,std::string::npos);
+      std::vector<std::string> V = make_vec(this_line,",");
+      for( std::vector<std::string>::iterator itr = V.begin();
+                                              itr!=V.end();
+                                              ++itr)
+      {
+        std::string tmp=*itr;
+        if(tmp.compare(fname)==0)
+          return HEADER;
+      }
+    }
+  }
+}
+return "";} {}
+}
+
 Function {trace(std::string MSG, int n = 0)} {} {
   code {//return;
 std::cout<<MSG;
@@ -2639,7 +2758,28 @@ if(mydir!=NULL)
 return false;} {}
 }
 
-Function {types(std::string header)} {return_type {std::vector <std::string>}
+Function {types(std::string header, bool ignore_case = false)} {open return_type {std::vector <std::string>}
 } {
-  code {return comma_line(header, "types");} {}
+  code {std::vector<std::string> V = comma_line(header, "types", ignore_case);
+if(V.empty())
+  return V;
+std::string a = V[0];
+std::vector<std::string> DIR_LIST;
+if(a[0] == '/')
+{
+  if(fl_filename_isdir(a.c_str())!=0)
+  {
+    for( std::vector<std::string>::iterator it = V.begin();
+    it!=V.end();
+    ++it)
+    {
+      std::string tmp=*it;
+      std::vector <std::string> T = dir_vector(tmp);
+      DIR_LIST=join_string_vectors(DIR_LIST,T);
+    }
+  }
+  V=DIR_LIST;
+}
+return V;} {selected
+  }
 }

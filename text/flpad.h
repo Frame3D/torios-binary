@@ -61,6 +61,7 @@ public:
   Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0);
   ~Fl_Syntax_Text_Editor();
   bool WRAPPED; 
+  bool IGNORE_SYNTAX_CASE; 
   bool RELEASE; 
   Fl_Text_Display::Style_Table_Entry styletable[10]; 
   Fl_Text_Buffer * stylebuffer; 
@@ -403,8 +404,9 @@ public:
   void undo_cb();
   void wordwrap();
 };
-std::vector<std::string> comma_line(std::string lang,std::string field);
+std::vector<std::string> comma_line(std::string lang,std::string field, bool ignore_case = false);
 unsigned int convert(std::string num, int default_value=0);
+std::vector<std::string> dir_vector(std::string DIRECTORY);
 std::string get(std::string header, std::string line);
 std::string get_syntax_file();
 std::vector<std::string> get_syntax_headers();
@@ -413,10 +415,12 @@ std::string get_type(std::string fname);
 std::vector<std::string> get_themes();
 int get_theme(std::string theme, std::string item, int default_value=0);
 bool is_space(const char x);
-std::vector <std::string> keywords(std::string header);
+std::vector<std::string> join_string_vectors(std::vector<std::string> vectorA,std::vector<std::string> vectorB);
+std::vector <std::string> keywords(std::string header, bool ignore_case = false);
 int main(int argc, char **argv);
 std::vector<std::string> make_vec(std::string string_to_become_vector,std::string delimiter=" ");
+std::string syntax_type_from_filename(std::string fname);
 void trace(std::string MSG, int n = 0);
 bool test_file(std::string file);
-std::vector <std::string> types(std::string header);
+std::vector <std::string> types(std::string header, bool ignore_case = false);
 #endif

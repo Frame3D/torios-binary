@@ -8,6 +8,7 @@
 #include "flpad.h"
 
 Fl_Syntax_Text_Editor::Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label ):Fl_Text_Editor(x,y,w,h,label) {
+  IGNORE_SYNTAX_CASE=false;
   this->resize(x,y,w,h);
   //this->label(label);
   changed=0;
@@ -213,8 +214,20 @@ void Fl_Syntax_Text_Editor::set_type(std::string fname) {
     return;
   
   STYLE_HEADER = get_type(fname);
-  KEYWORDS     = keywords(STYLE_HEADER);
-  TYPES        = types(STYLE_HEADER);
+  //trace(STYLE_HEADER);
+  std::string ignore_case   = get(STYLE_HEADER, "ignore_case");
+  if(ignore_case.compare("")!=0)
+  {
+    //trace("ignore_case="+ignore_case);
+    std::transform(ignore_case.begin(), ignore_case.end(), ignore_case.begin(), ::tolower);
+    if(ignore_case.compare("true")==0)
+      IGNORE_SYNTAX_CASE=true;
+    if(IGNORE_SYNTAX_CASE)
+      trace("ignoring syntax case for "+STYLE_HEADER+" files");
+  }
+  
+  KEYWORDS     = keywords(STYLE_HEADER, IGNORE_SYNTAX_CASE);
+  TYPES        = types(STYLE_HEADER, IGNORE_SYNTAX_CASE);
   
   //comments
   std::string c_open        = get(STYLE_HEADER,"blockopen");
@@ -225,6 +238,7 @@ void Fl_Syntax_Text_Editor::set_type(std::string fname) {
   //special
   std::string special_open  = get(STYLE_HEADER,"special_open");
   std::string special_close = get(STYLE_HEADER,"special_close");
+  
   
   //Set everything in the generator
   generator.set_comments(c_open,c_close,c_single);
@@ -954,7 +968,7 @@ Fl_Double_Window* UI::make_window() {
       } // Fl_Button* cut_button
       buttons->end();
     } // Fl_Group* buttons
-    { tabs = new Fl_Tabs(0, 55, 520, 485);
+    { tabs = new Fl_Tabs(0, 55, 520, 490);
       tabs->box(FL_FLAT_BOX);
       tabs->selection_color((Fl_Color)23);
       tabs->callback((Fl_Callback*)cb_tabs);
@@ -1381,21 +1395,21 @@ void UI::close_tab() {
   Fl_Group* curr = tabs->value()->as_group();
   if(!check_save())
     return;
-  trace("Looking for correct tab");
+  //trace("Looking for correct tab");
   Fl_Syntax_Text_Editor *T = NULL;
   for ( int i = 0;i<=curr->children();i++)
   {
     if(curr->child(i)!=NULL)
     {
-    trace("found a text editor!");
+    //trace("found a text editor!");
       T = (Fl_Syntax_Text_Editor *) curr->child(i);
       std::string tmp = T->filename;
       tmp = "Documents/"+ tmp;
-      trace("menu string ="+tmp);
+      //trace("menu string ="+tmp);
       int val = menu->find_index(tmp.c_str());
       if(val != -1)
       {
-        trace("removing document:"+tmp);
+        //trace("removing document:"+tmp);
         menu->remove(val);
       }
       menu->redraw();
@@ -1913,7 +1927,7 @@ void UI::load_file(std::string newfile, int ipos,bool NEW) {
   if(NEW)
   {
     add_tab(false);
-    trace("added tab");
+    //trace("added tab");
   }
   Fl_Syntax_Text_Editor * E = current_editor();
   if(E==NULL)
@@ -2408,9 +2422,17 @@ void UI::wordwrap() {
   }
 }
 
-std::vector<std::string> comma_line(std::string lang,std::string field) {
+std::vector<std::string> comma_line(std::string lang,std::string field, bool ignore_case ) {
   //get the line from the file
   std::string LINE=get(lang,field);
+  if(ignore_case)
+  {
+    std::string lower  = LINE;
+    std::string upper = LINE;
+    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+    std::transform(upper.begin(), upper.end(), upper.begin(), ::toupper);
+    LINE=lower+","+upper;
+  }
   //return a vector from the string delimited by commas
   return make_vec(LINE,",");
 }
@@ -2429,6 +2451,34 @@ unsigned int convert(std::string num, int default_value) {
   catch(const std::invalid_argument e){return default_value;}
   catch(const std::out_of_range e){return default_value;}
   return NUM;
+}
+
+std::vector<std::string> dir_vector(std::string DIRECTORY) {
+  //trace("dir_vector:"+DIRECTORY);
+  std::vector<std::string> myVector;
+  if(!fl_filename_isdir(DIRECTORY.c_str()))
+    return myVector;
+  DIR *mydir=NULL;
+  struct dirent *entryPointer=NULL;
+  mydir=opendir(DIRECTORY.c_str());
+  if(DIRECTORY.rfind('/')!=DIRECTORY.length()-1){DIRECTORY+="/";}
+  if(mydir!=NULL)
+  {
+    while ((entryPointer=readdir(mydir))!=NULL)
+    {
+      if((entryPointer->d_type == DT_REG)&&(entryPointer->d_name[0]!='.'))
+      {
+        std::string fullpath=entryPointer->d_name;
+        //trace(fullpath);
+        myVector.push_back(fullpath);
+      }
+    }
+  }
+  std::vector<std::string>::iterator it;
+  std::sort (myVector.begin(), myVector.end());
+  it = std::unique (myVector.begin(), myVector.end());
+  myVector.resize( std::distance(myVector.begin(),it) );
+  return myVector;
 }
 
 std::string get(std::string header, std::string line) {
@@ -2610,6 +2660,7 @@ std::string get_type(std::string fname) {
   }
   
   std::string ext;
+  
   unsigned int dot = fname.rfind(".");
   if(dot<fname.length())
   {
@@ -2617,7 +2668,9 @@ std::string get_type(std::string fname) {
     tmp=tmp.substr(dot,std::string::npos);
     ext=tmp;
   }
-  
+  std::string tmp = syntax_type_from_filename(fname);
+  if (tmp.compare("")!=0)
+    return tmp;
   /// get the shebang
   std::string thisLine;
   std::ifstream inputFileStream(fname.c_str(), std::ifstream::in);
@@ -2691,6 +2744,20 @@ std::string get_type(std::string fname) {
          HEADER=this_line.substr(open_bracket+1,close_bracket-1);
       }
       unsigned int eq = this_line.find("=");
+      if(this_line.find("filename=")<this_line.length())
+      {
+        this_line=this_line.substr(eq+1,std::string::npos);
+        std::vector<std::string> V = make_vec(this_line,",");
+        for( std::vector<std::string>::iterator itr = V.begin();
+                                                itr!=V.end();
+                                                ++itr)
+        {
+          std::string tmp=*itr;
+          if(tmp.compare(fname)==0)
+            return HEADER;
+        }
+      }
+  
       if(this_line.find(line)<this_line.length())
       {
         this_line=this_line.substr(eq+1,std::string::npos);
@@ -2784,8 +2851,16 @@ bool is_space(const char x) {
   return std::isspace(x);
 }
 
-std::vector <std::string> keywords(std::string header) {
-  return comma_line(header, "keywords");
+std::vector<std::string> join_string_vectors(std::vector<std::string> vectorA,std::vector<std::string> vectorB) {
+  std::vector<std::string> bothVectors;
+  bothVectors.reserve(vectorA.size()+vectorB.size());
+  bothVectors.insert(bothVectors.end(),vectorA.begin(),vectorA.end());
+  bothVectors.insert(bothVectors.end(),vectorB.begin(),vectorB.end());
+  return bothVectors;
+}
+
+std::vector <std::string> keywords(std::string header, bool ignore_case ) {
+  return comma_line(header, "keywords", ignore_case);
 }
 
 int main(int argc, char **argv) {
@@ -2858,6 +2933,48 @@ std::vector<std::string> make_vec(std::string string_to_become_vector,std::strin
   return Vector;
 }
 
+std::string syntax_type_from_filename(std::string fname) {
+  unsigned int dot = fname.rfind("/");
+  if(dot<fname.length())
+  {
+    fname=fname.substr(dot+1,std::string::npos);
+  }
+  std::string filename = get_syntax_file();
+  //parse the syntax highlighter file
+  std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
+  /** check if the input file stream is open */
+  if(inputFileStrem.is_open())
+  {
+    std::string this_line;
+    std::string HEADER="";
+    while (getline(inputFileStrem,this_line))
+    {
+      
+      if(this_line.find("[")<=1)
+      {
+         unsigned int open_bracket=this_line.find("[");
+         unsigned int close_bracket=this_line.find("]");
+         HEADER=this_line.substr(open_bracket+1,close_bracket-1);
+      }
+      unsigned int eq = this_line.find("=");
+      if(this_line.find("filename=")==0)
+      {
+        this_line=this_line.substr(eq+1,std::string::npos);
+        std::vector<std::string> V = make_vec(this_line,",");
+        for( std::vector<std::string>::iterator itr = V.begin();
+                                                itr!=V.end();
+                                                ++itr)
+        {
+          std::string tmp=*itr;
+          if(tmp.compare(fname)==0)
+            return HEADER;
+        }
+      }
+    }
+  }
+  return "";
+}
+
 void trace(std::string MSG, int n ) {
   //return;
   std::cout<<MSG;
@@ -2924,6 +3041,26 @@ bool test_file(std::string file) {
   return false;
 }
 
-std::vector <std::string> types(std::string header) {
-  return comma_line(header, "types");
+std::vector <std::string> types(std::string header, bool ignore_case ) {
+  std::vector<std::string> V = comma_line(header, "types", ignore_case);
+  if(V.empty())
+    return V;
+  std::string a = V[0];
+  std::vector<std::string> DIR_LIST;
+  if(a[0] == '/')
+  {
+    if(fl_filename_isdir(a.c_str())!=0)
+    {
+      for( std::vector<std::string>::iterator it = V.begin();
+      it!=V.end();
+      ++it)
+      {
+        std::string tmp=*it;
+        std::vector <std::string> T = dir_vector(tmp);
+        DIR_LIST=join_string_vectors(DIR_LIST,T);
+      }
+    }
+    V=DIR_LIST;
+  }
+  return V;
 }
