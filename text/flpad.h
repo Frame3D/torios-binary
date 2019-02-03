@@ -33,6 +33,7 @@
 #include <string>
 #include <unistd.h>
 int ret_val; 
+std::string spaces; 
 std::string return_value; 
 unsigned int EDIT_COLOR;
 unsigned int NORMAL_COLOR; 
@@ -52,7 +53,8 @@ int FONT_TEXT;
 int SIZE_TEXT;
 int LINE_NUMBERS;
 int BUTTON_COLOR;
-int HIGHLIGHT_PLAIN; 
+int HIGHLIGHT_PLAIN;
+int INDENT_NEW_LINES; 
 std::vector<std::string> SYNTAX_HEADERS; 
 std::string SYNTAX_FILE; 
 
@@ -60,6 +62,7 @@ class Fl_Syntax_Text_Editor : public Fl_Text_Editor {
 public:
   Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0);
   ~Fl_Syntax_Text_Editor();
+  bool SPACES; 
   bool WRAPPED; 
   bool IGNORE_SYNTAX_CASE; 
   bool RELEASE; 
@@ -76,12 +79,14 @@ public:
   lexertk::helper::bracket_checker bracket_checker; 
   lexertk::helper::symbol_replacer symbol_replacer; 
   static void changed_cb(int, int nInserted, int nDeleted, int, const char*, void *v);
+  static int enter_kf(int, Fl_Text_Editor *e);
   std::string file_string();
   void get_styletable(Fl_Text_Display::Style_Table_Entry &styles,int which);
 protected:
   int handle(int event);
 public:
   void init_highlight();
+  static void kill_selection(Fl_Text_Editor* e);
   void modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL);
   void refresh();
   void set_type(std::string fname);
@@ -90,6 +95,7 @@ public:
   static void style_unfinished_cb(int, void*);
   void theme_editor(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size,int linenum );
   void update_styletable();
+  void use_spaces();
 };
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Button.H>
@@ -340,6 +346,9 @@ public:
 private:
   inline void cb_broken_i(Fl_Button*, void*);
   static void cb_broken(Fl_Button*, void*);
+public:
+  Fl_Check_Button *indentor;
+private:
   inline void cb_Cancel_i(Fl_Button*, void*);
   static void cb_Cancel(Fl_Button*, void*);
   inline void cb_SAVE_i(Fl_Button*, void*);

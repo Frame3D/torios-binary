@@ -8,35 +8,37 @@
 #include "flpad.h"
 
 Fl_Syntax_Text_Editor::Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label ):Fl_Text_Editor(x,y,w,h,label) {
-  IGNORE_SYNTAX_CASE=false;
+  IGNORE_SYNTAX_CASE = false;
+  SPACES             = false;
+  RELEASE            = false;
+  WRAPPED            = false;
+  changed            = 0;
+  loading            = 0;
+  filename           = "";
+  textbuffer         = new Fl_Text_Buffer();
+  
   this->resize(x,y,w,h);
-  //this->label(label);
-  changed=0;
-  loading=0;
-  filename="";
-  RELEASE=false;
-  //std::cerr<<"Constructor: new Text Editor="<<this<<std::endl;
-  textbuffer = new Fl_Text_Buffer();
   this->buffer(textbuffer);
+  
   char *style = new char[textbuffer->length() + 1];
   char *text = textbuffer->text();
+  
   memset(style, 'A', textbuffer->length());
   stylebuffer = new Fl_Text_Buffer(textbuffer->length());
   style[textbuffer->length()] = '\0';
+  
   init_highlight();
-  //style_parse(text, style, textbuffer->length(),12);
+  
   stylebuffer->text(style);
-  //std::cerr<<"stylebuffer="<<stylebuffer<<std::endl;
+  
   delete[] style;
   free(text);
-  WRAPPED=false;
+  
   box(FL_FLAT_BOX);
-  //trace("editor colors");
+  
   theme_editor(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);
-  //trace("add modify callback");
+  
   textbuffer->add_modify_callback(changed_cb,(void *)this);
-  //textbuffer->call_modify_callbacks();
-  wrap_mode(Fl_Text_Display::WRAP_NONE, 0);
 }
 
 Fl_Syntax_Text_Editor::~Fl_Syntax_Text_Editor() {
@@ -54,6 +56,17 @@ void Fl_Syntax_Text_Editor::changed_cb(int, int nInserted, int nDeleted, int, co
     o->changed = 1;
   }
   ((UI *)(o->parent()->user_data()))->set_title(o->parent());
+}
+
+int Fl_Syntax_Text_Editor::enter_kf(int, Fl_Text_Editor *e) {
+  kill_selection(e);
+  std::string t = "\n";
+  t+=spaces;
+  e->insert(t.c_str());
+  e->show_insert_position();
+  e->set_changed();
+  if (e->when()&FL_WHEN_CHANGED) e->do_callback();
+  return 1;
 }
 
 std::string Fl_Syntax_Text_Editor::file_string() {
@@ -161,12 +174,41 @@ void Fl_Syntax_Text_Editor::init_highlight() {
   textbuffer->add_modify_callback(style_update, (void*) this);
 }
 
+void Fl_Syntax_Text_Editor::kill_selection(Fl_Text_Editor* e) {
+  if (e->buffer()->selected())
+  {
+    e->insert_position(e->buffer()->primary_selection()->start());
+    e->buffer()->remove_selection();
+  }
+}
+
 void Fl_Syntax_Text_Editor::modify_cb(int pos, int nInserted, int nDeleted, int unused, const char * nada) {
   if(stylebuffer->selected()!=0)
   {
      stylebuffer->unselect();
      return;
   }
+  //get initial spacing
+  if(SPACES)
+  {
+    spaces = "";
+    int start = textbuffer->line_start(pos);
+    int end   = textbuffer->line_end(pos);
+    int init = 0;
+    for(int i = start; i < end; i++)
+    {
+      char A = textbuffer->char_at(i);
+      if ( (' ' == A) || ( '\t' == A) )
+      {
+        spaces+=A;
+        init++;
+      }
+      else
+        break;
+    }
+    //trace("spaces::"+spaces+"::");
+  }
+  
   std::string thisLine;
   if ( (HIGHLIGHT_PLAIN==0)&& (STYLE_HEADER.compare("")==0) )
   {
@@ -324,6 +366,22 @@ void Fl_Syntax_Text_Editor::update_styletable() {
   
   Fl_Text_Display::Style_Table_Entry J; // Broken
   get_styletable(J,9);
+  
+  use_spaces();
+}
+
+void Fl_Syntax_Text_Editor::use_spaces() {
+  remove_key_binding(FL_Enter,FL_TEXT_EDITOR_ANY_STATE);
+  if(SPACES)
+  {
+  //use my function
+    add_key_binding(FL_Enter,FL_TEXT_EDITOR_ANY_STATE,enter_kf);
+  }
+  else
+  {
+  //use default function
+    add_key_binding(FL_Enter,FL_TEXT_EDITOR_ANY_STATE,kf_enter);
+  }
 }
 
 void UI::cb_Close_i(Fl_Button*, void*) {
@@ -747,22 +805,23 @@ void UI::cb_Cancel(Fl_Button* o, void* v) {
 }
 
 void UI::cb_SAVE_i(Fl_Button* o, void*) {
-  FOREGROUND_TEXT = tExt->color();
-BACKGROUND_TEXT = bg->color();
-SIZE_TEXT       = f_s->value();
-LINE_NUMBERS    = l_s->value();
-FONT_TEXT       = font_save->value();
-BUTTON_COLOR    = tool_color->value();
-COMMENT_TEXT    = cm->color();
-STRING_TEXT     = str->color();
-SYMBOLS_TEXT    = symbols->color();
-DIRECTIVE_TEXT  = directives->color();
-TYPE_TEXT       = typezz->color();
-KEYWORD_TEXT    = keywordz->color();
-NUMBER_TEXT     = numbers->color();
-HIGHLIGHT_PLAIN = plain_text->value();
-SPECIAL_TEXT    = special->color();
-BROKEN_TEXT     = broken->color();
+  FOREGROUND_TEXT  = tExt->color();
+BACKGROUND_TEXT  = bg->color();
+SIZE_TEXT        = f_s->value();
+LINE_NUMBERS     = l_s->value();
+FONT_TEXT        = font_save->value();
+BUTTON_COLOR     = tool_color->value();
+COMMENT_TEXT     = cm->color();
+STRING_TEXT      = str->color();
+SYMBOLS_TEXT     = symbols->color();
+DIRECTIVE_TEXT   = directives->color();
+TYPE_TEXT        = typezz->color();
+KEYWORD_TEXT     = keywordz->color();
+NUMBER_TEXT      = numbers->color();
+HIGHLIGHT_PLAIN  = plain_text->value();
+SPECIAL_TEXT     = special->color();
+BROKEN_TEXT      = broken->color();
+INDENT_NEW_LINES = indentor->value();
 if(!save_preferences())
 {
   trace("Failed to save preferences");
@@ -857,7 +916,7 @@ Fl_Double_Window* UI::make_replace() {
 }
 
 Fl_Double_Window* UI::make_window() {
-  { Fl_Double_Window* o = win = new Fl_Double_Window(520, 545, gettext("FLTK Pad"));
+  { Fl_Double_Window* o = win = new Fl_Double_Window(520, 545, gettext("flpad"));
     win->color(FL_DARK1);
     win->user_data((void*)(this));
     { menu = new Fl_Menu_Bar(0, 0, 520, 25);
@@ -1138,7 +1197,7 @@ Fl_Double_Window* UI::pref_window() {
           theme_button->selection_color(FL_DARK_RED);
           make_theme_menu();
         } // Fl_Menu_Button* theme_button
-        { Fl_Check_Button* o = plain_text = new Fl_Check_Button(25, 250, 25, 25, gettext("Highlight Plain text?"));
+        { Fl_Check_Button* o = plain_text = new Fl_Check_Button(25, 250, 25, 25, gettext("Enable Highlighting Plain text"));
           plain_text->tooltip(gettext("Highlight quotes, numbers, brackets, etc... on plain text"));
           plain_text->down_box(FL_GTK_DOWN_BOX);
           plain_text->color((Fl_Color)55);
@@ -1170,6 +1229,14 @@ Fl_Double_Window* UI::pref_window() {
           broken->deactivate();
           o->color( BROKEN_TEXT );
         } // Fl_Button* broken
+        { Fl_Check_Button* o = indentor = new Fl_Check_Button(25, 285, 25, 25, gettext("Enable Auto Indentation"));
+          indentor->tooltip(gettext("This will save the initial spacing from the last EDITED line for the next ENT\
+ER"));
+          indentor->down_box(FL_GTK_DOWN_BOX);
+          indentor->color((Fl_Color)55);
+          indentor->selection_color(FL_GREEN);
+          o->value(INDENT_NEW_LINES);
+        } // Fl_Check_Button* indentor
         syntax->end();
       } // Fl_Group* syntax
       pref_tabs->end();
@@ -1203,7 +1270,11 @@ void UI::add_tab(bool LOAD, bool NEW ) {
   
   Fl_Syntax_Text_Editor* te = new Fl_Syntax_Text_Editor(x,y,w,h);
   te->user_data(o);
-  
+  if(INDENT_NEW_LINES>0)
+  {
+    te->SPACES=true;
+    te->use_spaces();
+  }
   o->user_data(this);
   win->resizable(te);
   o->end();
@@ -1421,6 +1492,7 @@ void UI::close_tab() {
   {
     tabs->clear();
     win->redraw();
+    win->copy_label("flpad");
   }
   else
   {
@@ -1756,15 +1828,20 @@ void UI::get_preferences() {
         subString=line.substr(start,std::string::npos);
         HIGHLIGHT_PLAIN=convert(subString);
       }
+      if(line.find("BR:")<line.length())
+      {
+        subString=line.substr(start,std::string::npos);
+        BROKEN_TEXT=convert(subString);
+      }
       if(line.find("SP:")<line.length())
       {
         subString=line.substr(start,std::string::npos);
         SPECIAL_TEXT=convert(subString);
       }
-      if(line.find("BR:")<line.length())
+      if(line.find("IL:")<line.length())
       {
         subString=line.substr(start,std::string::npos);
-        BROKEN_TEXT=convert(subString);
+        INDENT_NEW_LINES=convert(subString);
       }
     }
   }
@@ -2293,6 +2370,8 @@ bool UI::save_preferences() {
   out+=prefline("SY",SYMBOLS_TEXT);
   out+=prefline("SP",SPECIAL_TEXT);
   out+=prefline("BR",BROKEN_TEXT);
+  out+=prefline("IL",INDENT_NEW_LINES);
+  
   std::ofstream dest;
   std::string fname=get_filename();
   dest.open(fname.c_str());

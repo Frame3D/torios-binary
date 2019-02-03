@@ -89,6 +89,9 @@ decl {\#include <unistd.h>} {public global
 decl {int ret_val;} {public global
 }
 
+decl {std::string spaces;} {public global
+}
+
 decl {std::string return_value;} {public global
 }
 
@@ -112,7 +115,8 @@ int FONT_TEXT;
 int SIZE_TEXT;
 int LINE_NUMBERS;
 int BUTTON_COLOR;
-int HIGHLIGHT_PLAIN;} {public global
+int HIGHLIGHT_PLAIN;
+int INDENT_NEW_LINES;} {public global
 }
 
 decl {std::vector<std::string> SYNTAX_HEADERS;} {public global
@@ -125,40 +129,44 @@ class Fl_Syntax_Text_Editor {open : {public Fl_Text_Editor}
 } {
   Function {Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0):Fl_Text_Editor(x,y,w,h,label)} {open
   } {
-    code {IGNORE_SYNTAX_CASE=false;
+    code {IGNORE_SYNTAX_CASE = false;
+SPACES             = false;
+RELEASE            = false;
+WRAPPED            = false;
+changed            = 0;
+loading            = 0;
+filename           = "";
+textbuffer         = new Fl_Text_Buffer();
+
 this->resize(x,y,w,h);
-//this->label(label);
-changed=0;
-loading=0;
-filename="";
-RELEASE=false;
-//std::cerr<<"Constructor: new Text Editor="<<this<<std::endl;
-textbuffer = new Fl_Text_Buffer();
 this->buffer(textbuffer);
+
 char *style = new char[textbuffer->length() + 1];
 char *text = textbuffer->text();
+
 memset(style, 'A', textbuffer->length());
 stylebuffer = new Fl_Text_Buffer(textbuffer->length());
 style[textbuffer->length()] = '\\0';
+
 init_highlight();
-//style_parse(text, style, textbuffer->length(),12);
+
 stylebuffer->text(style);
-//std::cerr<<"stylebuffer="<<stylebuffer<<std::endl;
+
 delete[] style;
 free(text);
-WRAPPED=false;
+
 box(FL_FLAT_BOX);
-//trace("editor colors");
+
 theme_editor(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);
-//trace("add modify callback");
-textbuffer->add_modify_callback(changed_cb,(void *)this);
-//textbuffer->call_modify_callbacks();
-wrap_mode(Fl_Text_Display::WRAP_NONE, 0);} {}
+
+textbuffer->add_modify_callback(changed_cb,(void *)this);} {}
   }
   Function {~Fl_Syntax_Text_Editor()} {} {
     code {buffer(0);
 textbuffer->remove_modify_callback(style_update, this);
 textbuffer->remove_modify_callback(changed_cb, this);} {}
+  }
+  decl {bool SPACES;} {public global
   }
   decl {bool WRAPPED;} {public global
   }
@@ -200,6 +208,17 @@ if ((nInserted || nDeleted) && !o->loading)
   o->changed = 1;
 }
 ((UI *)(o->parent()->user_data()))->set_title(o->parent());} {}
+  }
+  Function {enter_kf(int, Fl_Text_Editor *e)} {open return_type {static int}
+  } {
+    code {kill_selection(e);
+std::string t = "\\n";
+t+=spaces;
+e->insert(t.c_str());
+e->show_insert_position();
+e->set_changed();
+if (e->when()&FL_WHEN_CHANGED) e->do_callback();
+return 1;} {}
   }
   Function {file_string()} {return_type {std::string}
   } {
@@ -304,13 +323,42 @@ return Fl_Text_Editor::handle(event);} {}
 highlight_data(stylebuffer, styletable, sizeof(styletable) / sizeof(styletable[0]), 'A', style_unfinished_cb, 0);
 textbuffer->add_modify_callback(style_update, (void*) this);} {}
   }
-  Function {modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL)} {return_type void
+  Function {kill_selection(Fl_Text_Editor* e)} {return_type {static void}
+  } {
+    code {if (e->buffer()->selected())
+{
+  e->insert_position(e->buffer()->primary_selection()->start());
+  e->buffer()->remove_selection();
+}} {}
+  }
+  Function {modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL)} {open return_type void
   } {
     code {if(stylebuffer->selected()!=0)
 {
    stylebuffer->unselect();
    return;
 }
+//get initial spacing
+if(SPACES)
+{
+  spaces = "";
+  int start = textbuffer->line_start(pos);
+  int end   = textbuffer->line_end(pos);
+  int init = 0;
+  for(int i = start; i < end; i++)
+  {
+    char A = textbuffer->char_at(i);
+    if ( (' ' == A) || ( '\\t' == A) )
+    {
+      spaces+=A;
+      init++;
+    }
+    else
+      break;
+  }
+  //trace("spaces::"+spaces+"::");
+}
+
 std::string thisLine;
 if ( (HIGHLIGHT_PLAIN==0)&& (STYLE_HEADER.compare("")==0) )
 {
@@ -334,8 +382,7 @@ redisplay_range(0,stylebuffer->length());} {}
 redisplay_range(0,textbuffer->length());
 redraw();} {}
   }
-  Function {set_type(std::string fname)} {open
-  } {
+  Function {set_type(std::string fname)} {} {
     code {std::string dir=fname;
 unsigned int find = dir.rfind("/");
 
@@ -436,7 +483,8 @@ linenumber_size(size);
 update_styletable();
 modify_cb();} {}
   }
-  Function {update_styletable()} {} {
+  Function {update_styletable()} {open
+  } {
     code {Fl_Text_Display::Style_Table_Entry A; //  Plain
 get_styletable(A,0);
 
@@ -465,20 +513,37 @@ Fl_Text_Display::Style_Table_Entry I; // Special
 get_styletable(I,8);
 
 Fl_Text_Display::Style_Table_Entry J; // Broken
-get_styletable(J,9);} {}
+get_styletable(J,9);
+
+use_spaces();} {}
+  }
+  Function {use_spaces()} {} {
+    code {remove_key_binding(FL_Enter,FL_TEXT_EDITOR_ANY_STATE);
+if(SPACES)
+{
+//use my function
+  add_key_binding(FL_Enter,FL_TEXT_EDITOR_ANY_STATE,enter_kf);
+}
+else
+{
+//use default function
+  add_key_binding(FL_Enter,FL_TEXT_EDITOR_ANY_STATE,kf_enter);
+}} {}
   }
 }
 
-class UI {} {
+class UI {open
+} {
   decl {bool RELEASE;} {public local
   }
   Function {UI()} {} {
     code {get_preferences();
 RELEASE=false;} {}
   }
-  Function {about_window()} {} {
+  Function {about_window()} {open
+  } {
     Fl_Window about_win {
-      label About
+      label About open
       xywh {100 148 250 240} type Double hide xclass flpad
     } {
       Fl_Button {} {
@@ -491,7 +556,7 @@ RELEASE=false;} {}
 Copyright 1998-2005 by Bill Spitzak and others.
 
 This version was built for ToriOS
-copyright 2018 Israel Dahl}
+copyright 2018 Israel Dahl} selected
         xywh {0 0 250 200} box FLAT_BOX color 7 align 128
       }
     }
@@ -550,7 +615,7 @@ return;} {}
   Function {make_window()} {open
   } {
     Fl_Window win {
-      label {FLTK Pad} open
+      label flpad open
       xywh {348 120 520 545} type Double color 47 hide
       code1 {o->size_range(o->w(), o->h(), 0, 0);}
       code2 {make_icon(o);} xclass flpad
@@ -751,7 +816,7 @@ Fl_Text_Editor::kf_select_all(0,textor);}
   }
   Function {pref_window()} {} {
     Fl_Window pref_win {
-      label Preferences open
+      label Preferences
       xywh {265 238 310 460} type Double color 46 hide xclass flpad
     } {
       Fl_Tabs pref_tabs {open
@@ -871,7 +936,7 @@ button_style(val);}
             code0 {make_theme_menu();}
           } {}
           Fl_Check_Button plain_text {
-            label {Highlight Plain text?}
+            label {Enable Highlighting Plain text}
             tooltip {Highlight quotes, numbers, brackets, etc... on plain text} xywh {25 250 25 25} down_box GTK_DOWN_BOX color 55 selection_color 63
             code0 {o->value(HIGHLIGHT_PLAIN);}
           }
@@ -893,6 +958,11 @@ button_style(val);}
             tooltip {Broken brackets} xywh {185 170 55 30} box BORDER_BOX color 23 align 129 deactivate
             code0 {o->color( BROKEN_TEXT );}
           }
+          Fl_Check_Button indentor {
+            label {Enable Auto Indentation}
+            tooltip {This will save the initial spacing from the last EDITED line for the next ENTER} xywh {25 285 25 25} down_box GTK_DOWN_BOX color 55 selection_color 63
+            code0 {o->value(INDENT_NEW_LINES);}
+          }
         }
       }
       Fl_Button {} {
@@ -902,22 +972,23 @@ button_style(val);}
       }
       Fl_Button {} {
         label SAVE
-        callback {FOREGROUND_TEXT = tExt->color();
-BACKGROUND_TEXT = bg->color();
-SIZE_TEXT       = f_s->value();
-LINE_NUMBERS    = l_s->value();
-FONT_TEXT       = font_save->value();
-BUTTON_COLOR    = tool_color->value();
-COMMENT_TEXT    = cm->color();
-STRING_TEXT     = str->color();
-SYMBOLS_TEXT    = symbols->color();
-DIRECTIVE_TEXT  = directives->color();
-TYPE_TEXT       = typezz->color();
-KEYWORD_TEXT    = keywordz->color();
-NUMBER_TEXT     = numbers->color();
-HIGHLIGHT_PLAIN = plain_text->value();
-SPECIAL_TEXT    = special->color();
-BROKEN_TEXT     = broken->color();
+        callback {FOREGROUND_TEXT  = tExt->color();
+BACKGROUND_TEXT  = bg->color();
+SIZE_TEXT        = f_s->value();
+LINE_NUMBERS     = l_s->value();
+FONT_TEXT        = font_save->value();
+BUTTON_COLOR     = tool_color->value();
+COMMENT_TEXT     = cm->color();
+STRING_TEXT      = str->color();
+SYMBOLS_TEXT     = symbols->color();
+DIRECTIVE_TEXT   = directives->color();
+TYPE_TEXT        = typezz->color();
+KEYWORD_TEXT     = keywordz->color();
+NUMBER_TEXT      = numbers->color();
+HIGHLIGHT_PLAIN  = plain_text->value();
+SPECIAL_TEXT     = special->color();
+BROKEN_TEXT      = broken->color();
+INDENT_NEW_LINES = indentor->value();
 if(!save_preferences())
 {
   trace("Failed to save preferences");
@@ -929,7 +1000,8 @@ o->parent()->hide();}
       }
     }
   }
-  Function {add_tab(bool LOAD=true, bool NEW = true)} {} {
+  Function {add_tab(bool LOAD=true, bool NEW = true)} {open
+  } {
     code {int y = menu->y()+tabs->y()+add_button->y();
 int h = tabs->h();
 int w = tabs->w();
@@ -940,7 +1012,11 @@ o->copy_label("Untitled");
 
 Fl_Syntax_Text_Editor* te = new Fl_Syntax_Text_Editor(x,y,w,h);
 te->user_data(o);
-
+if(INDENT_NEW_LINES>0)
+{
+  te->SPACES=true;
+  te->use_spaces();
+}
 o->user_data(this);
 win->resizable(te);
 o->end();
@@ -1061,7 +1137,8 @@ cp_button->redraw();
 p_button->redraw();
 cut_button->redraw();} {}
   }
-  Function {change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line)} {} {
+  Function {change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line)} {open
+  } {
     code {FOREGROUND_TEXT=FG;
 BACKGROUND_TEXT=BG;
 SELECTION_TEXT=selection;
@@ -1156,6 +1233,7 @@ if(tabs->children()<=0)
 {
   tabs->clear();
   win->redraw();
+  win->copy_label("flpad");
 }
 else
 {
@@ -1481,15 +1559,20 @@ if(inputFileStrem.is_open())
       subString=line.substr(start,std::string::npos);
       HIGHLIGHT_PLAIN=convert(subString);
     }
+    if(line.find("BR:")<line.length())
+    {
+      subString=line.substr(start,std::string::npos);
+      BROKEN_TEXT=convert(subString);
+    }
     if(line.find("SP:")<line.length())
     {
       subString=line.substr(start,std::string::npos);
       SPECIAL_TEXT=convert(subString);
     }
-    if(line.find("BR:")<line.length())
+    if(line.find("IL:")<line.length())
     {
       subString=line.substr(start,std::string::npos);
-      BROKEN_TEXT=convert(subString);
+      INDENT_NEW_LINES=convert(subString);
     }
   }
 }
@@ -1882,8 +1965,7 @@ if (found)
 else
   fl_alert("No occurrences of \\'%s\\' found!", find);} {}
   }
-  Function {replall_cb()} {open
-  } {
+  Function {replall_cb()} {} {
     code {Fl_Syntax_Text_Editor * E = current_editor();
 if(E==NULL)
   return;
@@ -1997,6 +2079,8 @@ out+=prefline("PT",HIGHLIGHT_PLAIN);
 out+=prefline("SY",SYMBOLS_TEXT);
 out+=prefline("SP",SPECIAL_TEXT);
 out+=prefline("BR",BROKEN_TEXT);
+out+=prefline("IL",INDENT_NEW_LINES);
+
 std::ofstream dest;
 std::string fname=get_filename();
 dest.open(fname.c_str());
@@ -2024,7 +2108,8 @@ else
   ((Fl_Widget *)(textor->user_data()))->labelcolor(NORMAL_COLOR);
 }} {}
   }
-  Function {set_title(Fl_Widget* g)} {} {
+  Function {set_title(Fl_Widget* g)} {open
+  } {
     code {if(g==NULL)
   return;
 std::string title;
@@ -2780,6 +2865,5 @@ if(a[0] == '/')
   }
   V=DIR_LIST;
 }
-return V;} {selected
-  }
+return V;} {}
 }
