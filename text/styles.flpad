@@ -36,10 +36,11 @@ comments=#
 defines=#!
 [haxe]
 ext=hx
-keywords=class,public,var,extends,override,function,new,import,for,in,super,private,package
-types=Int,Float,String,Bool,Void
+keywords=class,public,var,extends,override,function,new,import,for,in,super,private,package,return,if,else,switch,case,default,static,this,super
+types=Int,Float,String,Bool,Void,Map,null,true,false,super,enum,Array
 blockopen=/*
 blockclose=*/
+comments=//
 defines=#
 [flpad]
 ext=flpad
@@ -47,7 +48,8 @@ comments=#
 ## NOTE if editing this in flpad... you will see the block comment
 blockopen=#*
 blockclose=*#
-keywords=ext,keywords,types,blockopen,blockclose,defines,comments,foreground,background,comments,strings,numbers,font,font_size,line_number_size,selection,highlight_plain_text,symbol,button_color,directives
+types=flpad,haxe,sh,c,rust,README,perl,go,c#,conf,javascript,tmx,svg,xml,html,fld,jwmrc
+keywords=special_color,special_open,special_close,broken_color,ext,keywords,types,blockopen,blockclose,defines,comments,foreground,background,comments,strings,numbers,font,font_size,line_number_size,selection,highlight_plain_text,symbol,button_color,directives
 [python]
 ext=py
 keywords=False,None,True,and,as,assert,break,class,continue,def,del,elif,else,except,finally,for,from,global,if,import,in,is,lambda,nonlocal,not,or,pass,raise,return,try,while,with,yield
@@ -81,11 +83,17 @@ ext=svg
 defines=<?
 blockopen=<!--
 blockclose=-->
+special_open=<
+special_close=>
 keywords=text,svg,defs,filter,metadata,g,path,ellipse,linearGradient,stop,rect,flowRoot
 types=width,height,id,transform,d,style,cx,cy,rx,ry,y1,x1,x2,y2,x,y,offset,href,gradientUnits,xml:space
 [xml]
 ext=xml
 defines=<?
+blockopen=<!--
+blockclose=-->
+special_open=<
+special_close=>
 [html]
 ext=html,htm
 keywords=html,head,meta,link,title,body,div,br

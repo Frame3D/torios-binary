@@ -68,10 +68,12 @@ namespace lexertk
    inline void trace(std::string msg){std::cout<<msg<<std::endl;}
 
 //global comment characters
-   std::string OPEN    = "";
-   std::string CLOSE   = "";
-   std::string SINGLE  = "";
-   std::string DEFINES = "";
+   std::string OPEN            = "";
+   std::string CLOSE           = "";
+   std::string SINGLE          = "";
+   std::string DEFINES         = "";
+   std::string OPEN_SPECIAL    = "";
+   std::string CLOSE_SPECIAL   = "";
    namespace details
    {
 
@@ -85,7 +87,26 @@ namespace lexertk
           return false;
         return (def[0]==c0);
       }
-
+      inline bool special_start(const char c0, const char c1)
+      {
+        const char* def = OPEN_SPECIAL.c_str();
+             int length = strlen(def);
+        if( length > 1)
+          return ( (def[0]==c0) && (def[1]==c1) );
+        if(length==0)
+          return false;
+        return (def[0]==c0);
+      }
+      inline bool special_end(const char c0, const char c1)
+      {
+        const char* def = CLOSE_SPECIAL.c_str();
+             int length = strlen(def);
+        if( length > 1)
+          return ( (def[0]==c0) && (def[1]==c1) );
+        if(length==0)
+          return false;
+        return (def[0]==c0);
+      }
       inline bool is_whitespace(const char c)
       {
          return (' '  == c) || ('\n' == c) ||
@@ -117,6 +138,8 @@ namespace lexertk
 
       inline bool is_operator_char(const char c)
       {
+         const char* ops = OPEN_SPECIAL.c_str();
+         const char* cls = CLOSE_SPECIAL.c_str();
          return ('+' == c) || ('-' == c) ||
                 ('*' == c) || ('/' == c) ||
                 ('^' == c) || ('<' == c) ||
@@ -127,7 +150,8 @@ namespace lexertk
                 ('{' == c) || ('}' == c) ||
                 ('%' == c) || (':' == c) ||
                 ('?' == c) || ('&' == c) ||
-                ('|' == c) || (';' == c);
+                ('|' == c) || (';' == c) ||
+                (ops[0] == c) || (cls[0] == c);
       }
 
       inline bool is_letter(const char c)
@@ -285,7 +309,7 @@ namespace lexertk
                    mode = 2;
                    incr = strlen(open);
                  }
-         else if ( single[0] == c0 ) { mode = 1; incr = 1; }
+         else if ( ( single[0] == c0 ) && (strlen(single) == 1) ) { mode = 1; incr = 1; }
          else if ( single[1] == c1 ) { mode = 1; incr = strlen(single); }
 
          return ( mode != 0 );
@@ -318,7 +342,7 @@ namespace lexertk
          e_comment     = 777, e_err_comment = 888, e_whitespace  = 999,
          e_type        = 778, e_keyword     = 889, e_newline     ='\n',
          e_return      = '\r',e_tab         ='\t', e_bracket     = 998,
-         e_define      = 997
+         e_define      = 997, e_special     = 995, e_broken      = 994
       };
 
       token()
@@ -449,6 +473,15 @@ namespace lexertk
          return *this;
       }
       template <typename Iterator>
+      inline token& set_special(const Iterator begin, const Iterator end, const Iterator base_begin = Iterator(0))
+      {
+         type = e_special;
+         value.assign(begin,end);
+         if (base_begin)
+            position = std::distance(base_begin,begin);
+         return *this;
+      }
+      template <typename Iterator>
       inline token& set_error(const token_type et, const Iterator begin, const Iterator end, const Iterator base_begin = Iterator(0))
       {
          if (
@@ -527,14 +560,16 @@ namespace lexertk
       }
       static inline std::string to_type(token_type t)
       {
-         const char* PLAIN_TEXT = "A";
-         const char* COMMENT_TEXT = "B";
+         const char* PLAIN_TEXT     = "A";
+         const char* COMMENT_TEXT   = "B";
          const char* DIRECTIVE_TEXT = "C";
-         const char* STRING_TEXT = "D";
-         const char* SYMBOL_TEXT = "E";
-         const char* TYPE_TEXT = "F";
-         const char* KEYWORD_TEXT = "G";
-         const char* NUMBER_TEXT = "H";
+         const char* STRING_TEXT    = "D";
+         const char* SYMBOL_TEXT    = "E";
+         const char* TYPE_TEXT      = "F";
+         const char* KEYWORD_TEXT   = "G";
+         const char* NUMBER_TEXT    = "H";
+         const char* SPECIAL_TEXT   = "I";
+         const char* BROKEN_TEXT    = "J";
          switch (t)
          {
             case e_number      : return NUMBER_TEXT;
@@ -554,6 +589,8 @@ namespace lexertk
             case e_return      : return "\r";
             case e_eq          : return SYMBOL_TEXT;
             case e_define      : return DIRECTIVE_TEXT;
+            case e_special     : return SPECIAL_TEXT;
+            case e_broken      : return BROKEN_TEXT;
             default            : return PLAIN_TEXT;
          }
       }
@@ -589,6 +626,11 @@ namespace lexertk
         s_end_(0)
       {
          clear();
+      }
+      inline void set_special(std::string open, std::string close)
+      {
+        OPEN_SPECIAL=open;
+        CLOSE_SPECIAL=close;
       }
 
       inline void set_comments(std::string open, std::string close, std::string single)
@@ -779,8 +821,6 @@ namespace lexertk
          t.set_define(begin,s_itr_,base_itr_);
          token_list_.push_back(t);
       }
-
-//DONT SKIP... actually report comments
       inline void scan_comments()
       {
          int mode = 0;
@@ -809,7 +849,36 @@ namespace lexertk
             scan_comments();
          }
       }
+      inline void scan_special()
+      {
+         if (is_end(s_itr_))
+            return;
+         else if (! details::special_start( *s_itr_,*(s_itr_+1) ))
+            return;
 
+         token t;
+         int len = OPEN_SPECIAL.length();
+         const char* begin = s_itr_;
+
+         if (details::is_operator_char(*s_itr_))
+         {
+           t.set_as_operator(begin,s_itr_+len,base_itr_);
+           token_list_.push_back(t);
+         }
+         s_itr_ = s_itr_ + len;
+         begin = s_itr_;
+         while (!is_end(s_itr_) && !details::is_whitespace(*s_itr_) && !details::special_end( *s_itr_,*(s_itr_+1) ))
+         {
+            ++s_itr_;
+         }
+         t.set_special(begin,s_itr_,base_itr_);
+         token_list_.push_back(t);
+         if (!is_end(s_itr_))
+         {
+            scan_special();
+         }
+
+      }
       inline void scan_token()
       {
          scan_whitespace();
@@ -828,6 +897,11 @@ namespace lexertk
          else if ( ('\'' == (*s_itr_)) || ('\"' == (*s_itr_)) )
          {
             scan_string(*s_itr_);
+            return;
+         }
+         else if ( details::special_start( *s_itr_,*(s_itr_+1) ) )
+         {
+            scan_special();
             return;
          }
          else if (details::is_operator_char(*s_itr_))

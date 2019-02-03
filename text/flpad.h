@@ -46,6 +46,8 @@ unsigned int NUMBER_TEXT;
 unsigned int KEYWORD_TEXT;
 unsigned int TYPE_TEXT;
 unsigned int SYMBOLS_TEXT;
+unsigned int SPECIAL_TEXT;
+unsigned int BROKEN_TEXT;
 int FONT_TEXT;
 int SIZE_TEXT;
 int LINE_NUMBERS;
@@ -60,7 +62,7 @@ public:
   ~Fl_Syntax_Text_Editor();
   bool WRAPPED; 
   bool RELEASE; 
-  Fl_Text_Display::Style_Table_Entry styletable[8]; 
+  Fl_Text_Display::Style_Table_Entry styletable[10]; 
   Fl_Text_Buffer * stylebuffer; 
   Fl_Text_Buffer * textbuffer; 
   std::string filename; 
@@ -86,6 +88,7 @@ public:
   static void style_update(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL, void *cbArg = NULL);
   static void style_unfinished_cb(int, void*);
   void theme_editor(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size,int linenum );
+  void update_styletable();
 };
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Button.H>
@@ -326,6 +329,16 @@ public:
 private:
   inline void cb_directives_i(Fl_Button*, void*);
   static void cb_directives(Fl_Button*, void*);
+public:
+  Fl_Button *special;
+private:
+  inline void cb_special_i(Fl_Button*, void*);
+  static void cb_special(Fl_Button*, void*);
+public:
+  Fl_Button *broken;
+private:
+  inline void cb_broken_i(Fl_Button*, void*);
+  static void cb_broken(Fl_Button*, void*);
   inline void cb_Cancel_i(Fl_Button*, void*);
   static void cb_Cancel(Fl_Button*, void*);
   inline void cb_SAVE_i(Fl_Button*, void*);
@@ -391,13 +404,13 @@ public:
   void wordwrap();
 };
 std::vector<std::string> comma_line(std::string lang,std::string field);
-unsigned int convert(std::string num);
+unsigned int convert(std::string num, int default_value=0);
 std::string get(std::string header, std::string line);
 std::string get_syntax_file();
 std::string get_theme_file();
 std::string get_type(std::string fname);
 std::vector<std::string> get_themes();
-int get_theme(std::string theme, std::string item);
+int get_theme(std::string theme, std::string item, int default_value=0);
 bool is_space(const char x);
 std::vector <std::string> keywords(std::string header);
 int main(int argc, char **argv);

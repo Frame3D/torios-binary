@@ -1,5 +1,7 @@
 flpad
 add more languages to styles.flpad
+add in ability to parse /usr/bin for shell keywords
+add in brakcet checker?
 
 flrun
 make command history, perhaps drop down box...
