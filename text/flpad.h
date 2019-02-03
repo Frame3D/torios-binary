@@ -407,6 +407,7 @@ std::vector<std::string> comma_line(std::string lang,std::string field);
 unsigned int convert(std::string num, int default_value=0);
 std::string get(std::string header, std::string line);
 std::string get_syntax_file();
+std::vector<std::string> get_syntax_headers();
 std::string get_theme_file();
 std::string get_type(std::string fname);
 std::vector<std::string> get_themes();
@@ -418,5 +419,4 @@ std::vector<std::string> make_vec(std::string string_to_become_vector,std::strin
 void trace(std::string MSG, int n = 0);
 bool test_file(std::string file);
 std::vector <std::string> types(std::string header);
-std::vector<std::string> get_syntax_headers();
 #endif

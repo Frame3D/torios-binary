@@ -232,7 +232,7 @@ void Fl_Syntax_Text_Editor::set_type(std::string fname) {
   generator.set_keywords(KEYWORDS);
   generator.set_types(TYPES);
   
-  trace("set syntax type for: "+fname+" to:"+STYLE_HEADER);
+  //trace("set syntax type for: "+fname+" to:"+STYLE_HEADER);
 }
 
 std::string Fl_Syntax_Text_Editor::style_line(std::string thisLine) {
@@ -748,7 +748,6 @@ NUMBER_TEXT     = numbers->color();
 HIGHLIGHT_PLAIN = plain_text->value();
 SPECIAL_TEXT    = special->color();
 BROKEN_TEXT     = broken->color();
-
 if(!save_preferences())
 {
   trace("Failed to save preferences");
@@ -1022,7 +1021,6 @@ Fl_Double_Window* UI::pref_window() {
       pref_tabs->box(FL_FLAT_BOX);
       { gen = new Fl_Group(0, 25, 310, 395, gettext("General"));
         gen->selection_color((Fl_Color)43);
-        gen->hide();
         { Fl_Browser* o = font_b = new Fl_Browser(5, 55, 290, 175, gettext("Font"));
           font_b->tooltip(gettext("Browse system installed fonts"));
           font_b->type(2);
@@ -1113,6 +1111,7 @@ Fl_Double_Window* UI::pref_window() {
       } // Fl_Group* gen
       { syntax = new Fl_Group(0, 25, 310, 395, gettext("Syntax Highlighting"));
         syntax->selection_color((Fl_Color)43);
+        syntax->hide();
         { Fl_Button* o = cm = new Fl_Button(25, 65, 55, 30, gettext("Comments"));
           cm->tooltip(gettext("The color of comments"));
           cm->box(FL_BORDER_BOX);
@@ -1457,20 +1456,37 @@ void UI::close_tab() {
 void UI::colorize_syntax_buttons() {
   cm->color(COMMENT_TEXT);
   cm->redraw();
+  
   str->color(STRING_TEXT);
   str->redraw();
+  
+  symbols->color(SYMBOLS_TEXT);
+  symbols->redraw();
+  
   directives->color(DIRECTIVE_TEXT);
   directives->redraw();
+  
   typezz->color(TYPE_TEXT);
   typezz->redraw();
+  
   keywordz->color(KEYWORD_TEXT);
   keywordz->redraw();
+  
   numbers->color(NUMBER_TEXT);
   numbers->redraw();
-  pref_win->show();
-  pref_tabs->value(syntax);
-  tExt->color(FOREGROUND_TEXT);
+  
   bg->color(BACKGROUND_TEXT);
+  bg->redraw();
+  
+  tExt->color(FOREGROUND_TEXT);
+  tExt->redraw();
+  
+  broken->color(BROKEN_TEXT);
+  broken->redraw();
+  
+  special->color(SPECIAL_TEXT);
+  special->redraw();
+  
   tExt->redraw();
   bg->redraw();
 }
@@ -1782,7 +1798,6 @@ void UI::get_preferences() {
 }
 
 void UI::get_theme_from_config(std::string theme) {
-  trace("theme="+theme);
   //COLORS
   FOREGROUND_TEXT = get_theme( theme, "foreground",           FOREGROUND_TEXT );
   BACKGROUND_TEXT = get_theme( theme, "background",           BACKGROUND_TEXT );
@@ -1806,38 +1821,7 @@ void UI::get_theme_from_config(std::string theme) {
   ///modify the window
   
   //colors
-  cm->color(COMMENT_TEXT);
-  cm->redraw();
-  
-  str->color(STRING_TEXT);
-  str->redraw();
-  
-  symbols->color(SYMBOLS_TEXT);
-  symbols->redraw();
-  
-  directives->color(DIRECTIVE_TEXT);
-  directives->redraw();
-  
-  typezz->color(TYPE_TEXT);
-  typezz->redraw();
-  
-  keywordz->color(KEYWORD_TEXT);
-  keywordz->redraw();
-  
-  numbers->color(NUMBER_TEXT);
-  numbers->redraw();
-  
-  bg->color(BACKGROUND_TEXT);
-  bg->redraw();
-  
-  tExt->color(FOREGROUND_TEXT);
-  tExt->redraw();
-  
-  broken->color(BROKEN_TEXT);
-  broken->redraw();
-  
-  special->color(SPECIAL_TEXT);
-  special->redraw();
+  colorize_syntax_buttons();
   
   //etc
   f_s->value(SIZE_TEXT);
@@ -1924,6 +1908,8 @@ std::string UI::input(std::string MSG, std::string text, std::string ok, std::st
   o1->selection_color((Fl_Color)80);
   o1->copy_label(MSG.c_str());
   o1->value(text.c_str());
+  o1->callback(ask_cb,1);
+  o1->when(FL_WHEN_ENTER_KEY);
   Fl_Button* o2 = new Fl_Button(200, 40, 75, 30);
   o2->box(FL_FLAT_BOX);
   o2->color((Fl_Color)62);
@@ -2404,7 +2390,7 @@ void UI::set_title(Fl_Widget* g) {
     // is there a path???  add it!!
     Ti = Ti + "(" + full + ")";
   }
-  trace("Title="+title);
+  //trace("Title="+title);
   win->copy_label(Ti.c_str());
   g->copy_label(title.c_str());
   g->copy_tooltip(fname.c_str());
@@ -2428,7 +2414,6 @@ void UI::theme_menu_cb(Fl_Widget* o, void* v) {
   const char* txt=p->label();
   if(txt==NULL)
     return;
-  trace(txt);
   ((UI*)(p->user_data()))->get_theme_from_config(txt);
 }
 
@@ -2515,7 +2500,6 @@ std::string get(std::string header, std::string line) {
       }
       if(this_line.find(find_header)<this_line.length())
       {
-        trace("FOUND:"+find_header);
         found_after_this=true;
       }
       /** if found return it immediately */
@@ -2557,7 +2541,7 @@ std::string get_syntax_file() {
     home_tester = home_config;
     home_tester = home_tester + "/" + base_name;
   }
-  trace(home_tester);
+  
   if(test_file(home_tester))
   {
     SYNTAX_FILE=home_tester;
@@ -2581,6 +2565,34 @@ std::string get_syntax_file() {
   return SYNTAX_FILE;
 }
 
+std::vector<std::string> get_syntax_headers() {
+  std::vector<std::string> V;
+  std::string filename = get_syntax_file();
+  if(filename.compare("")==0){return V;}
+  
+  
+  //parse the syntax highlighter file
+  std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
+  /** check if the input file stream is open */
+  if(inputFileStrem.is_open())
+  {
+    std::string this_line;
+    std::string h="";
+    while (getline(inputFileStrem,this_line))
+    {
+      
+      if(this_line.find("[")<=1)
+      {
+         unsigned int open_bracket=this_line.find("[");
+         unsigned int close_bracket=this_line.find("]");
+         h=this_line.substr(open_bracket+1,close_bracket-1);
+         V.push_back(h);
+      }
+    }
+  }
+  return V;
+}
+
 std::string get_theme_file() {
   std::string base_name = "flpad/themes.flpad";
   std::string tmp;
@@ -2601,7 +2613,6 @@ std::string get_theme_file() {
     home_tester = home_config;
     home_tester = home_tester + "/" + base_name;
   }
-  trace(home_tester);
   if(test_file(home_tester))
   {
     tmp=home_tester;
@@ -2639,9 +2650,7 @@ std::string get_type(std::string fname) {
   {
     std::string tmp=fname;
     tmp=tmp.substr(dot,std::string::npos);
-    trace("<"+tmp+">");
     ext=tmp;
-    trace(ext);
   }
   
   /// get the shebang
@@ -2672,7 +2681,6 @@ std::string get_type(std::string fname) {
     {
       std::string tmp=*itr;
       std::string c="."+tmp;
-      trace("compare:"+c+" with:"+ext);
       if(c.compare(ext)==0)
       {
         return tmp;
@@ -2693,7 +2701,7 @@ std::string get_type(std::string fname) {
   unsigned int f_dot = EXT.find(".");
   if(f_dot<EXT.length())
     EXT=EXT.substr(f_dot+1,std::string::npos);
-  //trace("extention="+EXT);
+  
   //get the syntax highlighter file
   std::string filename = get_syntax_file();
   if(filename.compare("")==0){return "";}
@@ -2716,20 +2724,17 @@ std::string get_type(std::string fname) {
          unsigned int open_bracket=this_line.find("[");
          unsigned int close_bracket=this_line.find("]");
          HEADER=this_line.substr(open_bracket+1,close_bracket-1);
-         trace("["+HEADER+"]");
       }
       unsigned int eq = this_line.find("=");
       if(this_line.find(line)<this_line.length())
       {
         this_line=this_line.substr(eq+1,std::string::npos);
-        trace(this_line+"::"+EXT);
         std::vector<std::string> V = make_vec(this_line,",");
         for( std::vector<std::string>::iterator itr = V.begin();
                                                 itr!=V.end();
                                                 ++itr)
         {
           std::string tmp=*itr;
-          //trace(tmp+"=="+EXT);
           if(tmp.compare(EXT)==0)
             return HEADER;
         }
@@ -2777,7 +2782,6 @@ int get_theme(std::string theme, std::string item, int default_value) {
   //this is the line we are looking for
   std::string line=item;
   
-  trace(item);
   //parse the syntax highlighter file
   std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
   /** check if the input file stream is open */
@@ -2803,7 +2807,6 @@ int get_theme(std::string theme, std::string item, int default_value) {
         if(this_line.find(line)<eq)
         {
           this_line=this_line.substr(eq+1,std::string::npos);
-          //trace("color="+this_line);
           return convert(this_line,default_value);
         }
       }
@@ -2958,32 +2961,4 @@ bool test_file(std::string file) {
 
 std::vector <std::string> types(std::string header) {
   return comma_line(header, "types");
-}
-
-std::vector<std::string> get_syntax_headers() {
-  std::vector<std::string> V;
-  std::string filename = get_syntax_file();
-  if(filename.compare("")==0){return V;}
-  
-  
-  //parse the syntax highlighter file
-  std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
-  /** check if the input file stream is open */
-  if(inputFileStrem.is_open())
-  {
-    std::string this_line;
-    std::string h="";
-    while (getline(inputFileStrem,this_line))
-    {
-      
-      if(this_line.find("[")<=1)
-      {
-         unsigned int open_bracket=this_line.find("[");
-         unsigned int close_bracket=this_line.find("]");
-         h=this_line.substr(open_bracket+1,close_bracket-1);
-         V.push_back(h);
-      }
-    }
-  }
-  return V;
 }
