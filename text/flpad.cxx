@@ -35,6 +35,7 @@ Fl_Syntax_Text_Editor::Fl_Syntax_Text_Editor(int x, int y, int w, int h, const c
   //trace("add modify callback");
   textbuffer->add_modify_callback(changed_cb,(void *)this);
   //textbuffer->call_modify_callbacks();
+  wrap_mode(Fl_Text_Display::WRAP_NONE, 0);
 }
 
 Fl_Syntax_Text_Editor::~Fl_Syntax_Text_Editor() {
@@ -478,28 +479,28 @@ void UI::cb_About(Fl_Menu_* o, void* v) {
 unsigned char UI::menu_menu_i18n_done = 0;
 Fl_Menu_Item UI::menu_menu[] = {
  {"&File", 0,  0, 0, 64, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"&New", 0,  (Fl_Callback*)UI::cb_New, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"&Open", 0,  (Fl_Callback*)UI::cb_Open, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"&Insert", 0,  (Fl_Callback*)UI::cb_Insert, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"&Save", 0,  (Fl_Callback*)UI::cb_Save, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"Save &As...", 0,  (Fl_Callback*)UI::cb_Save1, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"&Exit", 0,  (Fl_Callback*)UI::cb_Exit, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"&New", 0x4006e,  (Fl_Callback*)UI::cb_New, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"&Open", 0x4006f,  (Fl_Callback*)UI::cb_Open, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"&Insert", 0x50069,  (Fl_Callback*)UI::cb_Insert, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"&Save", 0x40073,  (Fl_Callback*)UI::cb_Save, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"Save &As...", 0x50073,  (Fl_Callback*)UI::cb_Save1, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"&Exit", 0x40071,  (Fl_Callback*)UI::cb_Exit, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {0,0,0,0,0,0,0,0,0},
  {"&Edit", 0,  0, 0, 64, (uchar)FL_NORMAL_LABEL, 0, 16, 0},
- {"&Undo", 0,  (Fl_Callback*)UI::cb_Undo, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"&Cut", 0,  (Fl_Callback*)UI::cb_Cut, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 16, 0},
- {"&Copy", 0,  (Fl_Callback*)UI::cb_Copy, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"&Paste", 0,  (Fl_Callback*)UI::cb_Paste, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"Select &All", 0,  (Fl_Callback*)UI::cb_Select, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"&Preferences", 0,  (Fl_Callback*)UI::cb_Preferences, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"&Word Wrap Toggle", 0,  (Fl_Callback*)UI::cb_Word, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"&Undo", 0x4007a,  (Fl_Callback*)UI::cb_Undo, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"&Cut", 0x40078,  (Fl_Callback*)UI::cb_Cut, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 16, 0},
+ {"&Copy", 0x40063,  (Fl_Callback*)UI::cb_Copy, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"&Paste", 0x40076,  (Fl_Callback*)UI::cb_Paste, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"Select &All", 0x40061,  (Fl_Callback*)UI::cb_Select, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"&Preferences", 0xffbe,  (Fl_Callback*)UI::cb_Preferences, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"&Word Wrap Toggle", 0x4006a,  (Fl_Callback*)UI::cb_Word, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {0,0,0,0,0,0,0,0,0},
  {"&Search", 0,  0, 0, 64, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"&Find", 0,  (Fl_Callback*)UI::cb_Find, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"F&ind Next", 0,  (Fl_Callback*)UI::cb_F, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"&Replace", 0,  (Fl_Callback*)UI::cb_Replace, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"Re&place Next", 0,  (Fl_Callback*)UI::cb_Re, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
- {"&Go to Line", 0,  (Fl_Callback*)UI::cb_Go, 0, 17, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"&Find", 0x40066,  (Fl_Callback*)UI::cb_Find, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"F&ind Next", 0x40067,  (Fl_Callback*)UI::cb_F, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"&Replace", 0x40068,  (Fl_Callback*)UI::cb_Replace, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"Re&place Next", 0x40074,  (Fl_Callback*)UI::cb_Re, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"&Go to Line", 0x40069,  (Fl_Callback*)UI::cb_Go, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {0,0,0,0,0,0,0,0,0},
  {"&Help", 0,  0, 0, 64, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {"&About", 0,  (Fl_Callback*)UI::cb_About, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
@@ -855,48 +856,6 @@ Fl_Double_Window* UI::make_window() {
       menu->textsize(16);
       menu->textcolor(FL_BACKGROUND2_COLOR);
       menu->align(Fl_Align(260));
-      { Fl_Menu_Item* o = &menu_menu[1];
-        o->shortcut(FL_COMMAND+'n');
-      }
-      { Fl_Menu_Item* o = &menu_menu[2];
-        o->shortcut(FL_COMMAND+'o');
-      }
-      { Fl_Menu_Item* o = &menu_menu[3];
-        o->shortcut(FL_COMMAND+'i');
-      }
-      { Fl_Menu_Item* o = &menu_menu[4];
-        o->shortcut(FL_COMMAND+'s');
-      }
-      { Fl_Menu_Item* o = &menu_menu[5];
-        o->shortcut(FL_COMMAND+FL_SHIFT+'s');
-      }
-      { Fl_Menu_Item* o = &menu_menu[9];
-        o->shortcut(FL_COMMAND+'z');
-      }
-      { Fl_Menu_Item* o = &menu_menu[10];
-        o->shortcut(FL_COMMAND+'x');
-      }
-      { Fl_Menu_Item* o = &menu_menu[11];
-        o->shortcut(FL_COMMAND+'c');
-      }
-      { Fl_Menu_Item* o = &menu_menu[12];
-        o->shortcut(FL_COMMAND+'v');
-      }
-      { Fl_Menu_Item* o = &menu_menu[13];
-        o->shortcut(FL_COMMAND+'a');
-      }
-      { Fl_Menu_Item* o = &menu_menu[18];
-        o->shortcut(FL_COMMAND+'f');
-      }
-      { Fl_Menu_Item* o = &menu_menu[19];
-        o->shortcut(FL_COMMAND+'g');
-      }
-      { Fl_Menu_Item* o = &menu_menu[20];
-        o->shortcut(FL_COMMAND+'r');
-      }
-      { Fl_Menu_Item* o = &menu_menu[21];
-        o->shortcut(FL_COMMAND+'t');
-      }
       if (!menu_menu_i18n_done) {
         int i=0;
         for ( ; i<26; i++)
@@ -1004,7 +963,6 @@ Fl_Double_Window* UI::make_window() {
       button_style(BUTTON_COLOR);
       tabs->end();
     } // Fl_Tabs* tabs
-    //Fl::event_dispatch(handle);
     o->size_range(o->w(), o->h(), 0, 0);
     make_icon(o);
     win->xclass("flpad");
@@ -1225,20 +1183,25 @@ void UI::add_tab(bool LOAD, bool NEW ) {
   int h = tabs->h();
   int w = tabs->w();
   int x = tabs->x();
+  tabs->client_area(x,y,w,h);
   Fl_Group* o = new Fl_Group(x, y, w, h);
   o->copy_label("Untitled");
-  Fl_Syntax_Text_Editor* te = new Fl_Syntax_Text_Editor(x, y,w, h);
+  
+  Fl_Syntax_Text_Editor* te = new Fl_Syntax_Text_Editor(x,y,w,h);
   te->user_data(o);
+  
   o->user_data(this);
   win->resizable(te);
-  //te->when(3);
   o->end();
+  
   tabs->resizable(o);
   tabs->add(o);
   tabs->redraw();
   tabs->value(o);
+  
   if(LOAD)
     open_file(NEW);
+  
   refresh_all();
 }
 
@@ -1836,9 +1799,9 @@ void UI::get_theme_from_config(std::string theme) {
 }
 
 void UI::goto_cb() {
-  const char * val;
-  val = fl_input("Go to line #:","");
-  if(val)
+  std::string val;
+  val = input("Go to line #:");
+  if(val.compare("")!=0)
   {
     goto_line(convert(val));
   }
@@ -1846,7 +1809,9 @@ void UI::goto_cb() {
 
 void UI::goto_line(int pos) {
   Fl_Text_Editor * E = current_editor();
-  E->insert_position(E->line_start(pos));
+  E->scroll(pos,0);
+  E->take_focus();
+  std::cout<<E->insert_position()<<std::endl;
 }
 
 int UI::handle(int event, Fl_Window *o) {

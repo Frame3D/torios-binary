@@ -373,7 +373,7 @@ protected:
   static int handle(int event, Fl_Window *o);
 public:
   static void handle_menu(Fl_Widget *w, void *v);
-  std::string input(std::string MSG, std::string text, std::string ok="OK", std::string cancel="Cancel");
+  std::string input(std::string MSG, std::string text="", std::string ok="OK", std::string cancel="Cancel");
   void insert_cb();
   void load_file(std::string newfile, int ipos,bool NEW=true);
   void make_icon(Fl_Window *o);

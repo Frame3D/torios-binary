@@ -45,6 +45,8 @@ defines=#
 [flpad]
 ext=flpad
 comments=#
+special_open=<
+special_close=>
 ## NOTE if editing this in flpad... you will see the block comment
 blockopen=#*
 blockclose=*#

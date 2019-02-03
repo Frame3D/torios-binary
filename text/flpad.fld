@@ -121,9 +121,10 @@ decl {std::vector<std::string> SYNTAX_HEADERS;} {public global
 decl {std::string SYNTAX_FILE;} {public global
 }
 
-class Fl_Syntax_Text_Editor {: {public Fl_Text_Editor}
+class Fl_Syntax_Text_Editor {open : {public Fl_Text_Editor}
 } {
-  Function {Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0):Fl_Text_Editor(x,y,w,h,label)} {} {
+  Function {Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0):Fl_Text_Editor(x,y,w,h,label)} {open
+  } {
     code {this->resize(x,y,w,h);
 //this->label(label);
 changed=0;
@@ -150,7 +151,9 @@ box(FL_FLAT_BOX);
 theme_editor(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);
 //trace("add modify callback");
 textbuffer->add_modify_callback(changed_cb,(void *)this);
-//textbuffer->call_modify_callbacks();} {}
+//textbuffer->call_modify_callbacks();
+wrap_mode(Fl_Text_Display::WRAP_NONE, 0);} {selected
+    }
   }
   Function {~Fl_Syntax_Text_Editor()} {} {
     code {buffer(0);
@@ -299,7 +302,7 @@ return Fl_Text_Editor::handle(event);} {}
 highlight_data(stylebuffer, styletable, sizeof(styletable) / sizeof(styletable[0]), 'A', style_unfinished_cb, 0);
 textbuffer->add_modify_callback(style_update, (void*) this);} {}
   }
-  Function {modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL)} {return_type void
+  Function {modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL)} {open return_type void
   } {
     code {if(stylebuffer->selected()!=0)
 {
@@ -529,11 +532,11 @@ return;} {}
       }
     }
   }
-  Function {make_window()} {} {
+  Function {make_window()} {open
+  } {
     Fl_Window win {
       label {FLTK Pad} open
       xywh {348 120 520 545} type Double color 47 hide
-      code0 {//Fl::event_dispatch(handle);}
       code1 {o->size_range(o->w(), o->h(), 0, 0);}
       code2 {make_icon(o);} xclass flpad
     } {
@@ -547,66 +550,57 @@ return;} {}
           MenuItem {} {
             label {&New}
             callback {new_cb();}
-            xywh {0 0 100 20}
-            code0 {o->shortcut(FL_COMMAND+'n');}
+            xywh {0 0 100 20} shortcut 0x4006e
           }
           MenuItem {} {
             label {&Open}
             callback {open_cb();}
-            xywh {0 0 100 20}
-            code0 {o->shortcut(FL_COMMAND+'o');}
+            xywh {0 0 100 20} shortcut 0x4006f
           }
           MenuItem {} {
             label {&Insert}
             callback {insert_cb();}
-            xywh {0 0 100 20}
-            code0 {o->shortcut(FL_COMMAND+'i');}
+            xywh {0 0 100 20} shortcut 0x50069
           }
           MenuItem {} {
             label {&Save}
             callback {save_cb();}
-            xywh {0 0 100 20}
-            code0 {o->shortcut(FL_COMMAND+'s');}
+            xywh {0 0 100 20} shortcut 0x40073
           }
           MenuItem {} {
             label {Save &As...}
             callback {saveas_cb();}
-            xywh {10 10 100 20}
-            code0 {o->shortcut(FL_COMMAND+FL_SHIFT+'s');}
+            xywh {10 10 100 20} shortcut 0x50073
           }
           MenuItem {} {
             label {&Exit}
             callback {quit_cb();}
-            xywh {0 0 100 20}
+            xywh {0 0 100 20} shortcut 0x40071
           }
         }
         Submenu {} {
-          label {&Edit} open
+          label {&Edit}
           xywh {0 0 100 25} labelsize 16
         } {
           MenuItem {} {
             label {&Undo}
             callback {undo_cb();}
-            xywh {0 0 100 20}
-            code0 {o->shortcut(FL_COMMAND+'z');}
+            xywh {0 0 100 20} shortcut 0x4007a
           }
           MenuItem {} {
             label {&Cut}
             callback {cut_cb();}
-            xywh {0 0 100 20} labelsize 16
-            code0 {o->shortcut(FL_COMMAND+'x');}
+            xywh {0 0 100 20} shortcut 0x40078 labelsize 16
           }
           MenuItem {} {
             label {&Copy}
             callback {copy_cb();}
-            xywh {0 0 100 20}
-            code0 {o->shortcut(FL_COMMAND+'c');}
+            xywh {0 0 100 20} shortcut 0x40063
           }
           MenuItem {} {
             label {&Paste}
             callback {paste_cb();}
-            xywh {0 0 100 20}
-            code0 {o->shortcut(FL_COMMAND+'v');}
+            xywh {0 0 100 20} shortcut 0x40076
           }
           MenuItem {} {
             label {Select &All}
@@ -614,18 +608,17 @@ return;} {}
 if(textor==NULL)
   return;
 Fl_Text_Editor::kf_select_all(0,textor);}
-            xywh {10 10 100 20}
-            code0 {o->shortcut(FL_COMMAND+'a');}
+            xywh {10 10 100 20} shortcut 0x40061
           }
           MenuItem {} {
             label {&Preferences}
             callback {pref_window()->show();}
-            xywh {0 0 100 20}
+            xywh {0 0 100 20} shortcut 0xffbe
           }
           MenuItem {} {
             label {&Word Wrap Toggle}
             callback {wordwrap();}
-            xywh {0 0 100 20}
+            xywh {0 0 100 20} shortcut 0x4006a
           }
         }
         Submenu {} {
@@ -635,35 +628,31 @@ Fl_Text_Editor::kf_select_all(0,textor);}
           MenuItem {} {
             label {&Find}
             callback {find_cb();}
-            xywh {0 0 100 20}
-            code0 {o->shortcut(FL_COMMAND+'f');}
+            xywh {0 0 100 20} shortcut 0x40066
           }
           MenuItem {} {
             label {F&ind Next}
             callback {find2_cb();}
-            xywh {0 0 100 20}
-            code0 {o->shortcut(FL_COMMAND+'g');}
+            xywh {0 0 100 20} shortcut 0x40067
           }
           MenuItem {} {
             label {&Replace}
             callback {replace_cb();}
-            xywh {0 0 100 20}
-            code0 {o->shortcut(FL_COMMAND+'r');}
+            xywh {0 0 100 20} shortcut 0x40068
           }
           MenuItem {} {
             label {Re&place Next}
             callback {replace2_cb();}
-            xywh {0 0 100 20}
-            code0 {o->shortcut(FL_COMMAND+'t');}
+            xywh {0 0 100 20} shortcut 0x40074
           }
           MenuItem {} {
             label {&Go to Line}
             callback {goto_cb();}
-            xywh {0 0 100 20} hide deactivate
+            xywh {0 0 100 20} shortcut 0x40069
           }
         }
         Submenu {} {
-          label {&Help} open
+          label {&Help}
           xywh {0 0 100 20}
         } {
           MenuItem {} {
@@ -745,8 +734,7 @@ Fl_Text_Editor::kf_select_all(0,textor);}
       } {}
     }
   }
-  Function {pref_window()} {open
-  } {
+  Function {pref_window()} {} {
     Fl_Window pref_win {
       label Preferences open
       xywh {265 238 310 460} type Double color 46 hide xclass flpad
@@ -926,25 +914,31 @@ o->parent()->hide();}
       }
     }
   }
-  Function {add_tab(bool LOAD=true, bool NEW = true)} {} {
+  Function {add_tab(bool LOAD=true, bool NEW = true)} {open
+  } {
     code {int y = menu->y()+tabs->y()+add_button->y();
 int h = tabs->h();
 int w = tabs->w();
 int x = tabs->x();
+tabs->client_area(x,y,w,h);
 Fl_Group* o = new Fl_Group(x, y, w, h);
 o->copy_label("Untitled");
-Fl_Syntax_Text_Editor* te = new Fl_Syntax_Text_Editor(x, y,w, h);
+
+Fl_Syntax_Text_Editor* te = new Fl_Syntax_Text_Editor(x,y,w,h);
 te->user_data(o);
+
 o->user_data(this);
 win->resizable(te);
-//te->when(3);
 o->end();
+
 tabs->resizable(o);
 tabs->add(o);
 tabs->redraw();
 tabs->value(o);
+
 if(LOAD)
   open_file(NEW);
+
 refresh_all();} {}
   }
   Function {ask(std::string MSG, std::string yes="Yes", std::string no="No", std::string other="")} {return_type int
@@ -1155,8 +1149,7 @@ else
 }
 tabs->redraw();} {}
   }
-  Function {colorize_syntax_buttons()} {open
-  } {
+  Function {colorize_syntax_buttons()} {} {
     code {cm->color(COMMENT_TEXT);
 cm->redraw();
 
@@ -1490,8 +1483,7 @@ else
   trace(fname+" does not exist yet");
 }} {}
   }
-  Function {get_theme_from_config(std::string theme)} {open
-  } {
+  Function {get_theme_from_config(std::string theme)} {} {
     code {//COLORS
 FOREGROUND_TEXT = get_theme( theme, "foreground",           FOREGROUND_TEXT );
 BACKGROUND_TEXT = get_theme( theme, "background",           BACKGROUND_TEXT );
@@ -1529,16 +1521,19 @@ tool_color->value(BUTTON_COLOR);
 plain_text->value(HIGHLIGHT_PLAIN);} {}
   }
   Function {goto_cb()} {} {
-    code {const char * val;
-val = fl_input("Go to line \#:","");
-if(val)
+    code {std::string val;
+val = input("Go to line \#:");
+if(val.compare("")!=0)
 {
   goto_line(convert(val));
 }} {}
   }
-  Function {goto_line(int pos)} {} {
+  Function {goto_line(int pos)} {open
+  } {
     code {Fl_Text_Editor * E = current_editor();
-E->insert_position(E->line_start(pos));} {}
+E->scroll(pos,0);
+E->take_focus();
+std::cout<<E->insert_position()<<std::endl;} {}
   }
   Function {handle(int event, Fl_Window *o)} {protected return_type {static int}
   } {
@@ -1592,7 +1587,7 @@ switch(static_cast<int>(reinterpret_cast<long>(v)))
     break;
 }} {}
   }
-  Function {input(std::string MSG, std::string text, std::string ok="OK", std::string cancel="Cancel")} {return_type {std::string}
+  Function {input(std::string MSG, std::string text="", std::string ok="OK", std::string cancel="Cancel")} {return_type {std::string}
   } {
     code {Fl_Double_Window* w = new Fl_Double_Window(285, 75);
 Fl_Input* o1 = new Fl_Input(125, 5, 150, 30);
@@ -1873,7 +1868,8 @@ if (found)
 else
   fl_alert("No occurrences of \\'%s\\' found!", find);} {}
   }
-  Function {replall_cb()} {} {
+  Function {replall_cb()} {open
+  } {
     code {Fl_Syntax_Text_Editor * E = current_editor();
 if(E==NULL)
   return;
@@ -2084,8 +2080,7 @@ const Fl_Menu_Item *p = m->mvalue();
 const char* txt=p->label();
 if(txt==NULL)
   return;
-((UI*)(p->user_data()))->get_theme_from_config(txt);} {selected
-    }
+((UI*)(p->user_data()))->get_theme_from_config(txt);} {}
   }
   Function {undo_cb()} {} {
     code {Fl_Syntax_Text_Editor * textor = current_editor();
@@ -2093,7 +2088,8 @@ if(textor==NULL)
   return;
 Fl_Text_Editor::kf_undo(0,textor);} {}
   }
-  Function {wordwrap()} {} {
+  Function {wordwrap()} {open
+  } {
     code {Fl_Syntax_Text_Editor * E = current_editor();
 std::string fname="";
 if(E==NULL)
