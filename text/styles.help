@@ -1,0 +1,43 @@
+Syntax file format:
+[NAME]
+ext=LIST
+keywords=LIST
+types=LIST
+comments=CHARACTER
+blockopen=CHARACTER
+blockclose=CHARACTER
+defines=CHARACTER
+special_open=CHARACTER
+special_close=CHARACTER
+filename=CHARACTER
+
+LIST is a comma separated list:
+item1,item2,item3,item4
+OR (spaces are ignored)
+item1 , item2, item3   ,  item4
+
+CHARACTER is a single word, or set of characters
+
+Some Details:
+
+ext is the file extentions used to define this file
+
+filename is a specific file that this applies to.
+This will ignore file extentions is a matching filename
+is found.
+
+comments are single line comments
+
+blockopen and blockclose are for multi-line comments
+
+defines are for preprocessor defines, or other single line uses
+
+special_open, and special_close are space or close
+terminated special strings
+
+keywords are reserved words (like if, else, return)
+
+types are data types (like int, char, double)
+
+keywords and types can be used for whatever words you want
+to highlight, and can be used in any fashion you deem useful.

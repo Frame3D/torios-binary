@@ -11,9 +11,6 @@ created from the FLTK tutorial using FLUID to design the UI
 created as part of the ToriOS project} {in_source in_header
 }
 
-decl {\#include <netinet/in.h>} {public global
-}
-
 decl {\#include "lexertk.hpp"} {public global
 }
 
@@ -125,10 +122,9 @@ decl {std::vector<std::string> SYNTAX_HEADERS;} {public global
 decl {std::string SYNTAX_FILE;} {public global
 }
 
-class Fl_Syntax_Text_Editor {open : {public Fl_Text_Editor}
+class Fl_Syntax_Text_Editor {: {public Fl_Text_Editor}
 } {
-  Function {Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0):Fl_Text_Editor(x,y,w,h,label)} {open
-  } {
+  Function {Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0):Fl_Text_Editor(x,y,w,h,label)} {} {
     code {IGNORE_SYNTAX_CASE = false;
 SPACES             = false;
 RELEASE            = false;
@@ -536,28 +532,26 @@ class UI {open
 } {
   decl {bool RELEASE;} {public local
   }
+  decl {Fl_Text_Buffer *about_buffer;} {public global
+  }
   Function {UI()} {} {
     code {get_preferences();
 RELEASE=false;} {}
   }
-  Function {about_window()} {open
-  } {
+  Function {about_window()} {} {
     Fl_Window about_win {
       label About open
-      xywh {100 148 250 240} type Double hide xclass flpad
+      xywh {744 141 305 370} type Double hide resizable
+      code0 {about_buffer = new Fl_Text_Buffer();}
+      code1 {make_icon(o);} xclass flpad
     } {
+      Fl_Text_Display about_dialog {
+        xywh {0 0 305 320} box FLAT_BOX selection_color 72 resizable
+      }
       Fl_Button {} {
         label Close
-        callback {about_win->hide();}
-        xywh {160 205 80 30} box FLAT_BOX color 80 labelcolor 7
-      }
-      Fl_Box {} {
-        label {Designed in FLUID, based on the FLTK tutorial
-Copyright 1998-2005 by Bill Spitzak and others.
-
-This version was built for ToriOS
-copyright 2018 Israel Dahl} selected
-        xywh {0 0 250 200} box FLAT_BOX color 7 align 128
+        callback {o->parent()->hide();}
+        xywh {220 330 80 30} box FLAT_BOX color 80 labelcolor 7
       }
     }
   }
@@ -584,7 +578,8 @@ return;} {}
   Function {make_replace()} {} {
     Fl_Window replace_dlg {
       label {Find and Replace} open
-      xywh {100 148 375 100} type Double hide xclass flpad
+      xywh {100 148 375 100} type Double hide
+      code0 {make_icon(o);} xclass flpad
     } {
       Fl_Input replace_find {
         label Find
@@ -620,7 +615,71 @@ return;} {}
       code1 {o->size_range(o->w(), o->h(), 0, 0);}
       code2 {make_icon(o);} xclass flpad
     } {
-      Fl_Menu_Bar menu {
+      Fl_Group buttons {
+        xywh {0 25 520 30} box FLAT_BOX
+      } {
+        Fl_Button add_button {
+          label {@+}
+          callback {add_tab(false);}
+          tooltip {Add a Tab} xywh {492 27 25 25} box FLAT_BOX color 23
+        }
+        Fl_Button remove_button {
+          callback {close_tab();}
+          tooltip {Remove current Tab} xywh {463 27 25 25} box FLAT_BOX color 23 labelfont 1 labelsize 18
+          code0 {o->image(close_image);}
+        }
+        Fl_Button open_button {
+          callback {open_cb();}
+          tooltip Open xywh {5 27 25 25} box FLAT_BOX labelfont 1
+          code0 {o->image(color_open_image);}
+        }
+        Fl_Button save_button {
+          callback {save_cb();}
+          tooltip Save xywh {35 27 25 25} box FLAT_BOX labelfont 1
+          code0 {o->image(color_save_image);}
+        }
+        Fl_Button new_button {
+          callback {new_cb();}
+          tooltip New xywh {65 27 25 25} box FLAT_BOX labelfont 1
+          code0 {o->image(color_new_image);}
+        }
+        Fl_Button undo_button {
+          callback {undo_cb();}
+          tooltip Undo xywh {95 27 25 25} box FLAT_BOX labelfont 1
+          code0 {o->image(color_undo_image);}
+        }
+        Fl_Button find_button {
+          callback {find_cb();}
+          tooltip Find xywh {145 27 25 25} box FLAT_BOX labelfont 1
+          code0 {o->image(color_search_image);}
+        }
+        Fl_Button replace_button {
+          callback {replace_cb();}
+          tooltip Replace xywh {175 27 25 25} box FLAT_BOX labelfont 1
+          code0 {o->image(color_replace_image);}
+        }
+        Fl_Button cp_button {
+          callback {copy_cb();}
+          tooltip {Copy current selection} xywh {220 27 25 25} box FLAT_BOX labelfont 1
+          code0 {o->image(color_copy_image);}
+        }
+        Fl_Button p_button {
+          callback {paste_cb();}
+          tooltip {Paste current clipboard} xywh {250 27 25 25} box FLAT_BOX labelfont 1
+          code0 {o->image(color_paste_image);}
+        }
+        Fl_Button settings_button {
+          callback {pref_window()->show();}
+          tooltip Settings xywh {430 27 25 25} box FLAT_BOX labelfont 1
+          code0 {o->image(settings_image);}
+        }
+        Fl_Button cut_button {
+          callback {cut_cb();}
+          tooltip {Paste current clipboard} xywh {280 27 25 25} box FLAT_BOX labelfont 1
+          code0 {o->image(color_cut_image);}
+        }
+      }
+      Fl_Menu_Bar menu {open
         xywh {0 0 520 25} box FLAT_BOX down_box FLAT_BOX color 39 selection_color 80 labelsize 16 labelcolor 7 align 260 textsize 16 textcolor 7
       } {
         Submenu {} {
@@ -732,78 +791,24 @@ Fl_Text_Editor::kf_select_all(0,textor);}
           }
         }
         Submenu {} {
-          label {&Help}
+          label {&Help} open
           xywh {0 0 100 20}
         } {
           MenuItem {} {
             label {&About}
-            callback {about_window()->show();}
+            callback {check_file("about");}
             xywh {0 0 100 20}
           }
-        }
-      }
-      Fl_Group buttons {
-        xywh {0 25 520 30} box FLAT_BOX
-      } {
-        Fl_Button add_button {
-          label {@+}
-          callback {add_tab(false);}
-          tooltip {Add a Tab} xywh {492 27 25 25} box FLAT_BOX color 23
-        }
-        Fl_Button remove_button {
-          callback {close_tab();}
-          tooltip {Remove current Tab} xywh {463 27 25 25} box FLAT_BOX color 23 labelfont 1 labelsize 18
-          code0 {o->image(close_image);}
-        }
-        Fl_Button open_button {
-          callback {open_cb();}
-          tooltip Open xywh {5 27 25 25} box FLAT_BOX labelfont 1
-          code0 {o->image(color_open_image);}
-        }
-        Fl_Button save_button {
-          callback {save_cb();}
-          tooltip Save xywh {35 27 25 25} box FLAT_BOX labelfont 1
-          code0 {o->image(color_save_image);}
-        }
-        Fl_Button new_button {
-          callback {new_cb();}
-          tooltip New xywh {65 27 25 25} box FLAT_BOX labelfont 1
-          code0 {o->image(color_new_image);}
-        }
-        Fl_Button undo_button {
-          callback {undo_cb();}
-          tooltip Undo xywh {95 27 25 25} box FLAT_BOX labelfont 1
-          code0 {o->image(color_undo_image);}
-        }
-        Fl_Button find_button {
-          callback {find_cb();}
-          tooltip Find xywh {145 27 25 25} box FLAT_BOX labelfont 1
-          code0 {o->image(color_search_image);}
-        }
-        Fl_Button replace_button {
-          callback {replace_cb();}
-          tooltip Replace xywh {175 27 25 25} box FLAT_BOX labelfont 1
-          code0 {o->image(color_replace_image);}
-        }
-        Fl_Button cp_button {
-          callback {copy_cb();}
-          tooltip {Copy current selection} xywh {220 27 25 25} box FLAT_BOX labelfont 1
-          code0 {o->image(color_copy_image);}
-        }
-        Fl_Button p_button {
-          callback {paste_cb();}
-          tooltip {Paste current clipboard} xywh {250 27 25 25} box FLAT_BOX labelfont 1
-          code0 {o->image(color_paste_image);}
-        }
-        Fl_Button settings_button {
-          callback {pref_window()->show();}
-          tooltip Settings xywh {430 27 25 25} box FLAT_BOX labelfont 1
-          code0 {o->image(settings_image);}
-        }
-        Fl_Button cut_button {
-          callback {cut_cb();}
-          tooltip {Paste current clipboard} xywh {280 27 25 25} box FLAT_BOX labelfont 1
-          code0 {o->image(color_cut_image);}
+          MenuItem {} {
+            label {&Syntax Highlighter}
+            callback {check_file("syntax.help","Syntax Highlighter");}
+            xywh {10 10 100 20}
+          }
+          MenuItem {} {
+            label {&Theme Creation}
+            callback {check_file("styles.help","Theme Creation");} selected
+            xywh {20 20 100 20}
+          }
         }
       }
       Fl_Tabs tabs {
@@ -817,7 +822,8 @@ Fl_Text_Editor::kf_select_all(0,textor);}
   Function {pref_window()} {} {
     Fl_Window pref_win {
       label Preferences
-      xywh {265 238 310 460} type Double color 46 hide xclass flpad
+      xywh {265 238 310 460} type Double color 46 hide
+      code0 {make_icon(o);} xclass flpad
     } {
       Fl_Tabs pref_tabs {open
         xywh {0 0 310 420} box FLAT_BOX
@@ -1000,8 +1006,7 @@ o->parent()->hide();}
       }
     }
   }
-  Function {add_tab(bool LOAD=true, bool NEW = true)} {open
-  } {
+  Function {add_tab(bool LOAD=true, bool NEW = true)} {} {
     code {int y = menu->y()+tabs->y()+add_button->y();
 int h = tabs->h();
 int w = tabs->w();
@@ -1137,8 +1142,7 @@ cp_button->redraw();
 p_button->redraw();
 cut_button->redraw();} {}
   }
-  Function {change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line)} {open
-  } {
+  Function {change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line)} {} {
     code {FOREGROUND_TEXT=FG;
 BACKGROUND_TEXT=BG;
 SELECTION_TEXT=selection;
@@ -1153,6 +1157,39 @@ for(int i = 0; i < tabs->children();i++)
   Fl_Syntax_Text_Editor * e = (Fl_Syntax_Text_Editor *)tab->child(0);
   e->theme_editor(FG,BG,selection,font,size,line);
 }} {}
+  }
+  Function {check_file(std::string file,std::string title="About")} {} {
+    code {about_window()->show();
+about_win->wait_for_expose();
+std::string tmp = get_flpad_dir(file);
+//trace("got:"+tmp);
+about_win->wait_for_expose();
+about_win->copy_label(title.c_str());
+if(tmp.compare("")==0)
+{
+  std::string res = "Designed in FLUID, based on the FLTK tutorial\\
+Copyright 1998-2005 by Bill Spitzak and others.\\
+\\
+lexertk.hpp was created by Arash Partow, and\\
+heavily modified to provide syntax highlighting.\\
+\\
+colored icons were inspired by:\\
+numixproject/numix-icon-theme-circle\\
+though all were hand coded xpm files.\\
+\\
+This version was built for ToriOS\\
+copyright 2018 Israel Dahl";
+  char* RES = const_cast <char*> (res.c_str());
+  about_win->wait_for_expose();
+  about_buffer->text(RES);
+}
+else
+{
+  //return;
+  about_buffer->loadfile(file.c_str());
+}
+
+about_dialog->buffer(about_buffer);} {}
   }
   Function {check_save()} {return_type int
   } {
@@ -1196,8 +1233,7 @@ if(txt==NULL)
 trace(txt);
 ((UI*)(p->user_data()))->pick_tab(txt);} {}
   }
-  Function {close_tab()} {open
-  } {
+  Function {close_tab()} {} {
     code {Fl_Widget * E = tabs->value();
 if(E==NULL)
 {
@@ -2108,8 +2144,7 @@ else
   ((Fl_Widget *)(textor->user_data()))->labelcolor(NORMAL_COLOR);
 }} {}
   }
-  Function {set_title(Fl_Widget* g)} {open
-  } {
+  Function {set_title(Fl_Widget* g)} {} {
     code {if(g==NULL)
   return;
 std::string title;
@@ -2207,7 +2242,7 @@ else
   }
 }
 
-Function {comma_line(std::string lang,std::string field, bool ignore_case = false)} {open return_type {std::vector<std::string>}
+Function {comma_line(std::string lang,std::string field, bool ignore_case = false)} {return_type {std::vector<std::string>}
 } {
   code {//get the line from the file
 std::string LINE=get(lang,field);
@@ -2240,7 +2275,7 @@ catch(const std::out_of_range e){return default_value;}
 return NUM;} {}
 }
 
-Function {dir_vector(std::string DIRECTORY)} {open return_type {std::vector<std::string>}
+Function {dir_vector(std::string DIRECTORY)} {return_type {std::vector<std::string>}
 } {
   code {//trace("dir_vector:"+DIRECTORY);
 std::vector<std::string> myVector;
@@ -2324,12 +2359,26 @@ if(inputFileStrem.is_open())
 return "";} {}
 }
 
-Function {get_syntax_file()} {return_type {std::string}
+Function {get_flpad_dir( std::string base_name)} {return_type {std::string}
 } {
-  code {std::string base_name = "flpad/styles.flpad";
-if(SYNTAX_FILE.compare("")!=0)
-  return SYNTAX_FILE;
-//testing
+  code {std::string tester = "/usr/share/flpad/";
+std::string res="";
+if(test_file(tester+base_name))
+{
+  res=tester+base_name;
+}
+else
+{
+  tester = "/usr/local/share/flpad/";
+  if(test_file(tester+base_name))
+    res=tester+base_name;
+}
+return res;} {}
+}
+
+Function {get_flpad_home_dir( std::string base_name)} {return_type {std::string}
+} {
+  code {//testing
 std::string home_tester;
 const char* home_config = getenv("XDG_CONFIG_HOME");
 if(home_config == NULL)
@@ -2338,31 +2387,39 @@ if(home_config == NULL)
   if(home_config != NULL)
   {
     home_tester=home_config;
-    home_tester =home_tester + "/.config/" + base_name;
+    home_tester =home_tester + "/.config/flpad/" + base_name;
   }
 }
 else
 {
   home_tester = home_config;
-  home_tester = home_tester + "/" + base_name;
+  home_tester = home_tester + "/flpad/" + base_name;
 }
 
 if(test_file(home_tester))
+{
+  return home_tester;
+}
+return "";} {}
+}
+
+Function {get_syntax_file()} {return_type {std::string}
+} {
+  code {std::string base_name = "styles.flpad";
+if(SYNTAX_FILE.compare("")!=0)
+  return SYNTAX_FILE;
+//testing
+std::string home_tester=get_flpad_home_dir(base_name);
+if(home_tester.compare("")!=0)
 {
   SYNTAX_FILE=home_tester;
 }
 else
 {
-  std::string tester = "/usr/share/";
-  if(test_file(tester+base_name))
+  std::string tester = get_flpad_dir(base_name);
+  if(tester.compare("")!=0)
   {
-    SYNTAX_FILE=tester+base_name;
-  }
-  else
-  {
-    tester = "/usr/local/share/";
-    if(test_file(tester+base_name))
-      SYNTAX_FILE=tester+base_name;
+    SYNTAX_FILE=tester;
   }
 }
 if(SYNTAX_FILE.compare("")==0)
@@ -2401,49 +2458,25 @@ return V;} {}
 
 Function {get_theme_file()} {return_type {std::string}
 } {
-  code {std::string base_name = "flpad/themes.flpad";
+  code {std::string base_name = "themes.flpad";
 std::string tmp;
-//testing
-std::string home_tester;
-const char* home_config = getenv("XDG_CONFIG_HOME");
-if(home_config == NULL)
-{
-  home_config = getenv("HOME");
-  if(home_config != NULL)
-  {
-    home_tester=home_config;
-    home_tester =home_tester + "/.config/" + base_name;
-  }
-}
-else
-{
-  home_tester = home_config;
-  home_tester = home_tester + "/" + base_name;
-}
-if(test_file(home_tester))
+std::string home_tester=get_flpad_home_dir(base_name);
+if(home_tester.compare("")!=0)
 {
   tmp=home_tester;
 }
 else
 {
-  std::string tester = "/usr/share/";
-  if(test_file(tester+base_name))
+  std::string tester = get_flpad_dir(base_name);
+  if(tester.compare("")!=0)
   {
-    tmp=tester+base_name;
-  }
-  else
-  {
-    tester = "/usr/local/share/";
-    if(test_file(tester+base_name))
-      tmp=tester+base_name;
+    tmp=tester;
   }
 }
-if(tmp.compare("")==0)
-  trace("No THEME file found...");
 return tmp;} {}
 }
 
-Function {get_type(std::string fname)} {open return_type {std::string}
+Function {get_type(std::string fname)} {return_type {std::string}
 } {
   code {SYNTAX_HEADERS=get_syntax_headers();
 if(!test_file(fname))
@@ -2601,7 +2634,7 @@ if(inputFileStrem.is_open())
 return THEMES;} {}
 }
 
-Function {get_theme(std::string theme, std::string item, int default_value=0)} {open return_type int
+Function {get_theme(std::string theme, std::string item, int default_value=0)} {return_type int
 } {
   code {std::string filename = get_theme_file();
 if(filename.compare("")==0){return default_value;}
@@ -2687,6 +2720,8 @@ try
       }
     }
   }
+  ui->about_window()->show();
+  ui->about_win->hide();
   return Fl::run();
 }
 catch (const std::exception& e)
@@ -2843,7 +2878,7 @@ if(mydir!=NULL)
 return false;} {}
 }
 
-Function {types(std::string header, bool ignore_case = false)} {open return_type {std::vector <std::string>}
+Function {types(std::string header, bool ignore_case = false)} {return_type {std::vector <std::string>}
 } {
   code {std::vector<std::string> V = comma_line(header, "types", ignore_case);
 if(V.empty())

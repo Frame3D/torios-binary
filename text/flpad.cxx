@@ -384,8 +384,8 @@ void Fl_Syntax_Text_Editor::use_spaces() {
   }
 }
 
-void UI::cb_Close_i(Fl_Button*, void*) {
-  about_win->hide();
+void UI::cb_Close_i(Fl_Button* o, void*) {
+  o->parent()->hide();
 }
 void UI::cb_Close(Fl_Button* o, void* v) {
   ((UI*)(o->parent()->user_data()))->cb_Close_i(o,v);
@@ -410,6 +410,90 @@ void UI::cb_replace_next_i(Fl_Button*, void*) {
 }
 void UI::cb_replace_next(Fl_Button* o, void* v) {
   ((UI*)(o->parent()->user_data()))->cb_replace_next_i(o,v);
+}
+
+void UI::cb_add_button_i(Fl_Button*, void*) {
+  add_tab(false);
+}
+void UI::cb_add_button(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->user_data()))->cb_add_button_i(o,v);
+}
+
+void UI::cb_remove_button_i(Fl_Button*, void*) {
+  close_tab();
+}
+void UI::cb_remove_button(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->user_data()))->cb_remove_button_i(o,v);
+}
+
+void UI::cb_open_button_i(Fl_Button*, void*) {
+  open_cb();
+}
+void UI::cb_open_button(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->user_data()))->cb_open_button_i(o,v);
+}
+
+void UI::cb_save_button_i(Fl_Button*, void*) {
+  save_cb();
+}
+void UI::cb_save_button(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->user_data()))->cb_save_button_i(o,v);
+}
+
+void UI::cb_new_button_i(Fl_Button*, void*) {
+  new_cb();
+}
+void UI::cb_new_button(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->user_data()))->cb_new_button_i(o,v);
+}
+
+void UI::cb_undo_button_i(Fl_Button*, void*) {
+  undo_cb();
+}
+void UI::cb_undo_button(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->user_data()))->cb_undo_button_i(o,v);
+}
+
+void UI::cb_find_button_i(Fl_Button*, void*) {
+  find_cb();
+}
+void UI::cb_find_button(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->user_data()))->cb_find_button_i(o,v);
+}
+
+void UI::cb_replace_button_i(Fl_Button*, void*) {
+  replace_cb();
+}
+void UI::cb_replace_button(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->user_data()))->cb_replace_button_i(o,v);
+}
+
+void UI::cb_cp_button_i(Fl_Button*, void*) {
+  copy_cb();
+}
+void UI::cb_cp_button(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->user_data()))->cb_cp_button_i(o,v);
+}
+
+void UI::cb_p_button_i(Fl_Button*, void*) {
+  paste_cb();
+}
+void UI::cb_p_button(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->user_data()))->cb_p_button_i(o,v);
+}
+
+void UI::cb_settings_button_i(Fl_Button*, void*) {
+  pref_window()->show();
+}
+void UI::cb_settings_button(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->user_data()))->cb_settings_button_i(o,v);
+}
+
+void UI::cb_cut_button_i(Fl_Button*, void*) {
+  cut_cb();
+}
+void UI::cb_cut_button(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->user_data()))->cb_cut_button_i(o,v);
 }
 
 void UI::cb_New_i(Fl_Menu_*, void*) {
@@ -542,10 +626,24 @@ void UI::cb_Go(Fl_Menu_* o, void* v) {
 }
 
 void UI::cb_About_i(Fl_Menu_*, void*) {
-  about_window()->show();
+  check_file("about");
 }
 void UI::cb_About(Fl_Menu_* o, void* v) {
   ((UI*)(o->parent()->user_data()))->cb_About_i(o,v);
+}
+
+void UI::cb_Syntax_i(Fl_Menu_*, void*) {
+  check_file("syntax.help","Syntax Highlighter");
+}
+void UI::cb_Syntax(Fl_Menu_* o, void* v) {
+  ((UI*)(o->parent()->user_data()))->cb_Syntax_i(o,v);
+}
+
+void UI::cb_Theme_i(Fl_Menu_*, void*) {
+  check_file("styles.help","Theme Creation");
+}
+void UI::cb_Theme(Fl_Menu_* o, void* v) {
+  ((UI*)(o->parent()->user_data()))->cb_Theme_i(o,v);
 }
 
 unsigned char UI::menu_menu_i18n_done = 0;
@@ -576,93 +674,11 @@ Fl_Menu_Item UI::menu_menu[] = {
  {0,0,0,0,0,0,0,0,0},
  {"&Help", 0,  0, 0, 64, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {"&About", 0,  (Fl_Callback*)UI::cb_About, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"&Syntax Highlighter", 0,  (Fl_Callback*)UI::cb_Syntax, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"&Theme Creation", 0,  (Fl_Callback*)UI::cb_Theme, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {0,0,0,0,0,0,0,0,0},
  {0,0,0,0,0,0,0,0,0}
 };
-
-void UI::cb_add_button_i(Fl_Button*, void*) {
-  add_tab(false);
-}
-void UI::cb_add_button(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->parent()->user_data()))->cb_add_button_i(o,v);
-}
-
-void UI::cb_remove_button_i(Fl_Button*, void*) {
-  close_tab();
-}
-void UI::cb_remove_button(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->parent()->user_data()))->cb_remove_button_i(o,v);
-}
-
-void UI::cb_open_button_i(Fl_Button*, void*) {
-  open_cb();
-}
-void UI::cb_open_button(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->parent()->user_data()))->cb_open_button_i(o,v);
-}
-
-void UI::cb_save_button_i(Fl_Button*, void*) {
-  save_cb();
-}
-void UI::cb_save_button(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->parent()->user_data()))->cb_save_button_i(o,v);
-}
-
-void UI::cb_new_button_i(Fl_Button*, void*) {
-  new_cb();
-}
-void UI::cb_new_button(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->parent()->user_data()))->cb_new_button_i(o,v);
-}
-
-void UI::cb_undo_button_i(Fl_Button*, void*) {
-  undo_cb();
-}
-void UI::cb_undo_button(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->parent()->user_data()))->cb_undo_button_i(o,v);
-}
-
-void UI::cb_find_button_i(Fl_Button*, void*) {
-  find_cb();
-}
-void UI::cb_find_button(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->parent()->user_data()))->cb_find_button_i(o,v);
-}
-
-void UI::cb_replace_button_i(Fl_Button*, void*) {
-  replace_cb();
-}
-void UI::cb_replace_button(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->parent()->user_data()))->cb_replace_button_i(o,v);
-}
-
-void UI::cb_cp_button_i(Fl_Button*, void*) {
-  copy_cb();
-}
-void UI::cb_cp_button(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->parent()->user_data()))->cb_cp_button_i(o,v);
-}
-
-void UI::cb_p_button_i(Fl_Button*, void*) {
-  paste_cb();
-}
-void UI::cb_p_button(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->parent()->user_data()))->cb_p_button_i(o,v);
-}
-
-void UI::cb_settings_button_i(Fl_Button*, void*) {
-  pref_window()->show();
-}
-void UI::cb_settings_button(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->parent()->user_data()))->cb_settings_button_i(o,v);
-}
-
-void UI::cb_cut_button_i(Fl_Button*, void*) {
-  cut_cb();
-}
-void UI::cb_cut_button(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->parent()->user_data()))->cb_cut_button_i(o,v);
-}
 
 void UI::cb_tabs_i(Fl_Tabs* o, void*) {
   set_title(o->value());
@@ -840,21 +856,21 @@ UI::UI() {
 }
 
 Fl_Double_Window* UI::about_window() {
-  { about_win = new Fl_Double_Window(250, 240, gettext("About"));
+  { Fl_Double_Window* o = about_win = new Fl_Double_Window(305, 370, gettext("About"));
     about_win->user_data((void*)(this));
-    { Fl_Button* o = new Fl_Button(160, 205, 80, 30, gettext("Close"));
+    { about_dialog = new Fl_Text_Display(0, 0, 305, 320);
+      about_dialog->box(FL_FLAT_BOX);
+      about_dialog->selection_color(FL_DARK_RED);
+      Fl_Group::current()->resizable(about_dialog);
+    } // Fl_Text_Display* about_dialog
+    { Fl_Button* o = new Fl_Button(220, 330, 80, 30, gettext("Close"));
       o->box(FL_FLAT_BOX);
       o->color((Fl_Color)80);
       o->labelcolor(FL_BACKGROUND2_COLOR);
       o->callback((Fl_Callback*)cb_Close);
     } // Fl_Button* o
-    { Fl_Box* o = new Fl_Box(0, 0, 250, 200, gettext("Designed in FLUID, based on the FLTK tutorial\nCopyright 1998-2005 by Bill Sp\
-itzak and others.\n\nThis version was built for ToriOS\ncopyright 2018 Israel \
-Dahl"));
-      o->box(FL_FLAT_BOX);
-      o->color(FL_BACKGROUND2_COLOR);
-      o->align(Fl_Align(FL_ALIGN_WRAP));
-    } // Fl_Box* o
+    about_buffer = new Fl_Text_Buffer();
+    make_icon(o);
     about_win->xclass("flpad");
     about_win->end();
   } // Fl_Double_Window* about_win
@@ -883,7 +899,7 @@ void UI::make_popup(Fl_Widget *o) {
 }
 
 Fl_Double_Window* UI::make_replace() {
-  { replace_dlg = new Fl_Double_Window(375, 100, gettext("Find and Replace"));
+  { Fl_Double_Window* o = replace_dlg = new Fl_Double_Window(375, 100, gettext("Find and Replace"));
     replace_dlg->user_data((void*)(this));
     { replace_find = new Fl_Input(70, 5, 295, 25, gettext("Find"));
       replace_find->box(FL_FLAT_BOX);
@@ -909,6 +925,7 @@ Fl_Double_Window* UI::make_replace() {
       replace_next->labelcolor(FL_BACKGROUND2_COLOR);
       replace_next->callback((Fl_Callback*)cb_replace_next);
     } // Fl_Button* replace_next
+    make_icon(o);
     replace_dlg->xclass("flpad");
     replace_dlg->end();
   } // Fl_Double_Window* replace_dlg
@@ -919,25 +936,6 @@ Fl_Double_Window* UI::make_window() {
   { Fl_Double_Window* o = win = new Fl_Double_Window(520, 545, gettext("flpad"));
     win->color(FL_DARK1);
     win->user_data((void*)(this));
-    { menu = new Fl_Menu_Bar(0, 0, 520, 25);
-      menu->box(FL_FLAT_BOX);
-      menu->down_box(FL_FLAT_BOX);
-      menu->color(FL_DARK3);
-      menu->selection_color((Fl_Color)80);
-      menu->labelsize(16);
-      menu->labelcolor(FL_BACKGROUND2_COLOR);
-      menu->textsize(16);
-      menu->textcolor(FL_BACKGROUND2_COLOR);
-      menu->align(Fl_Align(260));
-      if (!menu_menu_i18n_done) {
-        int i=0;
-        for ( ; i<26; i++)
-          if (menu_menu[i].label())
-            menu_menu[i].label(gettext(menu_menu[i].label()));
-        menu_menu_i18n_done = 1;
-      }
-      menu->menu(menu_menu);
-    } // Fl_Menu_Bar* menu
     { buttons = new Fl_Group(0, 25, 520, 30);
       buttons->box(FL_FLAT_BOX);
       { add_button = new Fl_Button(492, 27, 25, 25, gettext("@+"));
@@ -1027,6 +1025,25 @@ Fl_Double_Window* UI::make_window() {
       } // Fl_Button* cut_button
       buttons->end();
     } // Fl_Group* buttons
+    { menu = new Fl_Menu_Bar(0, 0, 520, 25);
+      menu->box(FL_FLAT_BOX);
+      menu->down_box(FL_FLAT_BOX);
+      menu->color(FL_DARK3);
+      menu->selection_color((Fl_Color)80);
+      menu->labelsize(16);
+      menu->labelcolor(FL_BACKGROUND2_COLOR);
+      menu->textsize(16);
+      menu->textcolor(FL_BACKGROUND2_COLOR);
+      menu->align(Fl_Align(260));
+      if (!menu_menu_i18n_done) {
+        int i=0;
+        for ( ; i<28; i++)
+          if (menu_menu[i].label())
+            menu_menu[i].label(gettext(menu_menu[i].label()));
+        menu_menu_i18n_done = 1;
+      }
+      menu->menu(menu_menu);
+    } // Fl_Menu_Bar* menu
     { tabs = new Fl_Tabs(0, 55, 520, 490);
       tabs->box(FL_FLAT_BOX);
       tabs->selection_color((Fl_Color)23);
@@ -1045,7 +1062,7 @@ Fl_Double_Window* UI::make_window() {
 }
 
 Fl_Double_Window* UI::pref_window() {
-  { pref_win = new Fl_Double_Window(310, 460, gettext("Preferences"));
+  { Fl_Double_Window* o = pref_win = new Fl_Double_Window(310, 460, gettext("Preferences"));
     pref_win->color((Fl_Color)46);
     pref_win->user_data((void*)(this));
     { pref_tabs = new Fl_Tabs(0, 0, 310, 420);
@@ -1253,6 +1270,7 @@ ER"));
       o->labelcolor(FL_BACKGROUND2_COLOR);
       o->callback((Fl_Callback*)cb_SAVE);
     } // Fl_Button* o
+    make_icon(o);
     pref_win->xclass("flpad");
     pref_win->end();
   } // Fl_Double_Window* pref_win
@@ -1412,6 +1430,40 @@ void UI::change_theme(unsigned int FG,unsigned int BG, unsigned int selection, i
     Fl_Syntax_Text_Editor * e = (Fl_Syntax_Text_Editor *)tab->child(0);
     e->theme_editor(FG,BG,selection,font,size,line);
   }
+}
+
+void UI::check_file(std::string file,std::string title) {
+  about_window()->show();
+  about_win->wait_for_expose();
+  std::string tmp = get_flpad_dir(file);
+  //trace("got:"+tmp);
+  about_win->wait_for_expose();
+  about_win->copy_label(title.c_str());
+  if(tmp.compare("")==0)
+  {
+    std::string res = "Designed in FLUID, based on the FLTK tutorial\
+  Copyright 1998-2005 by Bill Spitzak and others.\
+  \
+  lexertk.hpp was created by Arash Partow, and\
+  heavily modified to provide syntax highlighting.\
+  \
+  colored icons were inspired by:\
+  numixproject/numix-icon-theme-circle\
+  though all were hand coded xpm files.\
+  \
+  This version was built for ToriOS\
+  copyright 2018 Israel Dahl";
+    char* RES = const_cast <char*> (res.c_str());
+    about_win->wait_for_expose();
+    about_buffer->text(RES);
+  }
+  else
+  {
+    //return;
+    about_buffer->loadfile(file.c_str());
+  }
+  
+  about_dialog->buffer(about_buffer);
 }
 
 int UI::check_save() {
@@ -2614,10 +2666,23 @@ std::string get(std::string header, std::string line) {
   return "";
 }
 
-std::string get_syntax_file() {
-  std::string base_name = "flpad/styles.flpad";
-  if(SYNTAX_FILE.compare("")!=0)
-    return SYNTAX_FILE;
+std::string get_flpad_dir( std::string base_name) {
+  std::string tester = "/usr/share/flpad/";
+  std::string res="";
+  if(test_file(tester+base_name))
+  {
+    res=tester+base_name;
+  }
+  else
+  {
+    tester = "/usr/local/share/flpad/";
+    if(test_file(tester+base_name))
+      res=tester+base_name;
+  }
+  return res;
+}
+
+std::string get_flpad_home_dir( std::string base_name) {
   //testing
   std::string home_tester;
   const char* home_config = getenv("XDG_CONFIG_HOME");
@@ -2627,31 +2692,38 @@ std::string get_syntax_file() {
     if(home_config != NULL)
     {
       home_tester=home_config;
-      home_tester =home_tester + "/.config/" + base_name;
+      home_tester =home_tester + "/.config/flpad/" + base_name;
     }
   }
   else
   {
     home_tester = home_config;
-    home_tester = home_tester + "/" + base_name;
+    home_tester = home_tester + "/flpad/" + base_name;
   }
   
   if(test_file(home_tester))
+  {
+    return home_tester;
+  }
+  return "";
+}
+
+std::string get_syntax_file() {
+  std::string base_name = "styles.flpad";
+  if(SYNTAX_FILE.compare("")!=0)
+    return SYNTAX_FILE;
+  //testing
+  std::string home_tester=get_flpad_home_dir(base_name);
+  if(home_tester.compare("")!=0)
   {
     SYNTAX_FILE=home_tester;
   }
   else
   {
-    std::string tester = "/usr/share/";
-    if(test_file(tester+base_name))
+    std::string tester = get_flpad_dir(base_name);
+    if(tester.compare("")!=0)
     {
-      SYNTAX_FILE=tester+base_name;
-    }
-    else
-    {
-      tester = "/usr/local/share/";
-      if(test_file(tester+base_name))
-        SYNTAX_FILE=tester+base_name;
+      SYNTAX_FILE=tester;
     }
   }
   if(SYNTAX_FILE.compare("")==0)
@@ -2688,45 +2760,21 @@ std::vector<std::string> get_syntax_headers() {
 }
 
 std::string get_theme_file() {
-  std::string base_name = "flpad/themes.flpad";
+  std::string base_name = "themes.flpad";
   std::string tmp;
-  //testing
-  std::string home_tester;
-  const char* home_config = getenv("XDG_CONFIG_HOME");
-  if(home_config == NULL)
-  {
-    home_config = getenv("HOME");
-    if(home_config != NULL)
-    {
-      home_tester=home_config;
-      home_tester =home_tester + "/.config/" + base_name;
-    }
-  }
-  else
-  {
-    home_tester = home_config;
-    home_tester = home_tester + "/" + base_name;
-  }
-  if(test_file(home_tester))
+  std::string home_tester=get_flpad_home_dir(base_name);
+  if(home_tester.compare("")!=0)
   {
     tmp=home_tester;
   }
   else
   {
-    std::string tester = "/usr/share/";
-    if(test_file(tester+base_name))
+    std::string tester = get_flpad_dir(base_name);
+    if(tester.compare("")!=0)
     {
-      tmp=tester+base_name;
-    }
-    else
-    {
-      tester = "/usr/local/share/";
-      if(test_file(tester+base_name))
-        tmp=tester+base_name;
+      tmp=tester;
     }
   }
-  if(tmp.compare("")==0)
-    trace("No THEME file found...");
   return tmp;
 }
 
@@ -2967,6 +3015,8 @@ int main(int argc, char **argv) {
         }
       }
     }
+    ui->about_window()->show();
+    ui->about_win->hide();
     return Fl::run();
   }
   catch (const std::exception& e)

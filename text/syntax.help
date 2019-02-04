@@ -1,0 +1,26 @@
+Theme Files:
+The format is simple
+[NAME]
+foreground=COLOR
+background=COLOR
+comments=COLOR
+strings=COLOR
+numbers=COLOR
+keywords=COLOR
+symbol=COLOR
+directives=COLOR
+types=COLOR
+special_color=COLOR
+broken_color=COLOR
+selection=COLOR
+font_size=PIXELS
+line_number_size=PIXELS
+highlight_plain_text=BOOL
+button_color=BOOL
+
+BOOL is either 0 (no) 1 (yes)
+
+PIXELS is similar to font sizes, or icon sizes
+
+COLOR is either the raw FLTK color (copied directly from the config file)
+or an HTML color

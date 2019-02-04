@@ -1,0 +1,12 @@
+Designed in FLUID, based on the FLTK tutorial
+Copyright 1998-2005 by Bill Spitzak and others.
+
+lexertk.hpp was created by Arash Partow, and
+heavily modified to provide syntax highlighting.
+
+colored icons were inspired by:
+numixproject/numix-icon-theme-circle
+though all were hand coded xpm files.
+
+This version was built for ToriOS
+copyright 2018 Israel Dahl

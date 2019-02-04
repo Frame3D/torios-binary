@@ -1,14 +1,18 @@
-STYLES_CONFIG = styles.flpad
-THEME_CONFIG  = themes.flpad
-obj           = $(askpass:.c=.o) $(about:.c=.o) $(pm_dialogs:.c=.o)
-TARGET        = torios-binary
+STYLES_CONFIG     = styles.flpad
+THEME_CONFIG      = themes.flpad
+FLPAD_STYLES_HELP = styles.help
+FLPAD_ABOUT_HELP  = about
+FLPAD_THEMES_HELP = syntax.help
+FLPAD_DIR         = text/
+obj               = $(askpass:.c=.o) $(about:.c=.o) $(pm_dialogs:.c=.o)
+TARGET            = torios-binary
 $(TARGET):
 	$(MAKE) -C askpass/
 	$(MAKE) -C about/
 	$(MAKE) -C pm-dialogs/
 	$(MAKE) -C run/
 	$(MAKE) -C apt/
-	$(MAKE) -C text/
+	$(MAKE) -C $(FLPAD_DIR)
 	$(MAKE) -C screenie/
 	$(MAKE) -C image/
 	$(MAKE) -C calc/
@@ -16,7 +20,7 @@ $(TARGET):
 
 .PHONY: clean
 clean:
-	rm -f $(obj) askpass/flaskpass about/flabout  pm-dialogs/flpower Makefile askpass/Makefile pm-dialogs/Makefile about/Makefile run/flrun run/Makefile apt/Makefile apt/flapt text/flpad text/Makefile screenie/Makefile screenie/flscreenie image/flimage image/Makefile calc/Makefile calc/flcalc welcome/Makefile welcome/flwelcome
+	rm -f $(obj) askpass/flaskpass about/flabout  pm-dialogs/flpower Makefile askpass/Makefile pm-dialogs/Makefile about/Makefile run/flrun run/Makefile apt/Makefile apt/flapt $(FLPAD_DIR)flpad $(FLPAD_DIR)Makefile screenie/Makefile screenie/flscreenie image/flimage image/Makefile calc/Makefile calc/flcalc welcome/Makefile welcome/flwelcome
 
 .PHONY: install
 install: $(TARGET)
@@ -27,7 +31,7 @@ install: $(TARGET)
 	cp pm-dialogs/flpower $(DESTDIR)$(PREFIX)/bin/flpower
 	cp run/flrun $(DESTDIR)$(PREFIX)/bin/flrun
 	cp apt/flapt $(DESTDIR)$(PREFIX)/bin/flapt
-	cp text/flpad $(DESTDIR)$(PREFIX)/bin/flpad
+	cp $(FLPAD_DIR)flpad $(DESTDIR)$(PREFIX)/bin/flpad
 	cp screenie/flscreenie $(DESTDIR)$(PREFIX)/bin/flscreenie
 	cp image/flimage $(DESTDIR)$(PREFIX)/bin/flimage
 	cp calc/flcalc $(DESTDIR)$(PREFIX)/bin/flcalc
@@ -41,9 +45,12 @@ install: $(TARGET)
 	cp desktop/flcalc.desktop $(DESTDIR)$(PREFIX)/share/applications/flcalc.desktop
 	cp desktop/flwelcome.desktop $(DESTDIR)$(PREFIX)/share/applications/flwelcome.desktop
 #CONFIG
-	mkdir -p $(DESTDIR)$(PREFIX)/flpad/
-	cp text/$(STYLES_CONFIG) $(DESTDIR)$(PREFIX)/flpad/$(STYLES_CONFIG)
-	cp text/$(THEME_CONFIG) $(DESTDIR)$(PREFIX)/flpad/$(THEME_CONFIG)
+	mkdir -p $(DESTDIR)$(PREFIX)/share/flpad/
+	cp $(FLPAD_DIR)$(STYLES_CONFIG) $(DESTDIR)$(PREFIX)/share/flpad/$(STYLES_CONFIG)
+	cp $(FLPAD_DIR)$(THEME_CONFIG) $(DESTDIR)$(PREFIX)/share/flpad/$(THEME_CONFIG)
+	cp $(FLPAD_DIR)$(FLPAD_THEMES_HELP) $(DESTDIR)$(PREFIX)/share/flpad/$(FLPAD_THEMES_HELP)
+	cp $(FLPAD_DIR)$(FLPAD_ABOUT_HELP) $(DESTDIR)$(PREFIX)/share/flpad/$(FLPAD_ABOUT_HELP)
+	cp $(FLPAD_DIR)$(FLPAD_STYLES_HELP) $(DESTDIR)$(PREFIX)/share/flpad/$(FLPAD_STYLES_HELP)
 
 .PHONY: uninstall
 uninstall:
@@ -67,5 +74,4 @@ uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/flpad.desktop
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/flwelcome.desktop
 #Config
-	rm -f $(DESTDIR)$(PREFIX)/flpad/$(STYLES_CONFIG)
-	rm -f $(DESTDIR)$(PREFIX)/flpad/$(THEME_CONFIG)
+	rm -Rf $(DESTDIR)$(PREFIX)/share/flpad/

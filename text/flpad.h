@@ -7,7 +7,6 @@
 #ifndef flpad_h
 #define flpad_h
 #include <FL/Fl.H>
-#include <netinet/in.h>
 #include "lexertk.hpp"
 #include "../include/toolbar_icons.h"
 #include <algorithm>
@@ -98,11 +97,11 @@ public:
   void use_spaces();
 };
 #include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Text_Display.H>
 #include <FL/Fl_Button.H>
-#include <FL/Fl_Box.H>
 #include <FL/Fl_Input.H>
-#include <FL/Fl_Menu_Bar.H>
 #include <FL/Fl_Group.H>
+#include <FL/Fl_Menu_Bar.H>
 #include <FL/Fl_Tabs.H>
 #include <FL/Fl_Browser.H>
 #include <FL/Fl_Output.H>
@@ -115,9 +114,11 @@ public:
 class UI {
 public:
   bool RELEASE; 
+  Fl_Text_Buffer *about_buffer; 
   UI();
   Fl_Double_Window* about_window();
   Fl_Double_Window *about_win;
+  Fl_Text_Display *about_dialog;
 private:
   inline void cb_Close_i(Fl_Button*, void*);
   static void cb_Close(Fl_Button*, void*);
@@ -144,49 +145,6 @@ private:
 public:
   Fl_Double_Window* make_window();
   Fl_Double_Window *win;
-  Fl_Menu_Bar *menu;
-  static unsigned char menu_menu_i18n_done;
-  static Fl_Menu_Item menu_menu[];
-private:
-  inline void cb_New_i(Fl_Menu_*, void*);
-  static void cb_New(Fl_Menu_*, void*);
-  inline void cb_Open_i(Fl_Menu_*, void*);
-  static void cb_Open(Fl_Menu_*, void*);
-  inline void cb_Insert_i(Fl_Menu_*, void*);
-  static void cb_Insert(Fl_Menu_*, void*);
-  inline void cb_Save_i(Fl_Menu_*, void*);
-  static void cb_Save(Fl_Menu_*, void*);
-  inline void cb_Save1_i(Fl_Menu_*, void*);
-  static void cb_Save1(Fl_Menu_*, void*);
-  inline void cb_Exit_i(Fl_Menu_*, void*);
-  static void cb_Exit(Fl_Menu_*, void*);
-  inline void cb_Undo_i(Fl_Menu_*, void*);
-  static void cb_Undo(Fl_Menu_*, void*);
-  inline void cb_Cut_i(Fl_Menu_*, void*);
-  static void cb_Cut(Fl_Menu_*, void*);
-  inline void cb_Copy_i(Fl_Menu_*, void*);
-  static void cb_Copy(Fl_Menu_*, void*);
-  inline void cb_Paste_i(Fl_Menu_*, void*);
-  static void cb_Paste(Fl_Menu_*, void*);
-  inline void cb_Select_i(Fl_Menu_*, void*);
-  static void cb_Select(Fl_Menu_*, void*);
-  inline void cb_Preferences_i(Fl_Menu_*, void*);
-  static void cb_Preferences(Fl_Menu_*, void*);
-  inline void cb_Word_i(Fl_Menu_*, void*);
-  static void cb_Word(Fl_Menu_*, void*);
-  inline void cb_Find_i(Fl_Menu_*, void*);
-  static void cb_Find(Fl_Menu_*, void*);
-  inline void cb_F_i(Fl_Menu_*, void*);
-  static void cb_F(Fl_Menu_*, void*);
-  inline void cb_Replace_i(Fl_Menu_*, void*);
-  static void cb_Replace(Fl_Menu_*, void*);
-  inline void cb_Re_i(Fl_Menu_*, void*);
-  static void cb_Re(Fl_Menu_*, void*);
-  inline void cb_Go_i(Fl_Menu_*, void*);
-  static void cb_Go(Fl_Menu_*, void*);
-  inline void cb_About_i(Fl_Menu_*, void*);
-  static void cb_About(Fl_Menu_*, void*);
-public:
   Fl_Group *buttons;
   Fl_Button *add_button;
 private:
@@ -247,6 +205,53 @@ public:
 private:
   inline void cb_cut_button_i(Fl_Button*, void*);
   static void cb_cut_button(Fl_Button*, void*);
+public:
+  Fl_Menu_Bar *menu;
+  static unsigned char menu_menu_i18n_done;
+  static Fl_Menu_Item menu_menu[];
+private:
+  inline void cb_New_i(Fl_Menu_*, void*);
+  static void cb_New(Fl_Menu_*, void*);
+  inline void cb_Open_i(Fl_Menu_*, void*);
+  static void cb_Open(Fl_Menu_*, void*);
+  inline void cb_Insert_i(Fl_Menu_*, void*);
+  static void cb_Insert(Fl_Menu_*, void*);
+  inline void cb_Save_i(Fl_Menu_*, void*);
+  static void cb_Save(Fl_Menu_*, void*);
+  inline void cb_Save1_i(Fl_Menu_*, void*);
+  static void cb_Save1(Fl_Menu_*, void*);
+  inline void cb_Exit_i(Fl_Menu_*, void*);
+  static void cb_Exit(Fl_Menu_*, void*);
+  inline void cb_Undo_i(Fl_Menu_*, void*);
+  static void cb_Undo(Fl_Menu_*, void*);
+  inline void cb_Cut_i(Fl_Menu_*, void*);
+  static void cb_Cut(Fl_Menu_*, void*);
+  inline void cb_Copy_i(Fl_Menu_*, void*);
+  static void cb_Copy(Fl_Menu_*, void*);
+  inline void cb_Paste_i(Fl_Menu_*, void*);
+  static void cb_Paste(Fl_Menu_*, void*);
+  inline void cb_Select_i(Fl_Menu_*, void*);
+  static void cb_Select(Fl_Menu_*, void*);
+  inline void cb_Preferences_i(Fl_Menu_*, void*);
+  static void cb_Preferences(Fl_Menu_*, void*);
+  inline void cb_Word_i(Fl_Menu_*, void*);
+  static void cb_Word(Fl_Menu_*, void*);
+  inline void cb_Find_i(Fl_Menu_*, void*);
+  static void cb_Find(Fl_Menu_*, void*);
+  inline void cb_F_i(Fl_Menu_*, void*);
+  static void cb_F(Fl_Menu_*, void*);
+  inline void cb_Replace_i(Fl_Menu_*, void*);
+  static void cb_Replace(Fl_Menu_*, void*);
+  inline void cb_Re_i(Fl_Menu_*, void*);
+  static void cb_Re(Fl_Menu_*, void*);
+  inline void cb_Go_i(Fl_Menu_*, void*);
+  static void cb_Go(Fl_Menu_*, void*);
+  inline void cb_About_i(Fl_Menu_*, void*);
+  static void cb_About(Fl_Menu_*, void*);
+  inline void cb_Syntax_i(Fl_Menu_*, void*);
+  static void cb_Syntax(Fl_Menu_*, void*);
+  inline void cb_Theme_i(Fl_Menu_*, void*);
+  static void cb_Theme(Fl_Menu_*, void*);
 public:
   Fl_Tabs *tabs;
 private:
@@ -359,6 +364,7 @@ public:
   static void ask_cb(Fl_Widget *o, long val);
   void button_style(int style=0);
   void change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line);
+  void check_file(std::string file,std::string title="About");
   int check_save();
   unsigned int choose_a_color(Fl_Widget *o);
   static void choose_doc(Fl_Widget* o, void* v);
@@ -417,6 +423,8 @@ std::vector<std::string> comma_line(std::string lang,std::string field, bool ign
 unsigned int convert(std::string num, int default_value=0);
 std::vector<std::string> dir_vector(std::string DIRECTORY);
 std::string get(std::string header, std::string line);
+std::string get_flpad_dir( std::string base_name);
+std::string get_flpad_home_dir( std::string base_name);
 std::string get_syntax_file();
 std::vector<std::string> get_syntax_headers();
 std::string get_theme_file();
