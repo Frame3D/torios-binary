@@ -87,16 +87,6 @@ namespace lexertk
           return false;
         return (def[0]==c0);
       }
-      inline bool special_start(const char c0, const char c1)
-      {
-        const char* def = OPEN_SPECIAL.c_str();
-             int length = strlen(def);
-        if( length > 1)
-          return ( (def[0]==c0) && (def[1]==c1) );
-        if(length==0)
-          return false;
-        return (def[0]==c0);
-      }
       inline bool special_end(const char c0, const char c1)
       {
         const char* def = CLOSE_SPECIAL.c_str();
@@ -153,7 +143,28 @@ namespace lexertk
                 ('|' == c) || (';' == c) ||
                 (ops[0] == c) || (cls[0] == c);
       }
-
+      inline bool is_joined_operator(const char c0, const char c1)
+      {
+         const char* ops = OPEN_SPECIAL.c_str();
+         const char* cls = CLOSE_SPECIAL.c_str();
+         if( ( (ops[0] == c0) && (ops[1] == c1) )||
+             ( (cls[0] == c0) && (cls[1] == c1) )
+           )
+         {
+           return false;
+         }
+         return ( ('+' == c0) && ('=' == c1) )||
+                ( ('-' == c0) && ('=' == c1) )||
+                ( ('>' == c0) && ('=' == c1) )||
+                ( ('<' == c0) && ('=' == c1) )||
+                ( ('!' == c0) && ('=' == c1) )||
+                ( ('<' == c0) && ('<' == c1) )||
+                ( ('>' == c0) && ('>' == c1) )||
+                ( ('*' == c0) && ('=' == c1) )||
+                ( (':' == c0) && ('=' == c1) )||
+                ( ('=' == c0) && ('=' == c1) )||
+                ( ('<' == c0) && ('>' == c1) );
+      }
       inline bool is_letter(const char c)
       {
          return (('a' <= c) && (c <= 'z')) || (('A' <= c) && (c <= 'Z'));
@@ -211,7 +222,18 @@ namespace lexertk
                 ('~' != c)           &&
                 ('\'' != c);
       }
-
+      inline bool special_start(const char c0, const char c1)
+      {
+        const char* def = OPEN_SPECIAL.c_str();
+             int length = strlen(def);
+        if( length > 1)
+          return ( (def[0]==c0) && (def[1]==c1) );
+        if(length==0)
+          return false;
+        if ( (!is_letter_or_digit(c1)) && (is_whitespace(c1)) )
+          return false;
+        return (def[0]==c0);
+      }
       inline bool imatch(const char c1, const char c2)
       {
          return std::tolower(c1) == std::tolower(c2);
@@ -311,6 +333,18 @@ namespace lexertk
                  }
          else if ( ( single[0] == c0 ) && (strlen(single) == 1) ) { mode = 1; incr = 1; }
          else if ( single[1] == c1 ) { mode = 1; incr = strlen(single); }
+
+         return ( mode != 0 );
+      }
+
+      static inline bool comment_start(const char c0, const char c1)
+      {
+         int mode = 0;
+         const char* single = SINGLE.c_str();
+         const char* open = OPEN.c_str();
+              if ( ( open[0] == c0 ) && ( open[1] == c1 ) ){mode = 2;}
+         else if ( ( single[0] == c0 ) && (strlen(single) == 1) ) { mode = 1;}
+         else if ( single[1] == c1 ) { mode = 1;}
 
          return ( mode != 0 );
       }
@@ -420,7 +454,6 @@ namespace lexertk
       inline token& set_whitespace(const Iterator begin, const Iterator end, const Iterator base_begin = Iterator(0))
       {
          type = e_whitespace;
-//std::cout<<"----------------------------::"<<begin<<"::----------------"<<std::endl;
          if(details::is_escaped_whitespace(*begin))
          {
            if(details::is_newline(*begin))
@@ -796,7 +829,6 @@ namespace lexertk
          return (s_end_ == itr);
       }
 
-//DONT SKIP... actually report whitespace
       inline void scan_whitespace()
       {
          token t;
@@ -814,13 +846,14 @@ namespace lexertk
       {
          token t;
          const char* begin = s_itr_;
-         while (!is_end(s_itr_) && ('\n' != *s_itr_)) //!details::is_whitespace(*s_itr_))
+         while (!is_end(s_itr_) && !details::is_whitespace(*s_itr_)) //('\n' != *s_itr_)) //!details::is_whitespace(*s_itr_))
          {
             ++s_itr_;
          }
          t.set_define(begin,s_itr_,base_itr_);
          token_list_.push_back(t);
       }
+
       inline void scan_comments()
       {
          int mode = 0;
@@ -849,29 +882,67 @@ namespace lexertk
             scan_comments();
          }
       }
+
+      inline void scan_comment()
+      {
+         int mode = 0;
+         int increment = 0;
+         token_t t;
+
+
+         if (is_end(s_itr_))
+            return;
+         else if (!comment::comment_start(*s_itr_,*(s_itr_+1),mode,increment))
+            return;
+
+         const char* begin = s_itr_;
+         s_itr_ += increment;
+
+         while (!is_end(s_itr_) && !comment::comment_end(*s_itr_,*(s_itr_ +1 ) ,mode))
+         {
+            ++s_itr_;
+         }
+
+         t.set_comment(begin,s_itr_,base_itr_);
+         token_list_.push_back(t);
+      }
+
       inline void scan_special()
       {
          if (is_end(s_itr_))
             return;
-         else if (! details::special_start( *s_itr_,*(s_itr_+1) ))
+         else if (! details::special_start( *s_itr_,*(s_itr_+1)) )
             return;
-
          token t;
-         int len = OPEN_SPECIAL.length();
-         const char* begin = s_itr_;
-
+         const char* begin  = s_itr_;
+         if (details::is_joined_operator(*s_itr_,*(s_itr_+1)) )
+         {
+           s_itr_++;
+           t.set_as_operator(begin,s_itr_+1,base_itr_);
+           token_list_.push_back(t);
+           s_itr_++;
+           return;
+         }
          if (details::is_operator_char(*s_itr_))
          {
-           t.set_as_operator(begin,s_itr_+len,base_itr_);
+           t.set_as_operator(begin,s_itr_+1,base_itr_);
            token_list_.push_back(t);
+           begin=s_itr_;
+           s_itr_++;             
          }
-         s_itr_ = s_itr_ + len;
-         begin = s_itr_;
+         if (details::is_operator_char(*s_itr_))
+         {
+           t.set_as_operator(begin,s_itr_,base_itr_);
+           token_list_.push_back(t);
+           begin=s_itr_;
+           s_itr_++;             
+         }
          while (!is_end(s_itr_) && !details::is_whitespace(*s_itr_) && !details::special_end( *s_itr_,*(s_itr_+1) ))
          {
+
             ++s_itr_;
          }
-         t.set_special(begin,s_itr_,base_itr_);
+         t.set_special(begin,s_itr_-1,base_itr_);
          token_list_.push_back(t);
          if (!is_end(s_itr_))
          {
@@ -882,8 +953,6 @@ namespace lexertk
       inline void scan_token()
       {
          scan_whitespace();
-
-         scan_comments();
 
          if (is_end(s_itr_))
          {
@@ -897,6 +966,11 @@ namespace lexertk
          else if ( ('\'' == (*s_itr_)) || ('\"' == (*s_itr_)) )
          {
             scan_string(*s_itr_);
+            return;
+         }
+         else if ( comment::comment_start(*s_itr_,*(s_itr_+1)) )
+         {
+            scan_comment();
             return;
          }
          else if ( details::special_start( *s_itr_,*(s_itr_+1) ) )

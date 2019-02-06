@@ -32,7 +32,6 @@
 #include <string>
 #include <unistd.h>
 int ret_val; 
-std::string spaces; 
 std::string return_value; 
 unsigned int EDIT_COLOR;
 unsigned int NORMAL_COLOR; 
@@ -73,8 +72,11 @@ public:
   int changed; 
   int loading; 
   std::vector<std::string> KEYWORDS, TYPES; 
+protected:
   std::string STYLE_HEADER; 
+private:
   lexertk::generator generator; 
+public:
   lexertk::helper::bracket_checker bracket_checker; 
   lexertk::helper::symbol_replacer symbol_replacer; 
   static void changed_cb(int, int nInserted, int nDeleted, int, const char*, void *v);
@@ -88,6 +90,7 @@ public:
   static void kill_selection(Fl_Text_Editor* e);
   void modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL);
   void refresh();
+  void set_syntax();
   void set_type(std::string fname);
   std::string style_line(std::string thisLine);
   static void style_update(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL, void *cbArg = NULL);
@@ -95,6 +98,7 @@ public:
   void theme_editor(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size,int linenum );
   void update_styletable();
   void use_spaces();
+  std::string count_spaces();
 };
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Text_Display.H>

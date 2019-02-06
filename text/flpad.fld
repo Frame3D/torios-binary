@@ -86,9 +86,6 @@ decl {\#include <unistd.h>} {public global
 decl {int ret_val;} {public global
 }
 
-decl {std::string spaces;} {public global
-}
-
 decl {std::string return_value;} {public global
 }
 
@@ -122,9 +119,10 @@ decl {std::vector<std::string> SYNTAX_HEADERS;} {public global
 decl {std::string SYNTAX_FILE;} {public global
 }
 
-class Fl_Syntax_Text_Editor {: {public Fl_Text_Editor}
+class Fl_Syntax_Text_Editor {open : {public Fl_Text_Editor}
 } {
-  Function {Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0):Fl_Text_Editor(x,y,w,h,label)} {} {
+  Function {Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0):Fl_Text_Editor(x,y,w,h,label)} {open
+  } {
     code {IGNORE_SYNTAX_CASE = false;
 SPACES             = false;
 RELEASE            = false;
@@ -186,9 +184,9 @@ textbuffer->remove_modify_callback(changed_cb, this);} {}
   }
   decl {std::vector<std::string> KEYWORDS, TYPES;} {public global
   }
-  decl {std::string STYLE_HEADER;} {public local
+  decl {std::string STYLE_HEADER;} {protected local
   }
-  decl {lexertk::generator generator} {public local
+  decl {lexertk::generator generator} {private local
   }
   decl {lexertk::helper::bracket_checker bracket_checker;} {public local
   }
@@ -197,7 +195,6 @@ textbuffer->remove_modify_callback(changed_cb, this);} {}
   Function {changed_cb(int, int nInserted, int nDeleted, int, const char*, void *v)} {return_type {static void}
   } {
     code {Fl_Syntax_Text_Editor * o = (Fl_Syntax_Text_Editor *)v;
-//std::cerr<<"Editor object="<< o<<std::endl;
 std::string f = o->filename;
 if ((nInserted || nDeleted) && !o->loading)
 {
@@ -208,13 +205,16 @@ if ((nInserted || nDeleted) && !o->loading)
   Function {enter_kf(int, Fl_Text_Editor *e)} {open return_type {static int}
   } {
     code {kill_selection(e);
+Fl_Syntax_Text_Editor* E = (Fl_Syntax_Text_Editor*)e;
+std::string SPACES = E->count_spaces();
 std::string t = "\\n";
-t+=spaces;
+t+=SPACES;
 e->insert(t.c_str());
 e->show_insert_position();
 e->set_changed();
 if (e->when()&FL_WHEN_CHANGED) e->do_callback();
-return 1;} {}
+return 1;} {selected
+    }
   }
   Function {file_string()} {return_type {std::string}
   } {
@@ -334,27 +334,6 @@ textbuffer->add_modify_callback(style_update, (void*) this);} {}
    stylebuffer->unselect();
    return;
 }
-//get initial spacing
-if(SPACES)
-{
-  spaces = "";
-  int start = textbuffer->line_start(pos);
-  int end   = textbuffer->line_end(pos);
-  int init = 0;
-  for(int i = start; i < end; i++)
-  {
-    char A = textbuffer->char_at(i);
-    if ( (' ' == A) || ( '\\t' == A) )
-    {
-      spaces+=A;
-      init++;
-    }
-    else
-      break;
-  }
-  //trace("spaces::"+spaces+"::");
-}
-
 std::string thisLine;
 if ( (HIGHLIGHT_PLAIN==0)&& (STYLE_HEADER.compare("")==0) )
 {
@@ -365,18 +344,26 @@ if ( (HIGHLIGHT_PLAIN==0)&& (STYLE_HEADER.compare("")==0) )
 }
 else
 {
-  char* buf = textbuffer->text();
+  char* buf = this->textbuffer->text();
+  if(buf == NULL)
+    return;
   std::string out(buf);
   std::string res = style_line(out);
   char* RES = const_cast <char*> (res.c_str());
+  if (RES == NULL)
+    return;
   stylebuffer->text(RES);
 }
-redisplay_range(0,stylebuffer->length());} {}
+redisplay_range(0,textbuffer->length());} {}
   }
   Function {refresh()} {} {
-    code {style_update(0,0,0,0,NULL,this);
+    code {set_syntax();
+modify_cb(0,0,0,0,NULL);
 redisplay_range(0,textbuffer->length());
 redraw();} {}
+  }
+  Function {set_syntax()} {} {
+    code {set_type(filename);} {}
   }
   Function {set_type(std::string fname)} {} {
     code {std::string dir=fname;
@@ -392,46 +379,46 @@ if(find>dir.length())
     dir=PWD;
     dir+="/";
     fname=dir+fname;
-    filename=fname;
+    this->filename=fname;
   }
 }
 
-if(fname.empty())
+if( (fname.empty()) || (fname.compare("")==0) )
   return;
-
-STYLE_HEADER = get_type(fname);
+this->filename=fname;
+this->STYLE_HEADER = get_type(this->filename);
 //trace(STYLE_HEADER);
-std::string ignore_case   = get(STYLE_HEADER, "ignore_case");
+std::string ignore_case   = get(this->STYLE_HEADER, "ignore_case");
 if(ignore_case.compare("")!=0)
 {
   //trace("ignore_case="+ignore_case);
   std::transform(ignore_case.begin(), ignore_case.end(), ignore_case.begin(), ::tolower);
   if(ignore_case.compare("true")==0)
-    IGNORE_SYNTAX_CASE=true;
-  if(IGNORE_SYNTAX_CASE)
-    trace("ignoring syntax case for "+STYLE_HEADER+" files");
+    this->IGNORE_SYNTAX_CASE=true;
+  if(this->IGNORE_SYNTAX_CASE)
+    trace("ignoring syntax case for "+this->STYLE_HEADER+" files");
 }
 
-KEYWORDS     = keywords(STYLE_HEADER, IGNORE_SYNTAX_CASE);
-TYPES        = types(STYLE_HEADER, IGNORE_SYNTAX_CASE);
+this->KEYWORDS     = keywords(this->STYLE_HEADER, this->IGNORE_SYNTAX_CASE);
+this->TYPES        = types(this->STYLE_HEADER, this->IGNORE_SYNTAX_CASE);
 
 //comments
-std::string c_open        = get(STYLE_HEADER,"blockopen");
-std::string c_close       = get(STYLE_HEADER,"blockclose");
-std::string c_single      = get(STYLE_HEADER,"comments");
+std::string c_open        = get(this->STYLE_HEADER,"blockopen");
+std::string c_close       = get(this->STYLE_HEADER,"blockclose");
+std::string c_single      = get(this->STYLE_HEADER,"comments");
 //define
-std::string def           = get(STYLE_HEADER,"defines");
+std::string def           = get(this->STYLE_HEADER,"defines");
 //special
-std::string special_open  = get(STYLE_HEADER,"special_open");
-std::string special_close = get(STYLE_HEADER,"special_close");
+std::string special_open  = get(this->STYLE_HEADER,"special_open");
+std::string special_close = get(this->STYLE_HEADER,"special_close");
 
 
 //Set everything in the generator
-generator.set_comments(c_open,c_close,c_single);
-generator.set_defines(def.c_str());
-generator.set_special(special_open,special_close);
-generator.set_keywords(KEYWORDS);
-generator.set_types(TYPES);
+this->generator.set_comments(c_open,c_close,c_single);
+this->generator.set_defines(def.c_str());
+this->generator.set_special(special_open,special_close);
+this->generator.set_keywords(this->KEYWORDS);
+this->generator.set_types(this->TYPES);
 
 //trace("set syntax type for: "+fname+" to:"+STYLE_HEADER);} {}
   }
@@ -441,7 +428,7 @@ generator.set_types(TYPES);
   trace("error processing text:"+thisLine);
 else
 {
-  std::string line =lexertk::helper::style_line(generator);
+  std::string line = lexertk::helper::style_line(generator);
   if(line.compare("")==0)
   {
     //trace("adding newline!");
@@ -479,8 +466,7 @@ linenumber_size(size);
 update_styletable();
 modify_cb();} {}
   }
-  Function {update_styletable()} {open
-  } {
+  Function {update_styletable()} {} {
     code {Fl_Text_Display::Style_Table_Entry A; //  Plain
 get_styletable(A,0);
 
@@ -513,7 +499,8 @@ get_styletable(J,9);
 
 use_spaces();} {}
   }
-  Function {use_spaces()} {} {
+  Function {use_spaces()} {open
+  } {
     code {remove_key_binding(FL_Enter,FL_TEXT_EDITOR_ANY_STATE);
 if(SPACES)
 {
@@ -525,6 +512,30 @@ else
 //use default function
   add_key_binding(FL_Enter,FL_TEXT_EDITOR_ANY_STATE,kf_enter);
 }} {}
+  }
+  Function {count_spaces()} {open return_type {std::string}
+  } {
+    code {int pos = insert_position();
+//std::cout<<pos<<"<--position"<<std::endl;
+std::string spaces;
+if(SPACES)
+{
+  int start = textbuffer->line_start(pos);
+  int end   = textbuffer->line_end(pos);
+  int init = 0;
+  for(int i = start; i < end; i++)
+  {
+    char A = textbuffer->char_at(i);
+    if ( (' ' == A) || ( '\\t' == A) )
+    {
+      spaces+=A;
+      init++;
+    }
+    else
+      break;
+  }
+}
+return spaces;} {}
   }
 }
 
@@ -806,7 +817,7 @@ Fl_Text_Editor::kf_select_all(0,textor);}
           }
           MenuItem {} {
             label {&Theme Creation}
-            callback {check_file("styles.help","Theme Creation");} selected
+            callback {check_file("styles.help","Theme Creation");}
             xywh {20 20 100 20}
           }
         }
@@ -1321,7 +1332,7 @@ if(textor==NULL)
   return;
 Fl_Text_Editor::kf_copy(0, textor);} {}
   }
-  Function {current_editor()} {return_type {Fl_Syntax_Text_Editor *}
+  Function {current_editor()} {open return_type {Fl_Syntax_Text_Editor *}
   } {
     code {if(tabs==NULL)
   return NULL;
@@ -1759,7 +1770,8 @@ if(textor==NULL)
   return;
 Fl_Text_Editor::kf_insert(0,textor);} {}
   }
-  Function {load_file(std::string newfile, int ipos,bool NEW=true)} {} {
+  Function {load_file(std::string newfile, int ipos,bool NEW=true)} {open
+  } {
     code {//trace("Loading file:"+newfile);
 //todo 
 //if(pick_tab(newfile)){return;}
@@ -1774,7 +1786,6 @@ if(E==NULL)
   std::cerr<<"Null editor"<<std::endl;
   return;
 }
-E->set_type(newfile);
 E->loading = 1;
 int insert = (ipos != -1);
 E->changed = insert;
@@ -1795,8 +1806,9 @@ E->textbuffer->call_modify_callbacks();
 
 if (r)
   fl_alert("Error reading from file \\'%s\\':\\n%s.", newfile.c_str(), strerror(errno));
-else if (!insert)
+else
   E->filename=newfile;
+E->set_syntax();
 E->loading = 0;
 set_title(tabs->value());
 std::string tmp = "Documents/"+E->filename;
@@ -2144,11 +2156,14 @@ else
   ((Fl_Widget *)(textor->user_data()))->labelcolor(NORMAL_COLOR);
 }} {}
   }
-  Function {set_title(Fl_Widget* g)} {} {
+  Function {set_title(Fl_Widget* g)} {open
+  } {
     code {if(g==NULL)
   return;
+Fl_Group* gg = (Fl_Group*)g;
 std::string title;
-Fl_Syntax_Text_Editor * textor = current_editor();
+
+Fl_Syntax_Text_Editor* textor = ((Fl_Syntax_Text_Editor*)gg->child(0));//current_editor();
 if(textor==NULL)
   return;
 std::string fname = textor->filename;
