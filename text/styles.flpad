@@ -1,0 +1,142 @@
+#*
+  *               styles.flpad
+  *  Public Domain 2019 Israel Dahl <israeldahl@gmail.com>
+  *
+  * This file is simple to use with a very simple syntax highlighter
+  * Format is:
+
+[type]       * the header.  if it is an XML type file, set this to the file extention
+ext=         * file extention list comma separated
+keywords=    * specific keywords or reserved words, or elements (i.e. in XML)
+types=       * specific words that are data types, or attributes (i.e. in XML)
+comments=    * single line comments
+blockopen=   * the opening of block comment line
+blockclose=  * the closing of block comment line
+defines=     * defines or declarations
+
+  * See the included examples below.
+  * to modify this copy it to $XDG_CONFIG_HOME/flpad/ and then edit
+  * XDG_CONFIG_HOME is ~/.config
+  * please contribute any new styles upstream!!
+  * https://github.com/Israel-D/torios-binary
+  *#
+[c]
+ext=cxx,cpp,c,h,hpp,xpm
+keywords=alignas, alignof, and, and_eq, asm, bitand, bitor, break, case, catch, class, compl, constexpr, continue, default, delete, do, dynamic_cast, else, explicit, export, extern, false, for, friend, goto, if, inline, new, noexcept, not, not_eq, operator, or, or_eq, private, protected, public, register, reinterpret_cast, return, sizeof, struct, switch, template, this, thread_local, throw, true, try, typedef, typeid, typename, union, using, while, xor, xor_eq
+types=auto, bool, char, char16_t, char32_t, class, const, const_cast, decltype, double, dynamic_cast, enum, explicit, extern, float, friend, inline, int, long, mutable, namespace, nullptr_t, private, protected, public, register, short, signed, sizeof, static, static_assert, static_cast, string, struct, template, typedef, typename, union, unsigned, virtual, vector, void, volatile, wchar_t,NULL
+comments=//
+blockopen=/*
+blockclose=*/
+special_open=<
+special_close=>
+defines=#
+[sh]
+ext=sh,bash
+keywords=case, do, done, elif, else, esac, fi, for, function, if, in, select, source, then, time, until, while, let, echo, printf, read, cd, pwd, pushd, popd, dirs, eval, set, unset, export, declare, typeset, readonly, getopts, source, exit, exec, shopt, caller, true, false, type, hash, bind, help, coproc, mapfile, ulimit
+types=/usr/bin,/usr/local/bin,/bin,/sbin,/usr/sbin
+comments=#
+defines=#!
+special_open=${
+special_close=}
+[haxe]
+ext=hx
+keywords=class,public,var,extends,override,function,new,import,for,in,super,private,package,return,if,else,switch,case,default,static,this,super
+types=Int,Float,String,Bool,Void,Map,null,true,false,super,enum,Array
+blockopen=/*
+blockclose=*/
+comments=//
+defines=#
+[flpad]
+ext=flpad
+comments=#
+special_open=[
+special_close=]
+## NOTE if editing this in flpad... you will see the block comment
+blockopen=#*
+blockclose=*#
+keywords=special_color,ignore_case,special_open,special_close,broken_color,ext,keywords,types,blockopen,blockclose,defines,comments,foreground,background,comments,strings,numbers,font,font_size,line_number_size,selection,highlight_plain_text,symbol,button_color,directives,filename
+[python]
+ext=py
+keywords=False,None,True,and,as,assert,break,class,continue,def,del,elif,else,except,finally,for,from,global,if,import,in,is,lambda,nonlocal,not,or,pass,raise,return,try,while,with,yield
+types=int,float,complex,list,tuple,range,str,bytes,bytearray,memoryview,set,frozenset,dict
+[rust]
+ext=rs
+keywords=as,break,const,continue,crate,else,enum,extern,false,fn,for,if,impl,in,let,loop,match,mod,move,mut,pub,ref,return,self,Self,static,struct,super,trait,type,unsafe,use,where,while,dyn,abstract,become,box,do,final,macro,override,priv,typeof,unsized,virtual,yield,async,await,try,union
+types=true,false,char,str,u8,u16,u32,u64,u128,i8,i16,i32,i64,i128,f32,f64,usize,isize
+[README]
+ext=md
+[perl]
+ext=perl
+[go]
+ext=go
+[c#]
+ext=es
+[conf]
+ext=conf,config,ini
+[javascript]
+ext=js
+keywords=abstract,arguments,await,boolean,break,byte,case,catch,char,class,const,continue,debugger,default,delete,do,export,extends,false,final,finally,float,for,function,goto,if,implements,import,in,instanceof,int,interface,let,long,native,new,null,package,private,protected,public,return,short,static,super,switch,synchronized,this,throw,throws,transient,true,try,typeof,void,volatile,while,with,yield,
+types=var
+[tmx]
+defines=<?
+blockopen=<!--
+blockclose=-->
+keywords=map,tileset,layer,image,properties,property,data,objectgroup,object,polyline,tile,animation,frame
+types=version,orientation,renderorder,width,height,encoding,name,value,firstgid,tilewidth,tileheight,tilecount,x,y,type,id,points,source,trans,compression,opacity,tileid,duration,draworder
+[svg]
+ext=svg
+defines=<?
+blockopen=<!--
+blockclose=-->
+special_open=<
+special_close=>
+keywords=text,svg,defs,filter,metadata,g,path,ellipse,linearGradient,stop,rect,flowRoot
+types=width,height,id,transform,d,style,cx,cy,rx,ry,y1,x1,x2,y2,x,y,offset,href,gradientUnits,xml:space
+[xml]
+ext=xml
+defines=<?
+blockopen=<!--
+blockclose=-->
+special_open=<
+special_close=>
+[html]
+ext=html,htm
+keywords=html,head,meta,link,title,body,div,br
+types=href,class,rel,icon,type,media
+[fld]
+comments=//
+defines=\#
+special_open=<
+special_close=>
+blockopen=/*
+blockclose=*/
+ext=fl,fld
+keywords=alignas, alignof, and, and_eq, asm, bitand, bitor, break, case, catch, class, compl, constexpr, continue, default, delete, do, dynamic_cast, else, explicit, export, extern, false, for, friend, goto, if, inline, new, noexcept, not, not_eq, operator, or, or_eq, private, protected, public, register, reinterpret_cast, return, sizeof, struct, switch, template, this, thread_local, throw, true, try, typedef, typeid, typename, union, using, while, xor, xor_eq,decl,public global,Function
+types=auto, bool, char, char16_t, char32_t, class, const, const_cast, decltype, double, dynamic_cast, enum, explicit, extern, float, friend, inline, int, long, mutable, namespace, nullptr_t, private, protected, public, register, short, signed, sizeof, static, static_assert, static_cast, string, struct, template, typedef, typename, union, unsigned, virtual, vector, void, volatile, wchar_t
+[jwmrc]
+ext=jwmrc
+keywords=JWM,RootMenu,Menu,Dynamic,Program,Separator,Desktops,SendTo,Stick,Maximize,Minimize,Shade,Move,Resize,Kill,Close,Restart,Exit,Tray,Clock,Dock,Pager,Spacer,Swallow,TaskList,TrayButton,Button,Include,Group,Name,Class,Option,WindowStyle,Font,Width,Height,Corner,Foreground,Background,Opacity,Outline,ClockStyle,TrayStyle,Active,TaskListStyle,PagerStyle,Text,IconPath,Mouse,Desktops,Background,ButtonClose,ButtonMax,ButtonMaxActivve,ButtonMenu,ButtonMin,DefaultIcon,DoubleClickDelta,DoubleClickSpeed,FocusModel,MoveMode,ResizeMode,RestartCommand,ShutdownCommand,SnapMode,StartupCommand
+types=onroot,width,height,label,labeled,dynamic,tooltip,icon,confirm,autohide,x,y,valign,halign,format,zone,name,maxwidth,popup,mask,decorations,group,list,delay,enabled,context,button,type,distance
+blockopen=<!--
+blockclose=-->
+[Makefile]
+filename=Makefile
+special_open=$(
+special_close=)
+comments=#
+types=DESTDIR,MAKE
+[Makefile.in]
+filename=Makefile.in
+special_open=$(
+special_close=)
+comments=#
+types=DESTDIR,MAKE
+[cmake]
+## this will treat INSTALL and install the same
+ignore_case=true
+filename=CMakeLists.txt
+comments=#
+special_open=${
+special_close=}
+types=TARGETS,CMAKE_CXX_FLAGS,CMAKE_CXX_FLAGS_DEBUG,CMAKE_BUILD_TYPE,CMAKE_CONFIGURATION_TYPE,RELATIVE_PATH,LIB_DIR_RELATIVE,CMAKE_INSTALL_PREFIX,STATIC,VERSION,STREQUAL,FATAL_ERROR,CMAKE_BUILD_PARALLEL_LEVEL,CMAKE_CONFIG_TYPE,CMAKE_MSVCIDE_RUN_PATH,MACOSX_DEPLOYMENT_TARGET,CMAKE_CXX_COMPILER,CMAKE_C_COMPILER,CMAKE_C_FLAGS,CTEST_INTERACTIVE_DEBUG_MODE,CTEST_OUTPUT_ON_FAILURE,CTEST_PARALLEL_LEVEL,CTEST_PROGRESS_OUTPUT,CTEST_USE_LAUNCHERS_DEFAULT,DASHBOARD_TEST_FROM_CTEST,CMAKE_EXE_LINKER_FLAGS_INIT,CMAKE_MODULE_LINKER_FLAGS_INIT,CMAKE_SHARED_LINKER_FLAGS_INIT,DESTDIR,CMAKE_MODULE_PATH,REQUIRED,NO_MODULE,COMMAND
+keywords=break,cmake_host_system_information,cmake_minimum_required,cmake_parse_arguments,cmake_policy,configure_file,continue,elseif,else,endforeach,endfunction,endif,endmacro,endwhile,execute_process,file,find_file,find_library,find_package,find_path,find_program,foreach,function,get_cmake_property,get_directory_property,get_filename_component,get_property,if,include,include_guard,list,macro,mark_as_advanced,math,message,option,return,separate_arguments,set_directory_properties,set_property,set,site_name,string,unset,variable_watch,while,add_compile_definitions,add_compile_options,add_custom_command,add_custom_target,add_definitions,add_dependencies,add_executable,add_library,add_link_options,add_subdirectory,add_test,aux_source_directory,build_command,create_test_sourcelist,define_property,enable_language,enable_testing,export,fltk_wrap_ui,get_source_file_property,get_target_property,get_test_property,include_directories,include_external_msproject,include_regular_expression,install,link_directories,link_libraries,load_cache,project,qt_wrap_cpp,qt_wrap_ui,remove_definitions,set_source_files_properties,set_target_properties,set_tests_properties,source_group,target_compile_definitions,target_compile_features,target_compile_options,target_include_directories,target_link_directories,target_link_libraries,target_link_options,target_sources,try_compile,try_run,ctest_build,ctest_configure,ctest_coverage,ctest_empty_binary_directory,ctest_memcheck,ctest_read_custom_files,ctest_run_script,ctest_sleep,ctest_start,ctest_submit,ctest_test,ctest_update,ctest_upload
