@@ -79,17 +79,17 @@ LOGOUT_TEXT    = gettext("Log Out");
   } {
     Fl_Window win {
       label Power open
-      xywh {683 317 183 110} type Double hide resizable
+      xywh {683 317 183 110} type Double resizable visible
     } {
+      Fl_Button {} {
+        label OK
+        callback {decide();} selected
+        xywh {95 70 65 30} box FLAT_BOX color 62 selection_color 60 labelcolor 7
+      }
       Fl_Button {} {
         label Cancel
         callback {win->hide();}
         xywh {10 70 65 30} box FLAT_BOX color 80 selection_color 72 labelcolor 7
-      }
-      Fl_Button {} {
-        label OK
-        callback {decide();}
-        xywh {95 70 65 30} box FLAT_BOX color 62 selection_color 60 labelcolor 7
       }
       Fl_Box icon {
         xywh {15 7 48 48}
@@ -468,8 +468,7 @@ catch (...)
   std::cerr << "Unknown exception!" << std::endl;
   return EXIT_FAILURE;
 }
-return -1;} {selected
-  }
+return -1;} {}
 }
 
 Function {trace(std::string msg)} {} {

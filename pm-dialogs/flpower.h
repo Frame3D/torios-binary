@@ -52,10 +52,10 @@ public:
   Fl_Double_Window* make_window();
   Fl_Double_Window *win;
 private:
-  inline void cb_Cancel_i(Fl_Button*, void*);
-  static void cb_Cancel(Fl_Button*, void*);
   inline void cb_OK_i(Fl_Button*, void*);
   static void cb_OK(Fl_Button*, void*);
+  inline void cb_Cancel_i(Fl_Button*, void*);
+  static void cb_Cancel(Fl_Button*, void*);
 public:
   Fl_Box *icon;
   Fl_Box *label;

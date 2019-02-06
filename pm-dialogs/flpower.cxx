@@ -8,18 +8,18 @@
 #define NANOSVGRAST_IMPLEMENTATION
 #include "../include/nanosvgrast.h"
 
-void UI::cb_Cancel_i(Fl_Button*, void*) {
-  win->hide();
-}
-void UI::cb_Cancel(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_Cancel_i(o,v);
-}
-
 void UI::cb_OK_i(Fl_Button*, void*) {
   decide();
 }
 void UI::cb_OK(Fl_Button* o, void* v) {
   ((UI*)(o->parent()->user_data()))->cb_OK_i(o,v);
+}
+
+void UI::cb_Cancel_i(Fl_Button*, void*) {
+  win->hide();
+}
+void UI::cb_Cancel(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->user_data()))->cb_Cancel_i(o,v);
 }
 
 UI::UI() {
@@ -34,19 +34,19 @@ UI::UI() {
 Fl_Double_Window* UI::make_window() {
   { win = new Fl_Double_Window(183, 110, gettext("Power"));
     win->user_data((void*)(this));
-    { Fl_Button* o = new Fl_Button(10, 70, 65, 30, gettext("Cancel"));
-      o->box(FL_FLAT_BOX);
-      o->color((Fl_Color)80);
-      o->selection_color(FL_DARK_RED);
-      o->labelcolor(FL_BACKGROUND2_COLOR);
-      o->callback((Fl_Callback*)cb_Cancel);
-    } // Fl_Button* o
     { Fl_Button* o = new Fl_Button(95, 70, 65, 30, gettext("OK"));
       o->box(FL_FLAT_BOX);
       o->color((Fl_Color)62);
       o->selection_color(FL_DARK_GREEN);
       o->labelcolor(FL_BACKGROUND2_COLOR);
       o->callback((Fl_Callback*)cb_OK);
+    } // Fl_Button* o
+    { Fl_Button* o = new Fl_Button(10, 70, 65, 30, gettext("Cancel"));
+      o->box(FL_FLAT_BOX);
+      o->color((Fl_Color)80);
+      o->selection_color(FL_DARK_RED);
+      o->labelcolor(FL_BACKGROUND2_COLOR);
+      o->callback((Fl_Callback*)cb_Cancel);
     } // Fl_Button* o
     { icon = new Fl_Box(15, 7, 48, 48);
     } // Fl_Box* icon
