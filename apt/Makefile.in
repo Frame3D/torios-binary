@@ -6,7 +6,7 @@ DEB_LIBS   = -lapt-pkg
 INCLUDES   = -I/usr/include/apt-pkg
 FLTK_FLAGS = $(shell $(FLTK_CONF) --cxxflags)
 CXXFLAGS   = -w $(INCLUDES) -I. $(FLTK_FLAGS)
-CXXFLAGS  += -finline-small-functions -ffunction-sections -fdata-sections -fmerge-all-constants -fomit-frame-pointer -mno-accumulate-outgoing-args -fno-unwind-tables -fno-asynchronous-unwind-tables -O2 -std=c++0x
+CXXFLAGS  += -finline-small-functions -ffunction-sections -fdata-sections -fmerge-all-constants -fomit-frame-pointer -mno-accumulate-outgoing-args -fno-unwind-tables -fno-asynchronous-unwind-tables -O2 -std=c++0x $(DBG)
 FLTKLD     = $(shell $(FLTK_CONF) --use-images --ldflags )
 LDFLAGS    = $(FLTKLD)
 LDSTATIC   = $(shell $(FLTK_CONF) --use-images --ldstaticflags )

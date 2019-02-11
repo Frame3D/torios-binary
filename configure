@@ -1,13 +1,13 @@
 #!/bin/sh
 prefix=/usr/local
-debugsym=true
+debugsym=false
 for arg in "$@"
 do
   case "$arg" in
-    --prefix=*)
+    --prefix=*|-p=*)
       prefix=$(echo "$arg" | sed 's/--prefix=//')
       ;;
-    --enable-debug)
+    --enable-debug|--debug|-d)
       debugsym=true
       ;;
     --disable-debug)
@@ -36,8 +36,8 @@ do
     
     if $debugsym
     then
-      echo '
-dbg = -g' >>"$File"
+      echo "DBG       = -g 
+$(cat $File)" >"$File"
     fi
   fi
 done

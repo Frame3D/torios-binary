@@ -80,6 +80,9 @@ decl {\#include <cstdlib>} {public global
 decl {\#include <string>} {public global
 }
 
+decl {\#include <sys/inotify.h>} {public global
+}
+
 decl {\#include <unistd.h>} {public global
 }
 
@@ -121,8 +124,11 @@ decl {std::string SYNTAX_FILE;} {public global
 
 class Fl_Syntax_Text_Editor {open : {public Fl_Text_Editor}
 } {
-  Function {Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0):Fl_Text_Editor(x,y,w,h,label)} {open
-  } {
+  decl {int inotify_fd;} {public local
+  }
+  decl {int inotify_wd;} {public local
+  }
+  Function {Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0):Fl_Text_Editor(x,y,w,h,label)} {} {
     code {IGNORE_SYNTAX_CASE = false;
 SPACES             = false;
 RELEASE            = false;
@@ -158,7 +164,11 @@ textbuffer->add_modify_callback(changed_cb,(void *)this);} {}
   Function {~Fl_Syntax_Text_Editor()} {} {
     code {buffer(0);
 textbuffer->remove_modify_callback(style_update, this);
-textbuffer->remove_modify_callback(changed_cb, this);} {}
+textbuffer->remove_modify_callback(changed_cb, this);
+if(rm_inotify())
+{
+  trace("problem removing inotify watch");
+}} {}
   }
   decl {bool SPACES;} {public global
   }
@@ -192,7 +202,7 @@ textbuffer->remove_modify_callback(changed_cb, this);} {}
   }
   decl {lexertk::helper::symbol_replacer symbol_replacer;} {public local
   }
-  Function {changed_cb(int, int nInserted, int nDeleted, int, const char*, void *v)} {return_type {static void}
+  Function {changed_cb(int, int nInserted, int nDeleted, int, const char*, void *v)} {open return_type {static void}
   } {
     code {Fl_Syntax_Text_Editor * o = (Fl_Syntax_Text_Editor *)v;
 std::string f = o->filename;
@@ -213,8 +223,7 @@ e->insert(t.c_str());
 e->show_insert_position();
 e->set_changed();
 if (e->when()&FL_WHEN_CHANGED) e->do_callback();
-return 1;} {selected
-    }
+return 1;} {}
   }
   Function {file_string()} {return_type {std::string}
   } {
@@ -278,7 +287,7 @@ switch(which)
 }
 styletable[which] = styles; //  set} {}
   }
-  Function {handle(int event)} {protected return_type int
+  Function {handle(int event)} {open protected return_type int
   } {
     code {UI* ui = ((UI*)(parent()->parent()->parent()->user_data()));
 switch(event)
@@ -310,7 +319,10 @@ switch(event)
       ui->dnd_file(Fl::event_text());
       return 1;
     }
+    break;
 }
+//    check_inotify();
+
 return Fl_Text_Editor::handle(event);} {}
   }
   Function {init_highlight()} {} {
@@ -334,6 +346,7 @@ textbuffer->add_modify_callback(style_update, (void*) this);} {}
    stylebuffer->unselect();
    return;
 }
+
 std::string thisLine;
 if ( (HIGHLIGHT_PLAIN==0)&& (STYLE_HEADER.compare("")==0) )
 {
@@ -354,7 +367,8 @@ else
     return;
   stylebuffer->text(RES);
 }
-redisplay_range(0,textbuffer->length());} {}
+redisplay_range(0,textbuffer->length());} {selected
+    }
   }
   Function {refresh()} {} {
     code {set_syntax();
@@ -518,6 +532,10 @@ else
     code {int pos = insert_position();
 //std::cout<<pos<<"<--position"<<std::endl;
 std::string spaces;
+int Pos = textbuffer->line_start(pos);
+if(Pos == pos)
+  return "";
+
 if(SPACES)
 {
   int start = textbuffer->line_start(pos);
@@ -536,6 +554,63 @@ if(SPACES)
   }
 }
 return spaces;} {}
+  }
+  Function {init_inotify(std::string file)} {open
+  } {
+    code {//int event_buf_len = ( 1024 * ( (sizeof (struct inotify_event)) + 16 ) );
+
+inotify_fd = inotify_init();
+inotify_wd = inotify_add_watch (inotify_fd, file.c_str(), IN_MODIFY | IN_CREATE | IN_DELETE);
+
+if ( inotify_wd < 0 )
+{
+  perror("inotify_add_watch failed");
+}} {}
+  }
+  Function {rm_inotify()} {open return_type int
+  } {
+    code {return inotify_rm_watch (inotify_fd, inotify_wd);} {}
+  }
+  Function {check_inotify()} {open return_type bool
+  } {
+    code {if(filename.compare("")==0)
+  return false;
+//Took this directly from an old linux journal article
+struct timeval time;
+fd_set rfds;
+int ret;
+
+/* timeout after five seconds */
+time.tv_sec = 5;
+time.tv_usec = 0;
+
+/* zero-out the fd_set */
+FD_ZERO (&rfds);
+
+/*
+ * add the inotify fd to the fd_set -- of course,
+ * your application will probably want to add
+ * other file descriptors here, too
+ */
+FD_SET (inotify_fd, &rfds);
+
+std::string File_was_modified = gettext(" was modified,\\ndo you want to reload it?");
+
+ret = select (inotify_fd + 1, &rfds, NULL, NULL, &time);
+
+if( (ret !=0) && (FD_ISSET (inotify_fd, &rfds)) )
+{
+  if(ask(filename + File_was_modified)==1)
+  {
+    //they want to reload it
+    rm_inotify();
+    textbuffer->loadfile(filename.c_str());
+    init_inotify(filename.c_str());
+    modify_cb();
+  }
+  return true;
+}
+return false;} {}
   }
 }
 
@@ -618,8 +693,7 @@ return;} {}
       }
     }
   }
-  Function {make_window()} {open
-  } {
+  Function {make_window()} {} {
     Fl_Window win {
       label flpad open
       xywh {348 120 520 545} type Double color 47 hide
@@ -977,7 +1051,7 @@ button_style(val);}
           }
           Fl_Check_Button indentor {
             label {Enable Auto Indentation}
-            tooltip {This will save the initial spacing from the last EDITED line for the next ENTER} xywh {25 285 25 25} down_box GTK_DOWN_BOX color 55 selection_color 63
+            tooltip {This will save the initial spacing from the current line for the next ENTER} xywh {25 285 25 25} down_box GTK_DOWN_BOX color 55 selection_color 63
             code0 {o->value(INDENT_NEW_LINES);}
           }
         }
@@ -1046,76 +1120,6 @@ if(LOAD)
   open_file(NEW);
 
 refresh_all();} {}
-  }
-  Function {ask(std::string MSG, std::string yes="Yes", std::string no="No", std::string other="")} {return_type int
-  } {
-    code {int w = 250;
-int h = 90;
-Fl_Double_Window* ask_win = new Fl_Double_Window(w, h);
-Fl_Box* o = new Fl_Box(5, 5, 5, 5);
-o->copy_label(MSG.c_str());
-o->redraw();
-Fl_Button* o1 = new Fl_Button(170, 55, 65, 30, yes.c_str());
-o1->box(FL_FLAT_BOX);
-o1->color((Fl_Color)62);
-o1->labelcolor(FL_BACKGROUND2_COLOR);
-o1->callback(ask_cb,1);
-Fl_Button* o2 = new Fl_Button(100, 55, 65, 30, no.c_str());
-o2->box(FL_FLAT_BOX);
-o2->color((Fl_Color)80);
-o2->labelcolor(FL_BACKGROUND2_COLOR);
-o2->callback(ask_cb,0);
-if(other.compare("")!=0)
-{
-  Fl_Button* o3 = new Fl_Button(30, 55, 65, 30, other.c_str());
-  o3->box(FL_FLAT_BOX);
-  o3->color((Fl_Color)94);
-  o3->labelcolor(FL_BACKGROUND2_COLOR);
-  o3->callback(ask_cb,2);
-}
-else
-{
-  o1->position(5,o1->y());
-  o2->position(10+o1->w(),o1->y());
-  
-}
-ask_win->end();
-ask_win->show();
-o->measure_label(w,h);
-o->size(w+10,h);
-if(other.compare("")!=0)
-{
-  if(w<ask_win->w())
-     w=ask_win->w()+10;
-  else
-    w+=10;
-  if(h<ask_win->h())
-    h=ask_win->h();
-  else
-    h +=10;
-}
-else
-{
-  int W = o2->x()+o2->w()+5;
-  if(w<W)
-     w=W;
-  else if (w < W +10)
-    w=W+10;
-  else
-    w+=10;
-  if(h<ask_win->h())
-    h=ask_win->h();
-  else
-    h +=10;
-}
-ask_win->size(w,h);
-while (ask_win->shown()) Fl::wait();
-return ret_val;} {}
-  }
-  Function {ask_cb(Fl_Widget *o, long val)} {return_type {static void}
-  } {
-    code {ret_val = (int) val;
-o->parent()->hide();} {}
   }
   Function {button_style(int style=0)} {} {
     code {if(style==0)
@@ -1244,7 +1248,8 @@ if(txt==NULL)
 trace(txt);
 ((UI*)(p->user_data()))->pick_tab(txt);} {}
   }
-  Function {close_tab()} {} {
+  Function {close_tab()} {open
+  } {
     code {Fl_Widget * E = tabs->value();
 if(E==NULL)
 {
@@ -1796,6 +1801,7 @@ int r = 0;
 if (!insert)
 {
   r = E->textbuffer->loadfile(newfile.c_str());
+  E->init_inotify(newfile.c_str());
 }
 else
 {
@@ -2030,24 +2036,18 @@ trace("NULL");
 
 replace_dlg->hide();
 E->insert_position(0);
+
 int times = 0;
 Fl_Text_Buffer * buff = E->buffer();
-// Loop through the whole string
-for (int found = 1; found;)
-{
-  int pos = E->insert_position();
-  found = buff->search_forward(pos, find, &pos);
-  if (found)
-  {
-  // Found a match; update the position and replace text...
-    buff->select(pos, pos+strlen(find));
-    buff->remove_selection();
-    buff->insert(pos, replace);
-    E->insert_position(pos+strlen(replace));
-    E->show_insert_position();
-    times++; 
-  }
-}
+const char* text = buff->text();
+std::string T = text;
+
+//This function is WAY faster
+std::string res = replace_all_strings(T, find, replace, times);
+
+buff->text(res.c_str());
+E->modify_cb();
+
 if (times)
   fl_message("Replaced %d occurrences.", times);
 else
@@ -2156,8 +2156,7 @@ else
   ((Fl_Widget *)(textor->user_data()))->labelcolor(NORMAL_COLOR);
 }} {}
   }
-  Function {set_title(Fl_Widget* g)} {open
-  } {
+  Function {set_title(Fl_Widget* g)} {} {
     code {if(g==NULL)
   return;
 Fl_Group* gg = (Fl_Group*)g;
@@ -2254,6 +2253,20 @@ else
   E->WRAPPED=true;
   E->wrap_mode(Fl_Text_Display::WRAP_AT_BOUNDS, 0);
 }} {}
+  }
+  Function {replace_all_strings(std::string str, const std::string& old, const std::string& new_s, int &counter)} {open return_type {std::string}
+  } {
+    code {if(!old.empty())
+{
+  size_t pos = str.find(old);
+  while ((pos = str.find(old, pos)) != std::string::npos)
+  {
+    counter++;
+    str=str.replace(pos, old.length(), new_s);
+    pos += new_s.length();
+  }
+}
+return str;} {}
   }
 }
 
@@ -2491,7 +2504,7 @@ else
 return tmp;} {}
 }
 
-Function {get_type(std::string fname)} {return_type {std::string}
+Function {get_type(std::string fname)} {open return_type {std::string}
 } {
   code {SYNTAX_HEADERS=get_syntax_headers();
 if(!test_file(fname))
@@ -2557,6 +2570,7 @@ if(ext.compare("")==0)
   return "";
 
 std::string EXT=ext;
+std::transform(EXT.begin(), EXT.end(), EXT.begin(), ::tolower);
 unsigned int f_dot = EXT.find(".");
 if(f_dot<EXT.length())
   EXT=EXT.substr(f_dot+1,std::string::npos);
@@ -2587,6 +2601,8 @@ if(inputFileStrem.is_open())
     unsigned int eq = this_line.find("=");
     if(this_line.find("filename=")<this_line.length())
     {
+      std::string temp_fname = fname;
+      std::transform(temp_fname.begin(), temp_fname.end(), temp_fname.begin(), ::tolower);
       this_line=this_line.substr(eq+1,std::string::npos);
       std::vector<std::string> V = make_vec(this_line,",");
       for( std::vector<std::string>::iterator itr = V.begin();
@@ -2594,6 +2610,7 @@ if(inputFileStrem.is_open())
                                               ++itr)
       {
         std::string tmp=*itr;
+        std::transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
         if(tmp.compare(fname)==0)
           return HEADER;
       }
@@ -2608,6 +2625,7 @@ if(inputFileStrem.is_open())
                                               ++itr)
       {
         std::string tmp=*itr;
+        std::transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
         if(tmp.compare(EXT)==0)
           return HEADER;
       }
@@ -2916,4 +2934,76 @@ if(a[0] == '/')
   V=DIR_LIST;
 }
 return V;} {}
+}
+
+Function {ask(std::string MSG, std::string yes="Yes", std::string no="No", std::string other="")} {open return_type int
+} {
+  code {int w = 250;
+int h = 90;
+Fl_Double_Window* ask_win = new Fl_Double_Window(w, h);
+Fl_Box* o = new Fl_Box(5, 5, 5, 5);
+o->copy_label(MSG.c_str());
+o->redraw();
+Fl_Button* o1 = new Fl_Button(170, 55, 65, 30, yes.c_str());
+o1->box(FL_FLAT_BOX);
+o1->color((Fl_Color)62);
+o1->labelcolor(FL_BACKGROUND2_COLOR);
+o1->callback(ask_cb,1);
+Fl_Button* o2 = new Fl_Button(100, 55, 65, 30, no.c_str());
+o2->box(FL_FLAT_BOX);
+o2->color((Fl_Color)80);
+o2->labelcolor(FL_BACKGROUND2_COLOR);
+o2->callback(ask_cb,0);
+if(other.compare("")!=0)
+{
+  Fl_Button* o3 = new Fl_Button(30, 55, 65, 30, other.c_str());
+  o3->box(FL_FLAT_BOX);
+  o3->color((Fl_Color)94);
+  o3->labelcolor(FL_BACKGROUND2_COLOR);
+  o3->callback(ask_cb,2);
+}
+else
+{
+  o1->position(5,o1->y());
+  o2->position(10+o1->w(),o1->y());
+  
+}
+ask_win->end();
+ask_win->show();
+o->measure_label(w,h);
+o->size(w+10,h);
+if(other.compare("")!=0)
+{
+  if(w<ask_win->w())
+     w=ask_win->w()+10;
+  else
+    w+=10;
+  if(h<ask_win->h())
+    h=ask_win->h();
+  else
+    h +=10;
+}
+else
+{
+  int W = o2->x()+o2->w()+5;
+  if(w<W)
+     w=W;
+  else if (w < W +10)
+    w=W+10;
+  else
+    w+=10;
+  if(h<ask_win->h())
+    h=ask_win->h();
+  else
+    h +=10;
+}
+ask_win->size(w,h);
+while (ask_win->shown()) Fl::wait();
+return ret_val;} {}
+}
+
+Function {ask_cb(Fl_Widget *o, long val)} {open return_type {static void}
+} {
+  code {ret_val = (int) val;
+o->parent()->hide();} {}
 }

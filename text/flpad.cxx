@@ -45,6 +45,10 @@ Fl_Syntax_Text_Editor::~Fl_Syntax_Text_Editor() {
   buffer(0);
   textbuffer->remove_modify_callback(style_update, this);
   textbuffer->remove_modify_callback(changed_cb, this);
+  if(rm_inotify())
+  {
+    trace("problem removing inotify watch");
+  }
 }
 
 void Fl_Syntax_Text_Editor::changed_cb(int, int nInserted, int nDeleted, int, const char*, void *v) {
@@ -164,7 +168,10 @@ int Fl_Syntax_Text_Editor::handle(int event) {
         ui->dnd_file(Fl::event_text());
         return 1;
       }
+      break;
   }
+  //    check_inotify();
+  
   return Fl_Text_Editor::handle(event);
 }
 
@@ -189,6 +196,7 @@ void Fl_Syntax_Text_Editor::modify_cb(int pos, int nInserted, int nDeleted, int 
      stylebuffer->unselect();
      return;
   }
+  
   std::string thisLine;
   if ( (HIGHLIGHT_PLAIN==0)&& (STYLE_HEADER.compare("")==0) )
   {
@@ -377,6 +385,10 @@ std::string Fl_Syntax_Text_Editor::count_spaces() {
   int pos = insert_position();
   //std::cout<<pos<<"<--position"<<std::endl;
   std::string spaces;
+  int Pos = textbuffer->line_start(pos);
+  if(Pos == pos)
+    return "";
+  
   if(SPACES)
   {
     int start = textbuffer->line_start(pos);
@@ -395,6 +407,63 @@ std::string Fl_Syntax_Text_Editor::count_spaces() {
     }
   }
   return spaces;
+}
+
+void Fl_Syntax_Text_Editor::init_inotify(std::string file) {
+  //int event_buf_len = ( 1024 * ( (sizeof (struct inotify_event)) + 16 ) );
+  
+  inotify_fd = inotify_init();
+  inotify_wd = inotify_add_watch (inotify_fd, file.c_str(), IN_MODIFY | IN_CREATE | IN_DELETE);
+  
+  if ( inotify_wd < 0 )
+  {
+    perror("inotify_add_watch failed");
+  }
+}
+
+int Fl_Syntax_Text_Editor::rm_inotify() {
+  return inotify_rm_watch (inotify_fd, inotify_wd);
+}
+
+bool Fl_Syntax_Text_Editor::check_inotify() {
+  if(filename.compare("")==0)
+    return false;
+  //Took this directly from an old linux journal article
+  struct timeval time;
+  fd_set rfds;
+  int ret;
+  
+  /* timeout after five seconds */
+  time.tv_sec = 5;
+  time.tv_usec = 0;
+  
+  /* zero-out the fd_set */
+  FD_ZERO (&rfds);
+  
+  /*
+   * add the inotify fd to the fd_set -- of course,
+   * your application will probably want to add
+   * other file descriptors here, too
+   */
+  FD_SET (inotify_fd, &rfds);
+  
+  std::string File_was_modified = gettext(" was modified,\ndo you want to reload it?");
+  
+  ret = select (inotify_fd + 1, &rfds, NULL, NULL, &time);
+  
+  if( (ret !=0) && (FD_ISSET (inotify_fd, &rfds)) )
+  {
+    if(ask(filename + File_was_modified)==1)
+    {
+      //they want to reload it
+      rm_inotify();
+      textbuffer->loadfile(filename.c_str());
+      init_inotify(filename.c_str());
+      modify_cb();
+    }
+    return true;
+  }
+  return false;
 }
 
 void UI::cb_Close_i(Fl_Button* o, void*) {
@@ -1260,8 +1329,7 @@ Fl_Double_Window* UI::pref_window() {
           o->color( BROKEN_TEXT );
         } // Fl_Button* broken
         { Fl_Check_Button* o = indentor = new Fl_Check_Button(25, 285, 25, 25, gettext("Enable Auto Indentation"));
-          indentor->tooltip(gettext("This will save the initial spacing from the last EDITED line for the next ENT\
-ER"));
+          indentor->tooltip(gettext("This will save the initial spacing from the current line for the next ENTER"));
           indentor->down_box(FL_GTK_DOWN_BOX);
           indentor->color((Fl_Color)55);
           indentor->selection_color(FL_GREEN);
@@ -1319,76 +1387,6 @@ void UI::add_tab(bool LOAD, bool NEW ) {
     open_file(NEW);
   
   refresh_all();
-}
-
-int UI::ask(std::string MSG, std::string yes, std::string no, std::string other) {
-  int w = 250;
-  int h = 90;
-  Fl_Double_Window* ask_win = new Fl_Double_Window(w, h);
-  Fl_Box* o = new Fl_Box(5, 5, 5, 5);
-  o->copy_label(MSG.c_str());
-  o->redraw();
-  Fl_Button* o1 = new Fl_Button(170, 55, 65, 30, yes.c_str());
-  o1->box(FL_FLAT_BOX);
-  o1->color((Fl_Color)62);
-  o1->labelcolor(FL_BACKGROUND2_COLOR);
-  o1->callback(ask_cb,1);
-  Fl_Button* o2 = new Fl_Button(100, 55, 65, 30, no.c_str());
-  o2->box(FL_FLAT_BOX);
-  o2->color((Fl_Color)80);
-  o2->labelcolor(FL_BACKGROUND2_COLOR);
-  o2->callback(ask_cb,0);
-  if(other.compare("")!=0)
-  {
-    Fl_Button* o3 = new Fl_Button(30, 55, 65, 30, other.c_str());
-    o3->box(FL_FLAT_BOX);
-    o3->color((Fl_Color)94);
-    o3->labelcolor(FL_BACKGROUND2_COLOR);
-    o3->callback(ask_cb,2);
-  }
-  else
-  {
-    o1->position(5,o1->y());
-    o2->position(10+o1->w(),o1->y());
-    
-  }
-  ask_win->end();
-  ask_win->show();
-  o->measure_label(w,h);
-  o->size(w+10,h);
-  if(other.compare("")!=0)
-  {
-    if(w<ask_win->w())
-       w=ask_win->w()+10;
-    else
-      w+=10;
-    if(h<ask_win->h())
-      h=ask_win->h();
-    else
-      h +=10;
-  }
-  else
-  {
-    int W = o2->x()+o2->w()+5;
-    if(w<W)
-       w=W;
-    else if (w < W +10)
-      w=W+10;
-    else
-      w+=10;
-    if(h<ask_win->h())
-      h=ask_win->h();
-    else
-      h +=10;
-  }
-  ask_win->size(w,h);
-  while (ask_win->shown()) Fl::wait();
-  return ret_val;
-}
-
-void UI::ask_cb(Fl_Widget *o, long val) {
-  ret_val = (int) val;
-  o->parent()->hide();
 }
 
 void UI::button_style(int style) {
@@ -2087,6 +2085,7 @@ void UI::load_file(std::string newfile, int ipos,bool NEW) {
   if (!insert)
   {
     r = E->textbuffer->loadfile(newfile.c_str());
+    E->init_inotify(newfile.c_str());
   }
   else
   {
@@ -2333,24 +2332,18 @@ void UI::replall_cb() {
   
   replace_dlg->hide();
   E->insert_position(0);
+  
   int times = 0;
   Fl_Text_Buffer * buff = E->buffer();
-  // Loop through the whole string
-  for (int found = 1; found;)
-  {
-    int pos = E->insert_position();
-    found = buff->search_forward(pos, find, &pos);
-    if (found)
-    {
-    // Found a match; update the position and replace text...
-      buff->select(pos, pos+strlen(find));
-      buff->remove_selection();
-      buff->insert(pos, replace);
-      E->insert_position(pos+strlen(replace));
-      E->show_insert_position();
-      times++; 
-    }
-  }
+  const char* text = buff->text();
+  std::string T = text;
+  
+  //This function is WAY faster
+  std::string res = replace_all_strings(T, find, replace, times);
+  
+  buff->text(res.c_str());
+  E->modify_cb();
+  
   if (times)
     fl_message("Replaced %d occurrences.", times);
   else
@@ -2566,6 +2559,20 @@ void UI::wordwrap() {
     E->WRAPPED=true;
     E->wrap_mode(Fl_Text_Display::WRAP_AT_BOUNDS, 0);
   }
+}
+
+std::string UI::replace_all_strings(std::string str, const std::string& old, const std::string& new_s, int &counter) {
+  if(!old.empty())
+  {
+    size_t pos = str.find(old);
+    while ((pos = str.find(old, pos)) != std::string::npos)
+    {
+      counter++;
+      str=str.replace(pos, old.length(), new_s);
+      pos += new_s.length();
+    }
+  }
+  return str;
 }
 
 std::vector<std::string> comma_line(std::string lang,std::string field, bool ignore_case ) {
@@ -2858,6 +2865,7 @@ std::string get_type(std::string fname) {
     return "";
   
   std::string EXT=ext;
+  std::transform(EXT.begin(), EXT.end(), EXT.begin(), ::tolower);
   unsigned int f_dot = EXT.find(".");
   if(f_dot<EXT.length())
     EXT=EXT.substr(f_dot+1,std::string::npos);
@@ -2888,6 +2896,8 @@ std::string get_type(std::string fname) {
       unsigned int eq = this_line.find("=");
       if(this_line.find("filename=")<this_line.length())
       {
+        std::string temp_fname = fname;
+        std::transform(temp_fname.begin(), temp_fname.end(), temp_fname.begin(), ::tolower);
         this_line=this_line.substr(eq+1,std::string::npos);
         std::vector<std::string> V = make_vec(this_line,",");
         for( std::vector<std::string>::iterator itr = V.begin();
@@ -2895,6 +2905,7 @@ std::string get_type(std::string fname) {
                                                 ++itr)
         {
           std::string tmp=*itr;
+          std::transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
           if(tmp.compare(fname)==0)
             return HEADER;
         }
@@ -2909,6 +2920,7 @@ std::string get_type(std::string fname) {
                                                 ++itr)
         {
           std::string tmp=*itr;
+          std::transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
           if(tmp.compare(EXT)==0)
             return HEADER;
         }
@@ -3207,4 +3219,74 @@ std::vector <std::string> types(std::string header, bool ignore_case ) {
     V=DIR_LIST;
   }
   return V;
+}
+
+int ask(std::string MSG, std::string yes, std::string no, std::string other) {
+  int w = 250;
+  int h = 90;
+  Fl_Double_Window* ask_win = new Fl_Double_Window(w, h);
+  Fl_Box* o = new Fl_Box(5, 5, 5, 5);
+  o->copy_label(MSG.c_str());
+  o->redraw();
+  Fl_Button* o1 = new Fl_Button(170, 55, 65, 30, yes.c_str());
+  o1->box(FL_FLAT_BOX);
+  o1->color((Fl_Color)62);
+  o1->labelcolor(FL_BACKGROUND2_COLOR);
+  o1->callback(ask_cb,1);
+  Fl_Button* o2 = new Fl_Button(100, 55, 65, 30, no.c_str());
+  o2->box(FL_FLAT_BOX);
+  o2->color((Fl_Color)80);
+  o2->labelcolor(FL_BACKGROUND2_COLOR);
+  o2->callback(ask_cb,0);
+  if(other.compare("")!=0)
+  {
+    Fl_Button* o3 = new Fl_Button(30, 55, 65, 30, other.c_str());
+    o3->box(FL_FLAT_BOX);
+    o3->color((Fl_Color)94);
+    o3->labelcolor(FL_BACKGROUND2_COLOR);
+    o3->callback(ask_cb,2);
+  }
+  else
+  {
+    o1->position(5,o1->y());
+    o2->position(10+o1->w(),o1->y());
+    
+  }
+  ask_win->end();
+  ask_win->show();
+  o->measure_label(w,h);
+  o->size(w+10,h);
+  if(other.compare("")!=0)
+  {
+    if(w<ask_win->w())
+       w=ask_win->w()+10;
+    else
+      w+=10;
+    if(h<ask_win->h())
+      h=ask_win->h();
+    else
+      h +=10;
+  }
+  else
+  {
+    int W = o2->x()+o2->w()+5;
+    if(w<W)
+       w=W;
+    else if (w < W +10)
+      w=W+10;
+    else
+      w+=10;
+    if(h<ask_win->h())
+      h=ask_win->h();
+    else
+      h +=10;
+  }
+  ask_win->size(w,h);
+  while (ask_win->shown()) Fl::wait();
+  return ret_val;
+}
+
+void ask_cb(Fl_Widget *o, long val) {
+  ret_val = (int) val;
+  o->parent()->hide();
 }

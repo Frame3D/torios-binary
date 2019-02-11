@@ -30,6 +30,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <sys/inotify.h>
 #include <unistd.h>
 int ret_val; 
 std::string return_value; 
@@ -58,6 +59,8 @@ std::string SYNTAX_FILE;
 
 class Fl_Syntax_Text_Editor : public Fl_Text_Editor {
 public:
+  int inotify_fd; 
+  int inotify_wd; 
   Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0);
   ~Fl_Syntax_Text_Editor();
   bool SPACES; 
@@ -99,6 +102,9 @@ public:
   void update_styletable();
   void use_spaces();
   std::string count_spaces();
+  void init_inotify(std::string file);
+  int rm_inotify();
+  bool check_inotify();
 };
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Text_Display.H>
@@ -364,8 +370,6 @@ private:
   static void cb_SAVE(Fl_Button*, void*);
 public:
   void add_tab(bool LOAD=true, bool NEW = true);
-  int ask(std::string MSG, std::string yes="Yes", std::string no="No", std::string other="");
-  static void ask_cb(Fl_Widget *o, long val);
   void button_style(int style=0);
   void change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line);
   void check_file(std::string file,std::string title="About");
@@ -422,6 +426,7 @@ public:
   static void theme_menu_cb(Fl_Widget* o, void* v);
   void undo_cb();
   void wordwrap();
+  std::string replace_all_strings(std::string str, const std::string& old, const std::string& new_s, int &counter);
 };
 std::vector<std::string> comma_line(std::string lang,std::string field, bool ignore_case = false);
 unsigned int convert(std::string num, int default_value=0);
@@ -444,4 +449,6 @@ std::string syntax_type_from_filename(std::string fname);
 void trace(std::string MSG, int n = 0);
 bool test_file(std::string file);
 std::vector <std::string> types(std::string header, bool ignore_case = false);
+int ask(std::string MSG, std::string yes="Yes", std::string no="No", std::string other="");
+void ask_cb(Fl_Widget *o, long val);
 #endif
