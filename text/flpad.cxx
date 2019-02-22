@@ -11,6 +11,7 @@ Fl_Syntax_Text_Editor::Fl_Syntax_Text_Editor(int x, int y, int w, int h, const c
   IGNORE_SYNTAX_CASE = false;
   SPACES             = false;
   RELEASE            = false;
+  DND_START          = false;
   WRAPPED            = false;
   changed            = 0;
   loading            = 0;
@@ -39,6 +40,12 @@ Fl_Syntax_Text_Editor::Fl_Syntax_Text_Editor(int x, int y, int w, int h, const c
   theme_editor(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);
   
   textbuffer->add_modify_callback(changed_cb,(void *)this);
+  /*if(!take_focus())
+  {
+    trace("Failed to take focus for Text Editor");
+  }
+  */
+  Fl::focus(this);
 }
 
 Fl_Syntax_Text_Editor::~Fl_Syntax_Text_Editor() {
@@ -143,7 +150,6 @@ int Fl_Syntax_Text_Editor::handle(int event) {
   {
     case FL_PUSH:
     case FL_RELEASE:
-      //trace("push/release!");
       if(Fl::event_button() == FL_RIGHT_MOUSE)
       {
         if(Fl::event_clicks())
@@ -151,20 +157,18 @@ int Fl_Syntax_Text_Editor::handle(int event) {
           break;
         }
         ui->make_popup(this);
-        //trace("Right");
         return 1;
       }
       break;
     case FL_DND_DRAG:
     case FL_DND_LEAVE:
-    break;
     case FL_DND_RELEASE:
-      RELEASE=true;
+      RELEASE = true;
       break;
     case FL_PASTE:
       if(RELEASE)
       {
-        RELEASE=false;
+        RELEASE   = false;
         ui->dnd_file(Fl::event_text());
         return 1;
       }
@@ -764,6 +768,8 @@ Fl_Menu_Item UI::menu_menu[] = {
 
 void UI::cb_tabs_i(Fl_Tabs* o, void*) {
   set_title(o->value());
+Fl_Group* g = o->child(o->find(o->value()))->as_group();
+Fl::focus(g->child(0));
 }
 void UI::cb_tabs(Fl_Tabs* o, void* v) {
   ((UI*)(o->parent()->user_data()))->cb_tabs_i(o,v);

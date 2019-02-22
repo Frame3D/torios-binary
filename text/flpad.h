@@ -66,7 +66,7 @@ public:
   bool SPACES; 
   bool WRAPPED; 
   bool IGNORE_SYNTAX_CASE; 
-  bool RELEASE; 
+  bool RELEASE, DND_START; 
   Fl_Text_Display::Style_Table_Entry styletable[10]; 
   Fl_Text_Buffer * stylebuffer; 
   Fl_Text_Buffer * textbuffer; 

@@ -128,10 +128,12 @@ class Fl_Syntax_Text_Editor {open : {public Fl_Text_Editor}
   }
   decl {int inotify_wd;} {public local
   }
-  Function {Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0):Fl_Text_Editor(x,y,w,h,label)} {} {
+  Function {Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0):Fl_Text_Editor(x,y,w,h,label)} {open
+  } {
     code {IGNORE_SYNTAX_CASE = false;
 SPACES             = false;
 RELEASE            = false;
+DND_START          = false;
 WRAPPED            = false;
 changed            = 0;
 loading            = 0;
@@ -159,7 +161,13 @@ box(FL_FLAT_BOX);
 
 theme_editor(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);
 
-textbuffer->add_modify_callback(changed_cb,(void *)this);} {}
+textbuffer->add_modify_callback(changed_cb,(void *)this);
+/*if(!take_focus())
+{
+  trace("Failed to take focus for Text Editor");
+}
+*/
+Fl::focus(this);} {}
   }
   Function {~Fl_Syntax_Text_Editor()} {} {
     code {buffer(0);
@@ -176,7 +184,7 @@ if(rm_inotify())
   }
   decl {bool IGNORE_SYNTAX_CASE;} {public local
   }
-  decl {bool RELEASE;} {public local
+  decl {bool RELEASE, DND_START;} {public local
   }
   decl {Fl_Text_Display::Style_Table_Entry styletable[10];} {public global
   }
@@ -294,7 +302,6 @@ switch(event)
 {
   case FL_PUSH:
   case FL_RELEASE:
-    //trace("push/release!");
     if(Fl::event_button() == FL_RIGHT_MOUSE)
     {
       if(Fl::event_clicks())
@@ -302,20 +309,18 @@ switch(event)
         break;
       }
       ui->make_popup(this);
-      //trace("Right");
       return 1;
     }
     break;
   case FL_DND_DRAG:
   case FL_DND_LEAVE:
-  break;
   case FL_DND_RELEASE:
-    RELEASE=true;
+    RELEASE = true;
     break;
   case FL_PASTE:
     if(RELEASE)
     {
-      RELEASE=false;
+      RELEASE   = false;
       ui->dnd_file(Fl::event_text());
       return 1;
     }
@@ -367,8 +372,7 @@ else
     return;
   stylebuffer->text(RES);
 }
-redisplay_range(0,textbuffer->length());} {selected
-    }
+redisplay_range(0,textbuffer->length());} {}
   }
   Function {refresh()} {} {
     code {set_syntax();
@@ -693,7 +697,8 @@ return;} {}
       }
     }
   }
-  Function {make_window()} {} {
+  Function {make_window()} {open
+  } {
     Fl_Window win {
       label flpad open
       xywh {348 120 520 545} type Double color 47 hide
@@ -897,7 +902,9 @@ Fl_Text_Editor::kf_select_all(0,textor);}
         }
       }
       Fl_Tabs tabs {
-        callback {set_title(o->value());} open
+        callback {set_title(o->value());
+Fl_Group* g = o->child(o->find(o->value()))->as_group();
+Fl::focus(g->child(0));} open selected
         xywh {0 55 520 490} box FLAT_BOX selection_color 23 when 3
         code0 {add_tab(false);}
         code1 {button_style(BUTTON_COLOR);}
