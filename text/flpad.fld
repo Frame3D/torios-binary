@@ -92,8 +92,7 @@ decl {int ret_val;} {public global
 decl {std::string return_value;} {public global
 }
 
-decl {unsigned int EDIT_COLOR;
-unsigned int NORMAL_COLOR;} {public global
+decl {unsigned int EDIT_COLOR, NORMAL_COLOR, MATCH_CASE, BACKWARD_SEARCH;} {public global
 }
 
 decl {unsigned int FOREGROUND_TEXT;
@@ -210,7 +209,7 @@ if(rm_inotify())
   }
   decl {lexertk::helper::symbol_replacer symbol_replacer;} {public local
   }
-  Function {changed_cb(int, int nInserted, int nDeleted, int, const char*, void *v)} {open return_type {static void}
+  Function {changed_cb(int, int nInserted, int nDeleted, int, const char*, void *v)} {return_type {static void}
   } {
     code {Fl_Syntax_Text_Editor * o = (Fl_Syntax_Text_Editor *)v;
 std::string f = o->filename;
@@ -517,8 +516,7 @@ get_styletable(J,9);
 
 use_spaces();} {}
   }
-  Function {use_spaces()} {open
-  } {
+  Function {use_spaces()} {} {
     code {remove_key_binding(FL_Enter,FL_TEXT_EDITOR_ANY_STATE);
 if(SPACES)
 {
@@ -531,7 +529,7 @@ else
   add_key_binding(FL_Enter,FL_TEXT_EDITOR_ANY_STATE,kf_enter);
 }} {}
   }
-  Function {count_spaces()} {open return_type {std::string}
+  Function {count_spaces()} {return_type {std::string}
   } {
     code {int pos = insert_position();
 //std::cout<<pos<<"<--position"<<std::endl;
@@ -559,8 +557,7 @@ if(SPACES)
 }
 return spaces;} {}
   }
-  Function {init_inotify(std::string file)} {open
-  } {
+  Function {init_inotify(std::string file)} {} {
     code {//int event_buf_len = ( 1024 * ( (sizeof (struct inotify_event)) + 16 ) );
 
 inotify_fd = inotify_init();
@@ -571,11 +568,11 @@ if ( inotify_wd < 0 )
   perror("inotify_add_watch failed");
 }} {}
   }
-  Function {rm_inotify()} {open return_type int
+  Function {rm_inotify()} {return_type int
   } {
     code {return inotify_rm_watch (inotify_fd, inotify_wd);} {}
   }
-  Function {check_inotify()} {open return_type bool
+  Function {check_inotify()} {return_type bool
   } {
     code {if(filename.compare("")==0)
   return false;
@@ -664,6 +661,53 @@ if ( m )
   m->do_callback(o, m->user_data());
 }
 return;} {}
+  }
+  Function {find_window()} {open
+  } {
+    Fl_Window find_win {open
+      xywh {298 104 270 150} type Double hide
+    } {
+      Fl_Input finder {
+        callback {int match = match_case->value();
+int backward   = search_bwd->value();
+const char* va = finder->value();
+if(va==NULL)
+  return;
+std::string term = va;
+find2_cb(match, backward,term);}
+        xywh {40 5 185 25} box FLAT_BOX selection_color 80 when 8
+        code0 {std::string init = find_selection();}
+        code1 {o->value(init.c_str());}
+      }
+      Fl_Check_Button match_case {
+        label {Match Case}
+        callback {MATCH_CASE = o->value();}
+        xywh {40 40 115 25} down_box GTK_DOWN_BOX color 55 selection_color 63
+        code0 {o->value(MATCH_CASE);}
+      }
+      Fl_Button {} {
+        label Search
+        callback {int match = match_case->value();
+int backward   = search_bwd->value();
+const char* va = finder->value();
+if(va==NULL)
+  return;
+std::string term = va;
+find2_cb(match, backward,term);}
+        xywh {180 110 80 25} box FLAT_BOX color 62 selection_color 68 labelcolor 7
+      }
+      Fl_Check_Button search_bwd {
+        label {Backward Search}
+        callback {BACKWARD_SEARCH = o->value();}
+        xywh {40 65 145 25} down_box GTK_DOWN_BOX color 55 selection_color 63
+        code0 {o->value(BACKWARD_SEARCH);}
+      }
+      Fl_Button {} {
+        label Cancel
+        callback {o->parent()->hide();}
+        xywh {95 110 75 25} box FLAT_BOX color 80 selection_color 64 labelcolor 7
+      }
+    }
   }
   Function {make_replace()} {} {
     Fl_Window replace_dlg {
@@ -851,12 +895,12 @@ Fl_Text_Editor::kf_select_all(0,textor);}
           }
         }
         Submenu {} {
-          label {&Search}
+          label {&Search} open
           xywh {0 0 100 20}
         } {
           MenuItem {} {
             label {&Find}
-            callback {find_cb();}
+            callback {find_window()->show();}
             xywh {0 0 100 20} shortcut 0x40066
           }
           MenuItem {} {
@@ -904,7 +948,7 @@ Fl_Text_Editor::kf_select_all(0,textor);}
       Fl_Tabs tabs {
         callback {set_title(o->value());
 Fl_Group* g = o->child(o->find(o->value()))->as_group();
-Fl::focus(g->child(0));} open selected
+Fl::focus(g->child(0));} open
         xywh {0 55 520 490} box FLAT_BOX selection_color 23 when 3
         code0 {add_tab(false);}
         code1 {button_style(BUTTON_COLOR);}
@@ -1255,8 +1299,7 @@ if(txt==NULL)
 trace(txt);
 ((UI*)(p->user_data()))->pick_tab(txt);} {}
   }
-  Function {close_tab()} {open
-  } {
+  Function {close_tab()} {} {
     code {Fl_Widget * E = tabs->value();
 if(E==NULL)
 {
@@ -1344,7 +1387,7 @@ if(textor==NULL)
   return;
 Fl_Text_Editor::kf_copy(0, textor);} {}
   }
-  Function {current_editor()} {open return_type {Fl_Syntax_Text_Editor *}
+  Function {current_editor()} {return_type {Fl_Syntax_Text_Editor *}
   } {
     code {if(tabs==NULL)
   return NULL;
@@ -1436,7 +1479,8 @@ for( std::vector<std::string>::iterator itr = V.begin();
   } {
     code {return make_vec(in,"\\n");} {}
   }
-  Function {find_cb()} {} {
+  Function {find_cb()} {open
+  } {
     code {std::string val;
 Fl_Syntax_Text_Editor * E = current_editor();
 std::string SRCH = "";
@@ -1461,44 +1505,68 @@ if (val.compare("")!=0)
   find2_cb();
 }} {}
   }
-  Function {find2_cb()} {} {
+  Function {find2_cb(int match_case=0, int backward = 1, std::string term="")} {open
+  } {
     code {Fl_Syntax_Text_Editor * E = current_editor();
+
 if(E==NULL)
-  return;
-std::string SRCH = "";
-SRCH = E->search;
-if (SRCH.compare("")==0)
 {
-  // Search string is blank; get a new one...
-  find_cb();
   return;
 }
+
 int pos = E->insert_position();
-Fl_Text_Buffer * buff = E->buffer();
-int found = buff->search_forward(pos, SRCH.c_str(), &pos);
+
+int found = 0;
+
+if(backward)
+{
+  int init = E->textbuffer->line_start(pos);
+  init--;
+   E->textbuffer->line_start(init);
+  found = E->textbuffer->search_backward(init, term.c_str(), &pos, match_case);
+}
+else
+{
+  found = E->textbuffer->search_forward(pos, term.c_str(), &pos, match_case);
+}
+
 if (found)
 {
   // Found a match; select and update the position...
-  buff->select(pos, pos+SRCH.length());
-  E->search = buff->selection_text();
-  E->insert_position(pos+SRCH.length());
+  E->textbuffer->select(pos, pos+term.length());
+  E->search = E->textbuffer->selection_text();
+  E->insert_position(pos+term.length());
   E->show_insert_position();
 }
 else
 {
-  if(buff->selected())
+  if(E->textbuffer->selected())
   {
-    if(fl_choice("Do you want to search from the beginning?",fl_no,fl_yes,NULL))
+    std::string begend = "beginning";
+
+    if(backward)
+      begend = "end";
+
+    if(ask("Do you want to search from the "+begend +"?")==1)
     {
-       E->insert_position(0);
-       find2_cb();
+      if(backward)
+      {
+        E->insert_position(E->textbuffer->length());
+      }
+      else
+      {
+        E->insert_position(0);
+      }
+      E->textbuffer->unselect();
+      find2_cb(match_case,backward,term);
     }
   }
   else
   {
-    fl_alert("No occurrences of \\'%s\\' found!", SRCH.c_str());
+    fl_alert("No occurrences of \\'%s\\' found!", term.c_str());
   }
-}} {}
+}} {selected
+    }
   }
   Function {font_populate(Fl_Browser *o)} {} {
     code {Fl_Font a;a = Fl::set_fonts("-*");
@@ -1632,6 +1700,16 @@ if(inputFileStrem.is_open())
     {
       subString=line.substr(start,std::string::npos);
       INDENT_NEW_LINES=convert(subString);
+    }
+    if(line.find("MC:")<line.length())
+    {
+      subString=line.substr(start,std::string::npos);
+      MATCH_CASE=convert(subString);
+    }
+    if(line.find("BW:")<line.length())
+    {
+      subString=line.substr(start,std::string::npos);
+      BACKWARD_SEARCH=convert(subString);
     }
   }
 }
@@ -2026,7 +2104,8 @@ if (found)
 else
   fl_alert("No occurrences of \\'%s\\' found!", find);} {}
   }
-  Function {replall_cb()} {} {
+  Function {replall_cb()} {open
+  } {
     code {Fl_Syntax_Text_Editor * E = current_editor();
 if(E==NULL)
   return;
@@ -2115,7 +2194,7 @@ newfile = fl_file_chooser("Save File As?", "*", textor->filename.c_str());
 if (newfile != NULL)
   save_file(newfile);} {}
   }
-  Function {save_preferences()} {return_type bool
+  Function {save_preferences()} {open return_type bool
   } {
     code {std::string out=prefline("FG",FOREGROUND_TEXT);
 out+=prefline("BG",BACKGROUND_TEXT);
@@ -2135,7 +2214,8 @@ out+=prefline("SY",SYMBOLS_TEXT);
 out+=prefline("SP",SPECIAL_TEXT);
 out+=prefline("BR",BROKEN_TEXT);
 out+=prefline("IL",INDENT_NEW_LINES);
-
+out+=prefline("MC",MATCH_CASE);
+out+=prefline("BW",BACKWARD_SEARCH);
 std::ofstream dest;
 std::string fname=get_filename();
 dest.open(fname.c_str());
@@ -2274,6 +2354,32 @@ else
   }
 }
 return str;} {}
+  }
+  Function {find_selection()} {open return_type {std::string}
+  } {
+    code {std::string val;
+Fl_Syntax_Text_Editor * E = current_editor();
+
+if(E==NULL)
+{
+  return "";
+}
+
+std::string SRCH = E->search;
+char *       tmp = E->textbuffer->selection_text();
+
+if(tmp!=NULL)
+{
+  std::string t = tmp;
+
+  if(t.compare("")!=0)
+  {
+    SRCH      = tmp;
+    E->search = SRCH;
+  }
+}
+
+return SRCH;} {}
   }
 }
 
@@ -2945,7 +3051,7 @@ return V;} {}
 
 Function {ask(std::string MSG, std::string yes="Yes", std::string no="No", std::string other="")} {open return_type int
 } {
-  code {int w = 250;
+  code {int w = 450;
 int h = 90;
 Fl_Double_Window* ask_win = new Fl_Double_Window(w, h);
 Fl_Box* o = new Fl_Box(5, 5, 5, 5);

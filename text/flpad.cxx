@@ -477,6 +477,53 @@ void UI::cb_Close(Fl_Button* o, void* v) {
   ((UI*)(o->parent()->user_data()))->cb_Close_i(o,v);
 }
 
+void UI::cb_finder_i(Fl_Input*, void*) {
+  int match = match_case->value();
+int backward   = search_bwd->value();
+const char* va = finder->value();
+if(va==NULL)
+  return;
+std::string term = va;
+find2_cb(match, backward,term);
+}
+void UI::cb_finder(Fl_Input* o, void* v) {
+  ((UI*)(o->parent()->user_data()))->cb_finder_i(o,v);
+}
+
+void UI::cb_match_case_i(Fl_Check_Button* o, void*) {
+  MATCH_CASE = o->value();
+}
+void UI::cb_match_case(Fl_Check_Button* o, void* v) {
+  ((UI*)(o->parent()->user_data()))->cb_match_case_i(o,v);
+}
+
+void UI::cb_Search_i(Fl_Button*, void*) {
+  int match = match_case->value();
+int backward   = search_bwd->value();
+const char* va = finder->value();
+if(va==NULL)
+  return;
+std::string term = va;
+find2_cb(match, backward,term);
+}
+void UI::cb_Search(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->user_data()))->cb_Search_i(o,v);
+}
+
+void UI::cb_search_bwd_i(Fl_Check_Button* o, void*) {
+  BACKWARD_SEARCH = o->value();
+}
+void UI::cb_search_bwd(Fl_Check_Button* o, void* v) {
+  ((UI*)(o->parent()->user_data()))->cb_search_bwd_i(o,v);
+}
+
+void UI::cb_Cancel_i(Fl_Button* o, void*) {
+  o->parent()->hide();
+}
+void UI::cb_Cancel(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->user_data()))->cb_Cancel_i(o,v);
+}
+
 void UI::cb_replace_cancel_i(Fl_Button*, void*) {
   replace_dlg->hide();
 }
@@ -677,7 +724,7 @@ void UI::cb_Word(Fl_Menu_* o, void* v) {
 }
 
 void UI::cb_Find_i(Fl_Menu_*, void*) {
-  find_cb();
+  find_window()->show();
 }
 void UI::cb_Find(Fl_Menu_* o, void* v) {
   ((UI*)(o->parent()->user_data()))->cb_Find_i(o,v);
@@ -901,11 +948,11 @@ void UI::cb_broken(Fl_Button* o, void* v) {
   ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_broken_i(o,v);
 }
 
-void UI::cb_Cancel_i(Fl_Button* o, void*) {
+void UI::cb_Cancel1_i(Fl_Button* o, void*) {
   o->parent()->hide();
 }
-void UI::cb_Cancel(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->user_data()))->cb_Cancel_i(o,v);
+void UI::cb_Cancel1(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->user_data()))->cb_Cancel1_i(o,v);
 }
 
 void UI::cb_SAVE_i(Fl_Button* o, void*) {
@@ -984,6 +1031,50 @@ void UI::make_popup(Fl_Widget *o) {
     m->do_callback(o, m->user_data());
   }
   return;
+}
+
+Fl_Double_Window* UI::find_window() {
+  { find_win = new Fl_Double_Window(270, 150);
+    find_win->user_data((void*)(this));
+    { Fl_Input* o = finder = new Fl_Input(40, 5, 185, 25);
+      finder->box(FL_FLAT_BOX);
+      finder->selection_color((Fl_Color)80);
+      finder->callback((Fl_Callback*)cb_finder);
+      finder->when(FL_WHEN_ENTER_KEY);
+      std::string init = find_selection();
+      o->value(init.c_str());
+    } // Fl_Input* finder
+    { Fl_Check_Button* o = match_case = new Fl_Check_Button(40, 40, 115, 25, gettext("Match Case"));
+      match_case->down_box(FL_GTK_DOWN_BOX);
+      match_case->color((Fl_Color)55);
+      match_case->selection_color(FL_GREEN);
+      match_case->callback((Fl_Callback*)cb_match_case);
+      o->value(MATCH_CASE);
+    } // Fl_Check_Button* match_case
+    { Fl_Button* o = new Fl_Button(180, 110, 80, 25, gettext("Search"));
+      o->box(FL_FLAT_BOX);
+      o->color((Fl_Color)62);
+      o->selection_color((Fl_Color)68);
+      o->labelcolor(FL_BACKGROUND2_COLOR);
+      o->callback((Fl_Callback*)cb_Search);
+    } // Fl_Button* o
+    { Fl_Check_Button* o = search_bwd = new Fl_Check_Button(40, 65, 145, 25, gettext("Backward Search"));
+      search_bwd->down_box(FL_GTK_DOWN_BOX);
+      search_bwd->color((Fl_Color)55);
+      search_bwd->selection_color(FL_GREEN);
+      search_bwd->callback((Fl_Callback*)cb_search_bwd);
+      o->value(BACKWARD_SEARCH);
+    } // Fl_Check_Button* search_bwd
+    { Fl_Button* o = new Fl_Button(95, 110, 75, 25, gettext("Cancel"));
+      o->box(FL_FLAT_BOX);
+      o->color((Fl_Color)80);
+      o->selection_color((Fl_Color)64);
+      o->labelcolor(FL_BACKGROUND2_COLOR);
+      o->callback((Fl_Callback*)cb_Cancel);
+    } // Fl_Button* o
+    find_win->end();
+  } // Fl_Double_Window* find_win
+  return find_win;
 }
 
 Fl_Double_Window* UI::make_replace() {
@@ -1349,7 +1440,7 @@ Fl_Double_Window* UI::pref_window() {
       o->box(FL_FLAT_BOX);
       o->color((Fl_Color)80);
       o->labelcolor(FL_BACKGROUND2_COLOR);
-      o->callback((Fl_Callback*)cb_Cancel);
+      o->callback((Fl_Callback*)cb_Cancel1);
     } // Fl_Button* o
     { Fl_Button* o = new Fl_Button(240, 425, 65, 30, gettext("SAVE"));
       o->box(FL_FLAT_BOX);
@@ -1738,42 +1829,64 @@ void UI::find_cb() {
   }
 }
 
-void UI::find2_cb() {
+void UI::find2_cb(int match_case, int backward , std::string term) {
   Fl_Syntax_Text_Editor * E = current_editor();
+  
   if(E==NULL)
-    return;
-  std::string SRCH = "";
-  SRCH = E->search;
-  if (SRCH.compare("")==0)
   {
-    // Search string is blank; get a new one...
-    find_cb();
     return;
   }
+  
   int pos = E->insert_position();
-  Fl_Text_Buffer * buff = E->buffer();
-  int found = buff->search_forward(pos, SRCH.c_str(), &pos);
+  
+  int found = 0;
+  
+  if(backward)
+  {
+    int init = E->textbuffer->line_start(pos);
+    init--;
+     E->textbuffer->line_start(init);
+    found = E->textbuffer->search_backward(init, term.c_str(), &pos, match_case);
+  }
+  else
+  {
+    found = E->textbuffer->search_forward(pos, term.c_str(), &pos, match_case);
+  }
+  
   if (found)
   {
     // Found a match; select and update the position...
-    buff->select(pos, pos+SRCH.length());
-    E->search = buff->selection_text();
-    E->insert_position(pos+SRCH.length());
+    E->textbuffer->select(pos, pos+term.length());
+    E->search = E->textbuffer->selection_text();
+    E->insert_position(pos+term.length());
     E->show_insert_position();
   }
   else
   {
-    if(buff->selected())
+    if(E->textbuffer->selected())
     {
-      if(fl_choice("Do you want to search from the beginning?",fl_no,fl_yes,NULL))
+      std::string begend = "beginning";
+  
+      if(backward)
+        begend = "end";
+  
+      if(ask("Do you want to search from the "+begend +"?")==1)
       {
-         E->insert_position(0);
-         find2_cb();
+        if(backward)
+        {
+          E->insert_position(E->textbuffer->length());
+        }
+        else
+        {
+          E->insert_position(0);
+        }
+        E->textbuffer->unselect();
+        find2_cb(match_case,backward,term);
       }
     }
     else
     {
-      fl_alert("No occurrences of \'%s\' found!", SRCH.c_str());
+      fl_alert("No occurrences of \'%s\' found!", term.c_str());
     }
   }
 }
@@ -1911,6 +2024,16 @@ void UI::get_preferences() {
       {
         subString=line.substr(start,std::string::npos);
         INDENT_NEW_LINES=convert(subString);
+      }
+      if(line.find("MC:")<line.length())
+      {
+        subString=line.substr(start,std::string::npos);
+        MATCH_CASE=convert(subString);
+      }
+      if(line.find("BW:")<line.length())
+      {
+        subString=line.substr(start,std::string::npos);
+        BACKWARD_SEARCH=convert(subString);
       }
     }
   }
@@ -2435,7 +2558,8 @@ bool UI::save_preferences() {
   out+=prefline("SP",SPECIAL_TEXT);
   out+=prefline("BR",BROKEN_TEXT);
   out+=prefline("IL",INDENT_NEW_LINES);
-  
+  out+=prefline("MC",MATCH_CASE);
+  out+=prefline("BW",BACKWARD_SEARCH);
   std::ofstream dest;
   std::string fname=get_filename();
   dest.open(fname.c_str());
@@ -2579,6 +2703,32 @@ std::string UI::replace_all_strings(std::string str, const std::string& old, con
     }
   }
   return str;
+}
+
+std::string UI::find_selection() {
+  std::string val;
+  Fl_Syntax_Text_Editor * E = current_editor();
+  
+  if(E==NULL)
+  {
+    return "";
+  }
+  
+  std::string SRCH = E->search;
+  char *       tmp = E->textbuffer->selection_text();
+  
+  if(tmp!=NULL)
+  {
+    std::string t = tmp;
+  
+    if(t.compare("")!=0)
+    {
+      SRCH      = tmp;
+      E->search = SRCH;
+    }
+  }
+  
+  return SRCH;
 }
 
 std::vector<std::string> comma_line(std::string lang,std::string field, bool ignore_case ) {
@@ -3228,7 +3378,7 @@ std::vector <std::string> types(std::string header, bool ignore_case ) {
 }
 
 int ask(std::string MSG, std::string yes, std::string no, std::string other) {
-  int w = 250;
+  int w = 450;
   int h = 90;
   Fl_Double_Window* ask_win = new Fl_Double_Window(w, h);
   Fl_Box* o = new Fl_Box(5, 5, 5, 5);

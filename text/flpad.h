@@ -34,8 +34,7 @@
 #include <unistd.h>
 int ret_val; 
 std::string return_value; 
-unsigned int EDIT_COLOR;
-unsigned int NORMAL_COLOR; 
+unsigned int EDIT_COLOR, NORMAL_COLOR, MATCH_CASE, BACKWARD_SEARCH; 
 unsigned int FOREGROUND_TEXT;
 unsigned int BACKGROUND_TEXT;
 unsigned int SELECTION_TEXT;
@@ -110,13 +109,13 @@ public:
 #include <FL/Fl_Text_Display.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Input.H>
+#include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Group.H>
 #include <FL/Fl_Menu_Bar.H>
 #include <FL/Fl_Tabs.H>
 #include <FL/Fl_Browser.H>
 #include <FL/Fl_Output.H>
 #include <FL/Fl_Value_Output.H>
-#include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Slider.H>
 #include <FL/Fl_Value_Input.H>
 #include <FL/Fl_Menu_Button.H>
@@ -134,6 +133,27 @@ private:
   static void cb_Close(Fl_Button*, void*);
 public:
   void make_popup(Fl_Widget *o);
+  Fl_Double_Window* find_window();
+  Fl_Double_Window *find_win;
+  Fl_Input *finder;
+private:
+  inline void cb_finder_i(Fl_Input*, void*);
+  static void cb_finder(Fl_Input*, void*);
+public:
+  Fl_Check_Button *match_case;
+private:
+  inline void cb_match_case_i(Fl_Check_Button*, void*);
+  static void cb_match_case(Fl_Check_Button*, void*);
+  inline void cb_Search_i(Fl_Button*, void*);
+  static void cb_Search(Fl_Button*, void*);
+public:
+  Fl_Check_Button *search_bwd;
+private:
+  inline void cb_search_bwd_i(Fl_Check_Button*, void*);
+  static void cb_search_bwd(Fl_Check_Button*, void*);
+  inline void cb_Cancel_i(Fl_Button*, void*);
+  static void cb_Cancel(Fl_Button*, void*);
+public:
   Fl_Double_Window* make_replace();
   Fl_Double_Window *replace_dlg;
   Fl_Input *replace_find;
@@ -364,8 +384,8 @@ private:
 public:
   Fl_Check_Button *indentor;
 private:
-  inline void cb_Cancel_i(Fl_Button*, void*);
-  static void cb_Cancel(Fl_Button*, void*);
+  inline void cb_Cancel1_i(Fl_Button*, void*);
+  static void cb_Cancel1(Fl_Button*, void*);
   inline void cb_SAVE_i(Fl_Button*, void*);
   static void cb_SAVE(Fl_Button*, void*);
 public:
@@ -386,7 +406,7 @@ public:
   void dnd_file(const char* items, bool NEW=true);
   std::vector<std::string> dnd_vec(std::string in);
   void find_cb();
-  void find2_cb();
+  void find2_cb(int match_case=0, int backward = 1, std::string term="");
   void font_populate(Fl_Browser *o);
   std::string get_filename();
   void get_preferences();
@@ -427,6 +447,7 @@ public:
   void undo_cb();
   void wordwrap();
   std::string replace_all_strings(std::string str, const std::string& old, const std::string& new_s, int &counter);
+  std::string find_selection();
 };
 std::vector<std::string> comma_line(std::string lang,std::string field, bool ignore_case = false);
 unsigned int convert(std::string num, int default_value=0);
