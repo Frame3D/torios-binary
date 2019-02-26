@@ -957,17 +957,18 @@ Fl::focus(g->child(0));} open
       } {}
     }
   }
-  Function {pref_window()} {} {
+  Function {pref_window()} {open
+  } {
     Fl_Window pref_win {
-      label Preferences
-      xywh {265 238 310 460} type Double color 46 hide
-      code0 {make_icon(o);} xclass flpad
+      label Preferences open
+      xywh {265 238 310 460} type Double color 46
+      code0 {make_icon(o);} xclass flpad visible
     } {
       Fl_Tabs pref_tabs {open
         xywh {0 0 310 420} box FLAT_BOX
       } {
         Fl_Group gen {
-          label General
+          label General selected
           xywh {0 25 310 395} selection_color 43
         } {
           Fl_Browser font_b {
@@ -1144,15 +1145,18 @@ o->parent()->hide();}
       }
     }
   }
-  Function {add_recent(std::string filename)} {return_type bool
+  Function {add_recent(std::string filename)} {open return_type bool
   } {
     code {if(filename.compare("")==0)
+{
   return false;
+}
 
-std::string out=get_flpad_home_dir("recent");
+std::string out = get_flpad_home_dir("recent");
 
 //get our recent files
 std::vector<std::string> vect = file_to_vector(out);
+
 //add the new one
 vect.push_back(filename);
 
@@ -1166,15 +1170,26 @@ vect.resize( std::distance(vect.begin(),iter) );
 std::string result;
 for( std::vector<std::string>::iterator it = vect.begin();
 it!=vect.end();
-++it){
+++it)
+{
   if(result.compare("")!=0)
-    result=result+"\\n"+*it;
+  {
+    result = result + "\\n" + *it;
+  }
   else
-    result=*it;
+  {
+    result = *it;
+  }
 }
-if(save_string_to_file(result,out))
-  return true;
 
+if(save_string_to_file(result,out))
+{
+  return true;
+}
+else
+{
+  trace("Could not save recents filename:" + out );
+}
 return false;} {}
   }
   Function {add_tab(bool LOAD=true, bool NEW = true)} {} {
@@ -1878,8 +1893,7 @@ it!=vect.end();
 }
 
 menu->redraw();
-return true;} {selected
-    }
+return true;} {}
   }
   Function {get_theme_from_config(std::string theme)} {} {
     code {//COLORS
@@ -2024,27 +2038,29 @@ if(textor==NULL)
 Fl_Text_Editor::kf_insert(0,textor);} {}
   }
   Function {load_file(std::string newfile, int ipos,bool NEW=true)} {} {
-    code {//trace("Loading file:"+newfile);
-//todo 
+    code {//todo 
 //if(pick_tab(newfile)){return;}
 if(NEW)
 {
   add_tab(false);
-  //trace("added tab");
 }
+
 Fl_Syntax_Text_Editor * E = current_editor();
-if(E==NULL)
+
+if(E == NULL)
 {
   std::cerr<<"Null editor"<<std::endl;
   return;
 }
+
 E->loading = 1;
 int insert = (ipos != -1);
 E->changed = insert;
-//E->textbuffer->call_modify_callbacks();
+
 if (!insert)
   E->filename="";
 int r = 0;
+
 if (!insert)
 {
   r = E->textbuffer->loadfile(newfile.c_str());
@@ -2054,6 +2070,7 @@ else
 {
   r = E->textbuffer->insertfile(newfile.c_str(), ipos);
 }
+
 E->refresh();
 E->textbuffer->call_modify_callbacks();
 
@@ -2551,6 +2568,109 @@ else
   }
 }
 
+Function {ask(std::string MSG, std::string yes="Yes", std::string no="No", std::string other="")} {return_type int
+} {
+  code {int w = 450;
+int h = 90;
+Fl_Double_Window* ask_win = new Fl_Double_Window(w, h);
+Fl_Box* o = new Fl_Box(5, 5, 5, 5);
+o->copy_label(MSG.c_str());
+o->redraw();
+Fl_Button* o1 = new Fl_Button(170, 55, 65, 30, yes.c_str());
+o1->box(FL_FLAT_BOX);
+o1->color((Fl_Color)62);
+o1->labelcolor(FL_BACKGROUND2_COLOR);
+o1->callback(ask_cb,1);
+Fl_Button* o2 = new Fl_Button(100, 55, 65, 30, no.c_str());
+o2->box(FL_FLAT_BOX);
+o2->color((Fl_Color)80);
+o2->labelcolor(FL_BACKGROUND2_COLOR);
+o2->callback(ask_cb,0);
+if(other.compare("")!=0)
+{
+  Fl_Button* o3 = new Fl_Button(30, 55, 65, 30, other.c_str());
+  o3->box(FL_FLAT_BOX);
+  o3->color((Fl_Color)94);
+  o3->labelcolor(FL_BACKGROUND2_COLOR);
+  o3->callback(ask_cb,2);
+}
+else
+{
+  o1->position(5,o1->y());
+  o2->position(10+o1->w(),o1->y());
+  
+}
+ask_win->end();
+ask_win->show();
+o->measure_label(w,h);
+o->size(w+10,h);
+if(other.compare("")!=0)
+{
+  if(w<ask_win->w())
+     w=ask_win->w()+10;
+  else
+    w+=10;
+  if(h<ask_win->h())
+    h=ask_win->h();
+  else
+    h +=10;
+}
+else
+{
+  int W = o2->x()+o2->w()+5;
+  if(w<W)
+     w=W;
+  else if (w < W +10)
+    w=W+10;
+  else
+    w+=10;
+  if(h<ask_win->h())
+    h=ask_win->h();
+  else
+    h +=10;
+}
+ask_win->size(w,h);
+while (ask_win->shown()) Fl::wait();
+return ret_val;} {}
+}
+
+Function {ask_cb(Fl_Widget *o, long val)} {return_type {static void}
+} {
+  code {ret_val = (int) val;
+o->parent()->hide();} {}
+}
+
+Function {color_from_name(const char* colorName)} {
+  comment {Paul Sladen, 2014-08-13, Public Domain
+XLookupColor() -> RGB colour value example, per request on
+http://irclogs.ubuntu.com/2014/08/13/%23ubuntu-devel.html\#t19:52
+grep MistyRose /usr/share/X11/rgb.txt | awk '{printf("%02x%02x%02x\\n",$1,$2,$3);}'
+http://manpages.ubuntu.com/manpages/man3/XQueryColor.3.html
+gcc xlookupcolour.c -o xlookupcolour -lX11 && ./xlookupcolour red yellow blue
+modified for use in this program by Israel <israeldahl@gmail.com>
+Thanks Sladen for the quick help!!!!} return_type {std::string}
+} {
+  code {Display *dpy = XOpenDisplay(NULL);
+int scr = XDefaultScreen(dpy);
+Colormap map = DefaultColormap(dpy, scr);
+XColor rgb, nearest_rgb;
+XLookupColor(dpy, map, colorName, &rgb, &nearest_rgb);
+int red = (int)rgb.red>>8;
+int green = (int)rgb.green>>8;
+int blue = (int)rgb.blue>>8;
+char tmp[8];
+std::snprintf(tmp, sizeof(tmp), "\#%02x%02x%02x", red, green, blue);
+std::string output = tmp;
+return output;} {}
+}
+
+Function {color_to_string(const double *rgb)} {return_type {std::string}
+} {
+  code {char tmp[8];
+std::snprintf(tmp, sizeof(tmp), "\#%02x%02x%02x", int(rgb[0]), int(rgb[1]), int(rgb[2]));
+return tmp;} {}
+}
+
 Function {comma_line(std::string lang,std::string field, bool ignore_case = false)} {return_type {std::vector<std::string>}
 } {
   code {//get the line from the file
@@ -2664,20 +2784,69 @@ if(inputFileStrem.is_open())
 return "";} {}
 }
 
+Function {file_to_vector(std::string filename)} {return_type {std::vector<std::string>}
+} {
+  code {std::vector<std::string> fullString;
+if(filename.compare("")==0){return fullString;}
+if(!test_file(filename)){trace("No file sent in: "+filename);}
+std::string thisLine;
+std::ifstream inputFileStream(filename.c_str(), std::ifstream::in);
+
+if(inputFileStream.is_open())
+{
+  while (getline(inputFileStream,thisLine))
+  {
+    fullString.push_back(thisLine);
+  }
+}
+
+return fullString;} {}
+}
+
+Function {get_fl_color(std::string color, unsigned int default_value=0)} {return_type {unsigned int}
+} {
+  code {if(color.compare("")==0){return default_value;}
+std::string::size_type validator = color.find('\#');
+
+if(validator==0)
+{
+  std::string c1 = color.substr (1,6);
+  c1="0x"+c1+"00";
+
+  try
+  {
+    unsigned int flColor = strtoul(c1.c_str(),0,16);
+    return flColor;
+  }
+  catch(const std::invalid_argument e){return default_value;}
+  catch(const std::out_of_range e){return default_value;}
+}
+std::string value = color_from_name(color.c_str());
+return get_fl_color(value, default_value);} {}
+}
+
 Function {get_flpad_dir( std::string base_name)} {return_type {std::string}
 } {
   code {std::string tester = "/usr/share/flpad/";
 std::string res="";
-if(test_file(tester+base_name))
+std::string tmp = tester + base_name;
+
+if(test_file( tmp ))
 {
-  res=tester+base_name;
+  res = tmp;
 }
 else
 {
   tester = "/usr/local/share/flpad/";
-  if(test_file(tester+base_name))
-    res=tester+base_name;
+  tmp = tester + base_name;
+
+  if(test_file( (tmp) ))
+  {
+    res = tmp;
+  }
+  trace("Could not find:"+tmp);
 }
+
 return res;} {}
 }
 
@@ -2691,30 +2860,53 @@ if(home_config == NULL)
   home_config = getenv("HOME");
   if(home_config != NULL)
   {
-    home_tester=home_config;
-    home_tester =home_tester + "/.config/flpad/" + base_name;
+    home_tester  = home_config;
+    home_tester += "/.config/flpad/";
+
+ //make our home directory anyhow
+    if(!test_dir(home_tester))
+    {
+      mkdir_p(home_tester);
+      trace("Made user home dir:"+home_tester);
+    }
+
+    home_tester += base_name;
   }
 }
 else
 {
   home_tester = home_config;
-  home_tester = home_tester + "/flpad/" + base_name;
+  home_tester += "/flpad/";
+
+//make our home directory anyhow
+  if(!test_dir(home_tester))
+  {
+    mkdir_p(home_tester);
+  }
+
+  home_tester += base_name;
 }
 
-if(test_file(home_tester))
-{
-  return home_tester;
-}
-return "";} {}
+return home_tester;} {}
 }
 
 Function {get_syntax_file()} {return_type {std::string}
 } {
   code {std::string base_name = "styles.flpad";
+
 if(SYNTAX_FILE.compare("")!=0)
+{
   return SYNTAX_FILE;
+}
+
 //testing
-std::string home_tester=get_flpad_home_dir(base_name);
+std::string home_tester = get_flpad_home_dir(base_name);
+
+if(!test_file(home_tester))
+{
+  home_tester="";
+}
+
 if(home_tester.compare("")!=0)
 {
   SYNTAX_FILE=home_tester;
@@ -2722,13 +2914,18 @@ if(home_tester.compare("")!=0)
 else
 {
   std::string tester = get_flpad_dir(base_name);
+
   if(tester.compare("")!=0)
   {
     SYNTAX_FILE=tester;
   }
 }
+
 if(SYNTAX_FILE.compare("")==0)
+{
   trace("No syntax file found...");
+}
+
 return SYNTAX_FILE;} {}
 }
 
@@ -2763,21 +2960,29 @@ return V;} {}
 
 Function {get_theme_file()} {return_type {std::string}
 } {
-  code {std::string base_name = "themes.flpad";
+  code {std::string base_name   = "themes.flpad";
+std::string home_tester = get_flpad_home_dir(base_name);
 std::string tmp;
-std::string home_tester=get_flpad_home_dir(base_name);
-if(home_tester.compare("")!=0)
+
+if( !test_file(home_tester) )
 {
-  tmp=home_tester;
+   home_tester = "";
+}
+
+if(home_tester.compare("") != 0)
+{
+  tmp = home_tester;
 }
 else
 {
   std::string tester = get_flpad_dir(base_name);
-  if(tester.compare("")!=0)
+
+  if(tester.compare("") != 0)
   {
     tmp=tester;
   }
 }
+
 return tmp;} {}
 }
 
@@ -2919,11 +3124,16 @@ Function {get_themes()} {return_type {std::vector<std::string>}
 } {
   code {std::vector<std::string> THEMES;
 std::string filename = get_theme_file();
-if(filename.compare("")==0){return THEMES;}
+
+if(filename.compare("")==0)
+{
+  return THEMES;
+}
 
 
 //parse the syntax highlighter file
 std::ifstream inputFileStrem (filename.c_str(), std::ifstream::in);
+
 /** check if the input file stream is open */
 if(inputFileStrem.is_open())
 {
@@ -2932,11 +3142,13 @@ if(inputFileStrem.is_open())
   while (getline(inputFileStrem,this_line))
   {
     
-    if(this_line.find("[")<=1)
+    if(this_line.find("[") <= 1)
     {
-       unsigned int open_bracket=this_line.find("[");
-       unsigned int close_bracket=this_line.find("]");
-       HEADER=this_line.substr(open_bracket+1,close_bracket-1);
+       unsigned int open_bracket  = this_line.find("[");
+       unsigned int close_bracket = this_line.find("]");
+
+       HEADER = this_line.substr( (open_bracket + 1), (close_bracket - 1) );
+
        THEMES.push_back(HEADER);
     }
   }
@@ -3079,6 +3291,88 @@ if(postComma.compare("")!=0){Vector.push_back(postComma);}
 return Vector;} {}
 }
 
+Function {mkdir_p(std::string dirToMake)} {return_type int
+} {
+  code {if(test_dir(dirToMake.c_str()))
+{
+  return 0;
+}
+
+std::string temporaryDir = dirToMake;
+unsigned int last        = dirToMake.rfind('/');
+
+if( (last + 1) != dirToMake.length() )
+{
+  dirToMake += "/";
+}
+
+unsigned int found=dirToMake.find_first_of('/');
+
+while(found < dirToMake.length())
+{
+  found++;
+
+  temporaryDir        = dirToMake;
+  std::string testing = temporaryDir.erase(found,std::string::npos);
+  found               = dirToMake.find_first_of('/',found);
+
+  if(!test_dir(testing.c_str()))
+  {
+    if(mkdir(testing.c_str(), 0700) > 0)
+    {
+      return 1;
+    }
+    else
+    {
+      return 0;
+    }
+  }
+}
+return 0;} {}
+}
+
+Function {save_string_to_file(std::string MSG,std::string filename)} {open return_type bool
+} {
+  code {if(MSG.compare("")==0)
+{
+  return false;
+}
+
+if(filename.compare("")==0)
+{
+  return false;
+}
+
+unsigned int last=filename.rfind('/');
+
+if( (last + 1) == filename.length())
+{
+  return false;
+}
+
+if(last < filename.length())
+{
+  std::string dircheck=filename;
+  dircheck=dircheck.erase(last,std::string::npos);
+}
+else
+{
+  return false;
+}
+
+std::ofstream dest;
+dest.open(filename.c_str());
+
+if(!dest.is_open())
+{
+  return false;
+}
+
+dest << MSG;
+dest.close();
+return true;} {}
+}
+
 Function {syntax_type_from_filename(std::string fname)} {return_type {std::string}
 } {
   code {unsigned int dot = fname.rfind("/");
@@ -3130,50 +3424,77 @@ if(n!=0)
 std::cout<<std::endl;} {}
 }
 
-Function {test_file(std::string file)} {return_type bool
+Function {test_dir(std::string dirToTest)} {return_type bool
+} {
+  code {if(dirToTest.compare("")==0)
+{
+  return false;
+}
+
+DIR *dir = NULL;
+dir      = opendir(dirToTest.c_str());
+
+if (dir != NULL)
+{
+  closedir(dir);
+  return true;
+}
+
+return false;} {}
+}
+
+Function {test_file(std::string file)} {open return_type bool
 } {
   code {//if empty it doesn't exist
 if(file.compare("")==0)
+{
   return false;
+}
 
-
-std::string dir=file;
+std::string dir   = file;
 unsigned int find = dir.rfind("/");
 
 //if there is no directory this isn't correct
-if(find>dir.length())
+if(find > dir.length())
 {
   // try the PWD if we can
-  const char* PWD= getenv("PWD");
-  if(PWD==NULL)
+  const char* PWD = getenv("PWD");
+
+  if(PWD == NULL)
+  {
     return false;
-  dir=PWD;
-  dir+="/";
-  file=dir+file;
+  }
+
+  dir  = PWD;
+  dir += "/";
+  file = dir+file;
 }
 else
 {
   // get the directory
-  dir=dir.substr(0,find);
+  dir = dir.substr(0,find);
 }
 
 //open the directory
-DIR *mydir=NULL;
-struct dirent *entryPointer=NULL;
-mydir=opendir(dir.c_str());
+DIR *mydir                  = NULL;
+struct dirent *entryPointer = NULL;
+mydir                       = opendir(dir.c_str());
 
 //make sure there is a slash at the end
-if(dir.rfind('/')!=dir.length()-1){dir+="/";}
-
-if(mydir!=NULL)
+if( dir.rfind('/') != (dir.length()-1) )
 {
-  while ((entryPointer=readdir(mydir))!=NULL)
+  dir += "/";
+}
+
+if(mydir != NULL)
+{
+  while ((entryPointer=readdir(mydir)) != NULL)
   {
     if(entryPointer->d_type == DT_REG)
     {
       //get a pointer to the file in this directory
-      std::string fullpath=entryPointer->d_name;
-      fullpath=dir+fullpath;
+      std::string fullpath = entryPointer->d_name;
+                  fullpath = dir + fullpath;
       //is it the same as what we sent in?
       if(fullpath.compare(file)==0)
       {
@@ -3212,172 +3533,4 @@ if(a[0] == '/')
   V=DIR_LIST;
 }
 return V;} {}
-}
-
-Function {ask(std::string MSG, std::string yes="Yes", std::string no="No", std::string other="")} {open return_type int
-} {
-  code {int w = 450;
-int h = 90;
-Fl_Double_Window* ask_win = new Fl_Double_Window(w, h);
-Fl_Box* o = new Fl_Box(5, 5, 5, 5);
-o->copy_label(MSG.c_str());
-o->redraw();
-Fl_Button* o1 = new Fl_Button(170, 55, 65, 30, yes.c_str());
-o1->box(FL_FLAT_BOX);
-o1->color((Fl_Color)62);
-o1->labelcolor(FL_BACKGROUND2_COLOR);
-o1->callback(ask_cb,1);
-Fl_Button* o2 = new Fl_Button(100, 55, 65, 30, no.c_str());
-o2->box(FL_FLAT_BOX);
-o2->color((Fl_Color)80);
-o2->labelcolor(FL_BACKGROUND2_COLOR);
-o2->callback(ask_cb,0);
-if(other.compare("")!=0)
-{
-  Fl_Button* o3 = new Fl_Button(30, 55, 65, 30, other.c_str());
-  o3->box(FL_FLAT_BOX);
-  o3->color((Fl_Color)94);
-  o3->labelcolor(FL_BACKGROUND2_COLOR);
-  o3->callback(ask_cb,2);
-}
-else
-{
-  o1->position(5,o1->y());
-  o2->position(10+o1->w(),o1->y());
-  
-}
-ask_win->end();
-ask_win->show();
-o->measure_label(w,h);
-o->size(w+10,h);
-if(other.compare("")!=0)
-{
-  if(w<ask_win->w())
-     w=ask_win->w()+10;
-  else
-    w+=10;
-  if(h<ask_win->h())
-    h=ask_win->h();
-  else
-    h +=10;
-}
-else
-{
-  int W = o2->x()+o2->w()+5;
-  if(w<W)
-     w=W;
-  else if (w < W +10)
-    w=W+10;
-  else
-    w+=10;
-  if(h<ask_win->h())
-    h=ask_win->h();
-  else
-    h +=10;
-}
-ask_win->size(w,h);
-while (ask_win->shown()) Fl::wait();
-return ret_val;} {}
-}
-
-Function {ask_cb(Fl_Widget *o, long val)} {open return_type {static void}
-} {
-  code {ret_val = (int) val;
-o->parent()->hide();} {}
-}
-
-Function {get_fl_color(std::string color, unsigned int default_value=0)} {return_type {unsigned int}
-} {
-  code {if(color.compare("")==0){return default_value;}
-std::string::size_type validator = color.find('\#');
-
-if(validator==0)
-{
-  std::string c1 = color.substr (1,6);
-  c1="0x"+c1+"00";
-
-  try
-  {
-    unsigned int flColor = strtoul(c1.c_str(),0,16);
-    return flColor;
-  }
-  catch(const std::invalid_argument e){return default_value;}
-  catch(const std::out_of_range e){return default_value;}
-}
-std::string value = color_from_name(color.c_str());
-return get_fl_color(value, default_value);} {}
-}
-
-Function {color_to_string(const double *rgb)} {return_type {std::string}
-} {
-  code {char tmp[8];
-std::snprintf(tmp, sizeof(tmp), "\#%02x%02x%02x", int(rgb[0]), int(rgb[1]), int(rgb[2]));
-return tmp;} {}
-}
-
-Function {color_from_name(const char* colorName)} {
-  comment {Paul Sladen, 2014-08-13, Public Domain
-XLookupColor() -> RGB colour value example, per request on
-http://irclogs.ubuntu.com/2014/08/13/%23ubuntu-devel.html\#t19:52
-grep MistyRose /usr/share/X11/rgb.txt | awk '{printf("%02x%02x%02x\\n",$1,$2,$3);}'
-http://manpages.ubuntu.com/manpages/man3/XQueryColor.3.html
-gcc xlookupcolour.c -o xlookupcolour -lX11 && ./xlookupcolour red yellow blue
-modified for use in this program by Israel <israeldahl@gmail.com>
-Thanks Sladen for the quick help!!!!} return_type {std::string}
-} {
-  code {Display *dpy = XOpenDisplay(NULL);
-int scr = XDefaultScreen(dpy);
-Colormap map = DefaultColormap(dpy, scr);
-XColor rgb, nearest_rgb;
-XLookupColor(dpy, map, colorName, &rgb, &nearest_rgb);
-int red = (int)rgb.red>>8;
-int green = (int)rgb.green>>8;
-int blue = (int)rgb.blue>>8;
-char tmp[8];
-std::snprintf(tmp, sizeof(tmp), "\#%02x%02x%02x", red, green, blue);
-std::string output = tmp;
-return output;} {}
-}
-
-Function {file_to_vector(std::string filename)} {return_type {std::vector<std::string>}
-} {
-  code {std::vector<std::string> fullString;
-if(filename.compare("")==0){return fullString;}
-if(!test_file(filename)){trace("No file sent in: "+filename);}
-std::string thisLine;
-std::ifstream inputFileStream(filename.c_str(), std::ifstream::in);
-
-if(inputFileStream.is_open())
-{
-  while (getline(inputFileStream,thisLine))
-  {
-    fullString.push_back(thisLine);
-  }
-}
-
-return fullString;} {}
-}
-
-Function {save_string_to_file(std::string MSG,std::string filename)} {open return_type bool
-} {
-  code {if(MSG.compare("")==0){return false;}
-if(filename.compare("")==0){return false;}
-unsigned int last=filename.rfind('/');
-if(last+1==filename.length()){return false;}
-if(last < filename.length())
-{
-  std::string dircheck=filename;
-  dircheck=dircheck.erase(last,std::string::npos);
-}
-else
-{
-  return false;
-}
-
-std::ofstream dest;
-dest.open(filename.c_str());
-if(!dest.is_open()){return false;}
-dest << MSG;
-dest.close();
-return true;} {}
 }

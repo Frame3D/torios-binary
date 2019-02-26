@@ -444,10 +444,16 @@ public:
   void undo_cb();
   void wordwrap();
 };
+int ask(std::string MSG, std::string yes="Yes", std::string no="No", std::string other="");
+void ask_cb(Fl_Widget *o, long val);
+std::string color_from_name(const char* colorName);
+std::string color_to_string(const double *rgb);
 std::vector<std::string> comma_line(std::string lang,std::string field, bool ignore_case = false);
 unsigned int convert(std::string num, int default_value=0);
 std::vector<std::string> dir_vector(std::string DIRECTORY);
 std::string get(std::string header, std::string line);
+std::vector<std::string> file_to_vector(std::string filename);
+unsigned int get_fl_color(std::string color, unsigned int default_value=0);
 std::string get_flpad_dir( std::string base_name);
 std::string get_flpad_home_dir( std::string base_name);
 std::string get_syntax_file();
@@ -461,15 +467,11 @@ std::vector<std::string> join_string_vectors(std::vector<std::string> vectorA,st
 std::vector <std::string> keywords(std::string header, bool ignore_case = false);
 int main(int argc, char **argv);
 std::vector<std::string> make_vec(std::string string_to_become_vector,std::string delimiter=" ");
+int mkdir_p(std::string dirToMake);
+bool save_string_to_file(std::string MSG,std::string filename);
 std::string syntax_type_from_filename(std::string fname);
 void trace(std::string MSG, int n = 0);
+bool test_dir(std::string dirToTest);
 bool test_file(std::string file);
 std::vector <std::string> types(std::string header, bool ignore_case = false);
-int ask(std::string MSG, std::string yes="Yes", std::string no="No", std::string other="");
-void ask_cb(Fl_Widget *o, long val);
-unsigned int get_fl_color(std::string color, unsigned int default_value=0);
-std::string color_to_string(const double *rgb);
-std::string color_from_name(const char* colorName);
-std::vector<std::string> file_to_vector(std::string filename);
-bool save_string_to_file(std::string MSG,std::string filename);
 #endif
