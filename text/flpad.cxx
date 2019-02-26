@@ -6,6 +6,10 @@
 // GPL 3
 // created from the FLTK tutorial using FLUID to design the UI
 // created as part of the ToriOS project
+/**
+ configuration options
+*/
+static int FONT_TEXT, SIZE_TEXT, LINE_NUMBERS, BUTTON_COLOR, HIGHLIGHT_PLAIN, INDENT_NEW_LINES, WORD_WRAP; 
 
 Fl_Syntax_Text_Editor::Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label ):Fl_Text_Editor(x,y,w,h,label) {
   IGNORE_SYNTAX_CASE = false;
@@ -45,6 +49,8 @@ Fl_Syntax_Text_Editor::Fl_Syntax_Text_Editor(int x, int y, int w, int h, const c
     trace("Failed to take focus for Text Editor");
   }
   */
+  
+  
   Fl::focus(this);
 }
 
@@ -822,6 +828,7 @@ Fl_Menu_Item UI::menu_menu[] = {
  {0,0,0,0,0,0,0,0,0},
  {0,0,0,0,0,0,0,0,0}
 };
+Fl_Menu_Item* UI::file_menu = UI::menu_menu + 0;
 
 void UI::cb_tabs_i(Fl_Tabs* o, void*) {
   set_title(o->value());
@@ -1465,6 +1472,39 @@ Fl_Double_Window* UI::pref_window() {
   return pref_win;
 }
 
+bool UI::add_recent(std::string filename) {
+  if(filename.compare("")==0)
+    return false;
+  
+  std::string out=get_flpad_home_dir("recent");
+  
+  //get our recent files
+  std::vector<std::string> vect = file_to_vector(out);
+  //add the new one
+  vect.push_back(filename);
+  
+  //sort the array for unique ones only
+  std::vector<std::string>::iterator iter;
+  std::sort (vect.begin(), vect.end());
+  iter = std::unique (vect.begin(), vect.end());
+  vect.resize( std::distance(vect.begin(),iter) );
+  
+  //resave the file!
+  std::string result;
+  for( std::vector<std::string>::iterator it = vect.begin();
+  it!=vect.end();
+  ++it){
+    if(result.compare("")!=0)
+      result=result+"\n"+*it;
+    else
+      result=*it;
+  }
+  if(save_string_to_file(result,out))
+    return true;
+  
+  return false;
+}
+
 void UI::add_tab(bool LOAD, bool NEW ) {
   int y = menu->y()+tabs->y()+add_button->y();
   int h = tabs->h();
@@ -1476,11 +1516,24 @@ void UI::add_tab(bool LOAD, bool NEW ) {
   
   Fl_Syntax_Text_Editor* te = new Fl_Syntax_Text_Editor(x,y,w,h);
   te->user_data(o);
+  
   if(INDENT_NEW_LINES>0)
   {
     te->SPACES=true;
     te->use_spaces();
   }
+  
+  if(WORD_WRAP==0)
+  {
+    te->WRAPPED=false;
+    te->wrap_mode(Fl_Text_Display::WRAP_NONE, 0);
+  }
+  else
+  {
+    te->WRAPPED=true;
+    te->wrap_mode(Fl_Text_Display::WRAP_AT_BOUNDS, 0);
+  }
+  
   o->user_data(this);
   win->resizable(te);
   o->end();
@@ -1892,6 +1945,32 @@ void UI::find_cb() {
   }
 }
 
+std::string UI::find_selection() {
+  std::string val;
+  Fl_Syntax_Text_Editor * E = current_editor();
+  
+  if(E==NULL)
+  {
+    return "";
+  }
+  
+  std::string SRCH = E->search;
+  char *       tmp = E->textbuffer->selection_text();
+  
+  if(tmp!=NULL)
+  {
+    std::string t = tmp;
+  
+    if(t.compare("")!=0)
+    {
+      SRCH      = tmp;
+      E->search = SRCH;
+    }
+  }
+  
+  return SRCH;
+}
+
 void UI::find2_cb(int match_case, int backward , std::string term) {
   Fl_Syntax_Text_Editor * E = current_editor();
   
@@ -2098,12 +2177,51 @@ void UI::get_preferences() {
         subString=line.substr(start,std::string::npos);
         BACKWARD_SEARCH=convert(subString);
       }
+      if(line.find("WW:")<line.length())
+      {
+        subString=line.substr(start,std::string::npos);
+        WORD_WRAP=convert(subString);
+      }
     }
   }
   else
   {
     trace(fname+" does not exist yet");
   }
+}
+
+bool UI::get_recent() {
+  std::string out=get_flpad_home_dir("recent");
+  
+  if(!test_file(out))
+  {
+    return false;
+  }
+  
+  std::vector<std::string> vect = file_to_vector(out);
+  
+  if(vect.empty())
+  {
+    return false;
+  }
+  
+  int index = menu->find_index("&File/&Recent");
+  
+  if( index != -1 )
+  {
+    menu->clear_submenu(index);
+  }
+  
+  for( std::vector<std::string>::iterator it = vect.begin();
+  it!=vect.end();
+  ++it)
+  {
+    std::string item="&File/&Recent/"+*it;
+    menu->add(item.c_str(),0,recent_CB,(void*)this);
+  }
+  
+  menu->redraw();
+  return true;
 }
 
 void UI::get_theme_from_config(std::string theme) {
@@ -2277,7 +2395,7 @@ void UI::load_file(std::string newfile, int ipos,bool NEW) {
   if (!insert)
   {
     r = E->textbuffer->loadfile(newfile.c_str());
-    E->init_inotify(newfile.c_str());
+    //E->init_inotify(newfile.c_str());
   }
   else
   {
@@ -2287,9 +2405,16 @@ void UI::load_file(std::string newfile, int ipos,bool NEW) {
   E->textbuffer->call_modify_callbacks();
   
   if (r)
+  {
     fl_alert("Error reading from file \'%s\':\n%s.", newfile.c_str(), strerror(errno));
+  }
   else
+  {
     E->filename=newfile;
+    add_recent(newfile);
+    get_recent();
+  }
+  
   E->set_syntax();
   E->loading = 0;
   set_title(tabs->value());
@@ -2469,10 +2594,47 @@ void UI::quit_cb() {
   exit(0);
 }
 
+void UI::_recent_CB() {
+  char item[500];
+  
+  if(menu->item_pathname(item, (sizeof(item)-1) )!=0)
+    return;
+  
+  std::string str_item = (item);
+  std::string tag="&File/&Recent/";
+  
+  unsigned int finder =str_item.find(tag);
+  if(finder<str_item.length())
+  {
+    unsigned int sizer = tag.length();
+    std::string tmp=str_item.erase(0,sizer);
+    load_file(tmp,0);
+  }
+}
+
 void UI::replace_cb() {
   Fl_Syntax_Text_Editor * E = current_editor();
   if(E!=NULL)
     make_replace()->show();
+}
+
+void UI::recent_CB(Fl_Widget*w, void*data) {
+  UI *o=(UI *)data;
+  o->_recent_CB();
+}
+
+std::string UI::replace_all_strings(std::string str, const std::string& old, const std::string& new_s, int &counter) {
+  if(!old.empty())
+  {
+    size_t pos = str.find(old);
+    while ((pos = str.find(old, pos)) != std::string::npos)
+    {
+      counter++;
+      str=str.replace(pos, old.length(), new_s);
+      pos += new_s.length();
+    }
+  }
+  return str;
 }
 
 void UI::replace2_cb() {
@@ -2623,6 +2785,8 @@ bool UI::save_preferences() {
   out+=prefline("IL",INDENT_NEW_LINES);
   out+=prefline("MC",MATCH_CASE);
   out+=prefline("BW",BACKWARD_SEARCH);
+  out+=prefline("WW:",WORD_WRAP);
+  
   std::ofstream dest;
   std::string fname=get_filename();
   dest.open(fname.c_str());
@@ -2746,52 +2910,14 @@ void UI::wordwrap() {
   {
     E->WRAPPED=false;
     E->wrap_mode(Fl_Text_Display::WRAP_NONE, 0);
+    WORD_WRAP=0;
   }
   else
   {
     E->WRAPPED=true;
     E->wrap_mode(Fl_Text_Display::WRAP_AT_BOUNDS, 0);
+    WORD_WRAP=1;
   }
-}
-
-std::string UI::replace_all_strings(std::string str, const std::string& old, const std::string& new_s, int &counter) {
-  if(!old.empty())
-  {
-    size_t pos = str.find(old);
-    while ((pos = str.find(old, pos)) != std::string::npos)
-    {
-      counter++;
-      str=str.replace(pos, old.length(), new_s);
-      pos += new_s.length();
-    }
-  }
-  return str;
-}
-
-std::string UI::find_selection() {
-  std::string val;
-  Fl_Syntax_Text_Editor * E = current_editor();
-  
-  if(E==NULL)
-  {
-    return "";
-  }
-  
-  std::string SRCH = E->search;
-  char *       tmp = E->textbuffer->selection_text();
-  
-  if(tmp!=NULL)
-  {
-    std::string t = tmp;
-  
-    if(t.compare("")!=0)
-    {
-      SRCH      = tmp;
-      E->search = SRCH;
-    }
-  }
-  
-  return SRCH;
 }
 
 std::vector<std::string> comma_line(std::string lang,std::string field, bool ignore_case ) {
@@ -3259,6 +3385,7 @@ int main(int argc, char **argv) {
     }
     ui->about_window()->show();
     ui->about_win->hide();
+    ui->get_recent();
     return Fl::run();
   }
   catch (const std::exception& e)
@@ -3556,4 +3683,45 @@ std::string color_from_name(const char* colorName) {
   std::snprintf(tmp, sizeof(tmp), "#%02x%02x%02x", red, green, blue);
   std::string output = tmp;
   return output;
+}
+
+std::vector<std::string> file_to_vector(std::string filename) {
+  std::vector<std::string> fullString;
+  if(filename.compare("")==0){return fullString;}
+  if(!test_file(filename)){trace("No file sent in: "+filename);}
+  std::string thisLine;
+  std::ifstream inputFileStream(filename.c_str(), std::ifstream::in);
+  
+  if(inputFileStream.is_open())
+  {
+    while (getline(inputFileStream,thisLine))
+    {
+      fullString.push_back(thisLine);
+    }
+  }
+  
+  return fullString;
+}
+
+bool save_string_to_file(std::string MSG,std::string filename) {
+  if(MSG.compare("")==0){return false;}
+  if(filename.compare("")==0){return false;}
+  unsigned int last=filename.rfind('/');
+  if(last+1==filename.length()){return false;}
+  if(last < filename.length())
+  {
+    std::string dircheck=filename;
+    dircheck=dircheck.erase(last,std::string::npos);
+  }
+  else
+  {
+    return false;
+  }
+  
+  std::ofstream dest;
+  dest.open(filename.c_str());
+  if(!dest.is_open()){return false;}
+  dest << MSG;
+  dest.close();
+  return true;
 }

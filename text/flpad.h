@@ -36,24 +36,10 @@
 int ret_val; 
 std::string return_value; 
 unsigned int EDIT_COLOR, NORMAL_COLOR, MATCH_CASE, BACKWARD_SEARCH; 
-unsigned int FOREGROUND_TEXT;
-unsigned int BACKGROUND_TEXT;
-unsigned int SELECTION_TEXT;
-unsigned int COMMENT_TEXT;
-unsigned int STRING_TEXT;
-unsigned int DIRECTIVE_TEXT;
-unsigned int NUMBER_TEXT;
-unsigned int KEYWORD_TEXT;
-unsigned int TYPE_TEXT;
-unsigned int SYMBOLS_TEXT;
-unsigned int SPECIAL_TEXT;
-unsigned int BROKEN_TEXT;
-int FONT_TEXT;
-int SIZE_TEXT;
-int LINE_NUMBERS;
-int BUTTON_COLOR;
-int HIGHLIGHT_PLAIN;
-int INDENT_NEW_LINES; 
+/**
+ Syntax highlighting colors
+*/
+unsigned int FOREGROUND_TEXT, BACKGROUND_TEXT, SELECTION_TEXT, COMMENT_TEXT, STRING_TEXT, DIRECTIVE_TEXT, NUMBER_TEXT, KEYWORD_TEXT, TYPE_TEXT, SYMBOLS_TEXT, SPECIAL_TEXT, BROKEN_TEXT; 
 std::vector<std::string> SYNTAX_HEADERS; 
 std::string SYNTAX_FILE; 
 
@@ -240,6 +226,7 @@ public:
   Fl_Menu_Bar *menu;
   static unsigned char menu_menu_i18n_done;
   static Fl_Menu_Item menu_menu[];
+  static Fl_Menu_Item *file_menu;
 private:
   inline void cb_New_i(Fl_Menu_*, void*);
   static void cb_New(Fl_Menu_*, void*);
@@ -392,6 +379,7 @@ private:
   inline void cb_SAVE_i(Fl_Button*, void*);
   static void cb_SAVE(Fl_Button*, void*);
 public:
+  bool add_recent(std::string filename);
   void add_tab(bool LOAD=true, bool NEW = true);
   void button_style(int style=0);
   void change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line);
@@ -410,10 +398,12 @@ public:
   void dnd_file(const char* items, bool NEW=true);
   std::vector<std::string> dnd_vec(std::string in);
   void find_cb();
+  std::string find_selection();
   void find2_cb(int match_case=0, int backward = 1, std::string term="");
   void font_populate(Fl_Browser *o);
   std::string get_filename();
   void get_preferences();
+  bool get_recent();
   void get_theme_from_config(std::string theme);
   void goto_cb();
   void goto_line(int pos);
@@ -435,7 +425,10 @@ public:
   std::string prefline(std::string LINE,unsigned int COLOR);
   void print_cb();
   void quit_cb();
+  void _recent_CB();
   void replace_cb();
+  static void recent_CB(Fl_Widget*w, void*data);
+  std::string replace_all_strings(std::string str, const std::string& old, const std::string& new_s, int &counter);
   void replace2_cb();
   void replall_cb();
   void replace_start();
@@ -450,8 +443,6 @@ public:
   static void theme_menu_cb(Fl_Widget* o, void* v);
   void undo_cb();
   void wordwrap();
-  std::string replace_all_strings(std::string str, const std::string& old, const std::string& new_s, int &counter);
-  std::string find_selection();
 };
 std::vector<std::string> comma_line(std::string lang,std::string field, bool ignore_case = false);
 unsigned int convert(std::string num, int default_value=0);
@@ -479,4 +470,6 @@ void ask_cb(Fl_Widget *o, long val);
 unsigned int get_fl_color(std::string color, unsigned int default_value=0);
 std::string color_to_string(const double *rgb);
 std::string color_from_name(const char* colorName);
+std::vector<std::string> file_to_vector(std::string filename);
+bool save_string_to_file(std::string MSG,std::string filename);
 #endif
