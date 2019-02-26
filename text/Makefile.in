@@ -3,10 +3,13 @@ FLTK_CONF = fltk-config
 FLUID     = fluid -c $(TARGET).fld
 CXX       = $(shell $(FLTK_CONF) --cxx)
 DEBUG     = -g
+LD_X11    = $(shell pkg-config --libs xpm)
+CXX_X11   = $(shell pkg-config --cflags xpm)
 CXXFLAGS  = $(shell $(FLTK_CONF) --cxxflags --optim) -I.
 CXXFLAGS += -finline-small-functions -ffunction-sections -fdata-sections -fmerge-all-constants -fomit-frame-pointer -mno-accumulate-outgoing-args -fno-unwind-tables -fno-asynchronous-unwind-tables -O2 -std=c++11 -fexceptions $(DBG)
+CXXFLAGS += $(CXX_X11)
 LDFLAGS   = $(shell $(FLTK_CONF) --use-images --ldflags )
-LDSTATIC  = $(shell $(FLTK_CONF) --use-images --ldstaticflags )
+LDFLAGS  += $(LD_X11)
 LINK      = $(CXX)
 OBJS      = $(TARGET).o
 SRCS      = $(TARGET).cxx
