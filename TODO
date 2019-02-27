@@ -1,6 +1,7 @@
 flpad
 add more languages to styles.flpad
 add in brakcet checker?
+fix html/xml comments
 
 flrun
 make command history, perhaps drop down box...

@@ -17,6 +17,7 @@
 #include <iostream>
 #include <streambuf>
 #include <FL/Fl_Color_Chooser.H>
+#include <FL/Fl_Native_File_Chooser.H>
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Printer.H>
@@ -452,6 +453,7 @@ std::vector<std::string> comma_line(std::string lang,std::string field, bool ign
 unsigned int convert(std::string num, int default_value=0);
 std::vector<std::string> dir_vector(std::string DIRECTORY);
 std::string get(std::string header, std::string line);
+std::string file_chooser(std::string types="*", std::string where="", std::string label="Open File?");
 std::vector<std::string> file_to_vector(std::string filename);
 unsigned int get_fl_color(std::string color, unsigned int default_value=0);
 std::string get_flpad_dir( std::string base_name);

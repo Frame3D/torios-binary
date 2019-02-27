@@ -41,6 +41,9 @@ decl {\#include <streambuf>} {public global
 decl {\#include <FL/Fl_Color_Chooser.H>} {public global
 }
 
+decl {\#include <FL/Fl_Native_File_Chooser.H>} {public global
+}
+
 decl {\#include <FL/Fl_File_Chooser.H>} {public global
 }
 
@@ -961,14 +964,14 @@ Fl::focus(g->child(0));} open
   } {
     Fl_Window pref_win {
       label Preferences open
-      xywh {265 238 310 460} type Double color 46
-      code0 {make_icon(o);} xclass flpad visible
+      xywh {4 52 675 710} type Double color 46 hide
+      code0 {make_icon(o);} xclass flpad
     } {
       Fl_Tabs pref_tabs {open
         xywh {0 0 310 420} box FLAT_BOX
       } {
         Fl_Group gen {
-          label General selected
+          label General
           xywh {0 25 310 395} selection_color 43
         } {
           Fl_Browser font_b {
@@ -1561,7 +1564,8 @@ if(textor==NULL)
   return;
 textor->buffer()->remove_selection();} {}
   }
-  Function {dnd_file(const char* items, bool NEW=true)} {} {
+  Function {dnd_file(const char* items, bool NEW=true)} {open
+  } {
     code {if(items==NULL)
   return;
 std::string tmp = items;
@@ -1571,6 +1575,7 @@ for( std::vector<std::string>::iterator itr = V.begin();
                                       ++itr)
 {
   std::string s = *itr;
+  std::string txt = *itr;
 
   unsigned int URI = s.find("file:///");
   if(URI==0)
@@ -1586,9 +1591,26 @@ for( std::vector<std::string>::iterator itr = V.begin();
   fl_decode_uri(ch);
   s=ch;
 
-  load_file(s,-1,NEW);
+  if(test_file(s))
+  {
+    load_file(s,-1,NEW);
+  }
+  else
+  {
+    Fl_Syntax_Text_Editor * E = current_editor();
+
+    if(E==NULL)
+    {
+      return;
+    }
+    Fl_Text_Buffer * buff = E->buffer();
+    int pos = E->insert_position();
+    buff->insert(pos, txt.c_str());
+  }
+
   free(ch);
-}} {}
+}} {selected
+    }
   }
   Function {dnd_vec(std::string in)} {return_type {std::vector<std::string>}
   } {
@@ -2169,7 +2191,8 @@ if(f.compare("")==0)
 else
   open_file();} {}
   }
-  Function {open_file(bool NEW=true)} {} {
+  Function {open_file(bool NEW=true)} {open
+  } {
     code {Fl_Syntax_Text_Editor * E = current_editor();
 //std::string newf="";
 std::string init="";
@@ -2177,10 +2200,11 @@ if(E!=NULL)
 {
   init= E->filename;
 }
-char *newfile = fl_file_chooser("Open File?", "*",init.c_str());
-if(newfile!=NULL)
+std::string newfile = file_chooser("*", init.c_str(), "Open File?");
+
+if(newfile.compare("")!=0)
 {
-  load_file(newfile, -1,NEW);
+  load_file(newfile.c_str(), -1,NEW);
 }} {}
   }
   Function {paste_cb()} {} {
@@ -2781,6 +2805,57 @@ if(inputFileStrem.is_open())
     }
   }
 }
+return "";} {}
+}
+
+Function {file_chooser(std::string types="*", std::string where="", std::string label="Open File?")} {open return_type {std::string}
+} {
+  code {if(label.compare("")==0)
+{
+  label = "Choose";
+}
+
+if(where.compare("")==0)
+{
+  const char* home = getenv("HOME");
+  if(home != NULL)
+  {
+    where = home;
+  }
+}
+
+if(types.compare("")==0)
+{
+  types = "*";
+}
+
+const char* f = where.c_str();
+const char* m = label.c_str();
+const char* p = types.c_str();
+
+Fl_Native_File_Chooser fnfc;
+fnfc.title(m);
+fnfc.type(Fl_Native_File_Chooser::BROWSE_FILE);
+fnfc.options(Fl_Native_File_Chooser::PREVIEW);
+fnfc.filter(p);
+fnfc.directory(f); // default directory to use
+
+// Show native chooser
+switch ( fnfc.show() )
+{
+  case -1: break; // ERROR
+  case  1: break; // CANCEL
+  default:
+    const char *result = fnfc.filename();
+
+    if(result != NULL)
+    {
+      std::string String = result;
+      return String;
+    }
+    break; // FILE CHOSEN
+}
+
 return "";} {}
 }
 

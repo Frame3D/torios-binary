@@ -1258,7 +1258,7 @@ Fl_Double_Window* UI::make_window() {
 }
 
 Fl_Double_Window* UI::pref_window() {
-  { Fl_Double_Window* o = pref_win = new Fl_Double_Window(310, 460, gettext("Preferences"));
+  { Fl_Double_Window* o = pref_win = new Fl_Double_Window(675, 710, gettext("Preferences"));
     pref_win->color((Fl_Color)46);
     pref_win->user_data((void*)(this));
     { pref_tabs = new Fl_Tabs(0, 0, 310, 420);
@@ -1909,6 +1909,7 @@ void UI::dnd_file(const char* items, bool NEW) {
                                         ++itr)
   {
     std::string s = *itr;
+    std::string txt = *itr;
   
     unsigned int URI = s.find("file:///");
     if(URI==0)
@@ -1924,7 +1925,23 @@ void UI::dnd_file(const char* items, bool NEW) {
     fl_decode_uri(ch);
     s=ch;
   
-    load_file(s,-1,NEW);
+    if(test_file(s))
+    {
+      load_file(s,-1,NEW);
+    }
+    else
+    {
+      Fl_Syntax_Text_Editor * E = current_editor();
+  
+      if(E==NULL)
+      {
+        return;
+      }
+      Fl_Text_Buffer * buff = E->buffer();
+      int pos = E->insert_position();
+      buff->insert(pos, txt.c_str());
+    }
+  
     free(ch);
   }
 }
@@ -2530,10 +2547,11 @@ void UI::open_file(bool NEW) {
   {
     init= E->filename;
   }
-  char *newfile = fl_file_chooser("Open File?", "*",init.c_str());
-  if(newfile!=NULL)
+  std::string newfile = file_chooser("*", init.c_str(), "Open File?");
+  
+  if(newfile.compare("")!=0)
   {
-    load_file(newfile, -1,NEW);
+    load_file(newfile.c_str(), -1,NEW);
   }
 }
 
@@ -3144,6 +3162,56 @@ std::string get(std::string header, std::string line) {
       }
     }
   }
+  return "";
+}
+
+std::string file_chooser(std::string types, std::string where, std::string label) {
+  if(label.compare("")==0)
+  {
+    label = "Choose";
+  }
+  
+  if(where.compare("")==0)
+  {
+    const char* home = getenv("HOME");
+    if(home != NULL)
+    {
+      where = home;
+    }
+  }
+  
+  if(types.compare("")==0)
+  {
+    types = "*";
+  }
+  
+  const char* f = where.c_str();
+  const char* m = label.c_str();
+  const char* p = types.c_str();
+  
+  Fl_Native_File_Chooser fnfc;
+  fnfc.title(m);
+  fnfc.type(Fl_Native_File_Chooser::BROWSE_FILE);
+  fnfc.options(Fl_Native_File_Chooser::PREVIEW);
+  fnfc.filter(p);
+  fnfc.directory(f); // default directory to use
+  
+  // Show native chooser
+  switch ( fnfc.show() )
+  {
+    case -1: break; // ERROR
+    case  1: break; // CANCEL
+    default:
+      const char *result = fnfc.filename();
+  
+      if(result != NULL)
+      {
+        std::string String = result;
+        return String;
+      }
+      break; // FILE CHOSEN
+  }
+  
   return "";
 }
 

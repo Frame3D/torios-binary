@@ -101,6 +101,10 @@ special_open=<
 special_close=>
 [html]
 ext=html,htm
+special_open=<
+special_close=>
+blockopen=!-
+blockclose=->
 keywords=html,head,meta,link,title,body,div,br
 types=href,class,rel,icon,type,media
 [fld]
@@ -114,8 +118,9 @@ ext=fl,fld
 keywords=alignas, alignof, and, and_eq, asm, bitand, bitor, break, case, catch, class, compl, constexpr, continue, default, delete, do, dynamic_cast, else, explicit, export, extern, false, for, friend, goto, if, inline, new, noexcept, not, not_eq, operator, or, or_eq, private, protected, public, register, reinterpret_cast, return, sizeof, struct, switch, template, this, thread_local, throw, true, try, typedef, typeid, typename, union, using, while, xor, xor_eq,decl,public global,Function
 types=auto, bool, char, char16_t, char32_t, class, const, const_cast, decltype, double, dynamic_cast, enum, explicit, extern, float, friend, inline, int, long, mutable, namespace, nullptr_t, private, protected, public, register, short, signed, sizeof, static, static_assert, static_cast, string, struct, template, typedef, typename, union, unsigned, virtual, vector, void, volatile, wchar_t
 [jwmrc]
+defines=<?
 ext=jwmrc
-keywords=JWM,RootMenu,Menu,Dynamic,Program,Separator,Desktops,SendTo,Stick,Maximize,Minimize,Shade,Move,Resize,Kill,Close,Restart,Exit,Tray,Clock,Dock,Pager,Spacer,Swallow,TaskList,TrayButton,Button,Include,Group,Name,Class,Option,WindowStyle,Font,Width,Height,Corner,Foreground,Background,Opacity,Outline,ClockStyle,TrayStyle,Active,TaskListStyle,PagerStyle,Text,IconPath,Mouse,Desktops,Background,ButtonClose,ButtonMax,ButtonMaxActivve,ButtonMenu,ButtonMin,DefaultIcon,DoubleClickDelta,DoubleClickSpeed,FocusModel,MoveMode,ResizeMode,RestartCommand,ShutdownCommand,SnapMode,StartupCommand
+keywords=JWM,RootMenu,Menu,Dynamic,Program,Separator,Desktops,SendTo,Stick,Maximize,Minimize,Shade,Move,Resize,Kill,Close,Restart,Exit,Tray,Clock,Dock,Pager,Spacer,Swallow,TaskList,TrayButton,Button,Include,Group,Name,Class,Option,WindowStyle,Font,Width,Height,Corner,Foreground,Background,Opacity,Outline,ClockStyle,TrayStyle,Active,TaskListStyle,PagerStyle,Text,IconPath,Mouse,Desktops,Background,ButtonClose,ButtonMax,ButtonMaxActivve,ButtonMenu,ButtonMin,DefaultIcon,DoubleClickDelta,DoubleClickSpeed,FocusModel,MoveMode,ResizeMode,RestartCommand,ShutdownCommand,SnapMode,StartupCommand,MenuStyle,TitleButtonOrder,ButtonMaxActive,Desktop,PopupStyle,TrayButtonStyle
 types=onroot,width,height,label,labeled,dynamic,tooltip,icon,confirm,autohide,x,y,valign,halign,format,zone,name,maxwidth,popup,mask,decorations,group,list,delay,enabled,context,button,type,distance
 blockopen=<!--
 blockclose=-->
