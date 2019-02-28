@@ -621,6 +621,13 @@ void UI::cb_p_button(Fl_Button* o, void* v) {
   ((UI*)(o->parent()->parent()->user_data()))->cb_p_button_i(o,v);
 }
 
+void UI::cb_cut_button_i(Fl_Button*, void*) {
+  cut_cb();
+}
+void UI::cb_cut_button(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->user_data()))->cb_cut_button_i(o,v);
+}
+
 void UI::cb_settings_button_i(Fl_Button*, void*) {
   pref_window()->show();
 }
@@ -628,11 +635,11 @@ void UI::cb_settings_button(Fl_Button* o, void* v) {
   ((UI*)(o->parent()->parent()->user_data()))->cb_settings_button_i(o,v);
 }
 
-void UI::cb_cut_button_i(Fl_Button*, void*) {
-  cut_cb();
+void UI::cb_print_button_i(Fl_Button*, void*) {
+  print_cb();
 }
-void UI::cb_cut_button(Fl_Button* o, void* v) {
-  ((UI*)(o->parent()->parent()->user_data()))->cb_cut_button_i(o,v);
+void UI::cb_print_button(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->parent()->user_data()))->cb_print_button_i(o,v);
 }
 
 void UI::cb_New_i(Fl_Menu_*, void*) {
@@ -668,6 +675,13 @@ void UI::cb_Save1_i(Fl_Menu_*, void*) {
 }
 void UI::cb_Save1(Fl_Menu_* o, void* v) {
   ((UI*)(o->parent()->user_data()))->cb_Save1_i(o,v);
+}
+
+void UI::cb_Print_i(Fl_Menu_*, void*) {
+  print_cb();
+}
+void UI::cb_Print(Fl_Menu_* o, void* v) {
+  ((UI*)(o->parent()->user_data()))->cb_Print_i(o,v);
 }
 
 void UI::cb_Exit_i(Fl_Menu_*, void*) {
@@ -800,6 +814,7 @@ Fl_Menu_Item UI::menu_menu[] = {
  {"&Insert", 0x50069,  (Fl_Callback*)UI::cb_Insert, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {"&Save", 0x40073,  (Fl_Callback*)UI::cb_Save, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {"Save &As...", 0x50073,  (Fl_Callback*)UI::cb_Save1, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"&Print", 0,  (Fl_Callback*)UI::cb_Print, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {"&Exit", 0x40071,  (Fl_Callback*)UI::cb_Exit, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {0,0,0,0,0,0,0,0,0},
  {"&Edit", 0,  0, 0, 64, (uchar)FL_NORMAL_LABEL, 0, 16, 0},
@@ -1198,20 +1213,13 @@ Fl_Double_Window* UI::make_window() {
         cp_button->callback((Fl_Callback*)cb_cp_button);
         o->image(color_copy_image);
       } // Fl_Button* cp_button
-      { Fl_Button* o = p_button = new Fl_Button(250, 27, 25, 25);
+      { Fl_Button* o = p_button = new Fl_Button(265, 27, 25, 25);
         p_button->tooltip(gettext("Paste current clipboard"));
         p_button->box(FL_FLAT_BOX);
         p_button->labelfont(1);
         p_button->callback((Fl_Callback*)cb_p_button);
         o->image(color_paste_image);
       } // Fl_Button* p_button
-      { Fl_Button* o = settings_button = new Fl_Button(430, 27, 25, 25);
-        settings_button->tooltip(gettext("Settings"));
-        settings_button->box(FL_FLAT_BOX);
-        settings_button->labelfont(1);
-        settings_button->callback((Fl_Callback*)cb_settings_button);
-        o->image(settings_image);
-      } // Fl_Button* settings_button
       { Fl_Button* o = cut_button = new Fl_Button(280, 27, 25, 25);
         cut_button->tooltip(gettext("Paste current clipboard"));
         cut_button->box(FL_FLAT_BOX);
@@ -1219,6 +1227,20 @@ Fl_Double_Window* UI::make_window() {
         cut_button->callback((Fl_Callback*)cb_cut_button);
         o->image(color_cut_image);
       } // Fl_Button* cut_button
+      { Fl_Button* o = settings_button = new Fl_Button(430, 27, 25, 25);
+        settings_button->tooltip(gettext("Settings"));
+        settings_button->box(FL_FLAT_BOX);
+        settings_button->labelfont(1);
+        settings_button->callback((Fl_Callback*)cb_settings_button);
+        o->image(settings_image);
+      } // Fl_Button* settings_button
+      { Fl_Button* o = print_button = new Fl_Button(310, 27, 25, 25);
+        print_button->tooltip(gettext("Print"));
+        print_button->box(FL_FLAT_BOX);
+        print_button->labelfont(1);
+        print_button->callback((Fl_Callback*)cb_print_button);
+        o->image(color_print_image);
+      } // Fl_Button* print_button
       buttons->end();
     } // Fl_Group* buttons
     { menu = new Fl_Menu_Bar(0, 0, 520, 25);
@@ -1233,7 +1255,7 @@ Fl_Double_Window* UI::make_window() {
       menu->align(Fl_Align(260));
       if (!menu_menu_i18n_done) {
         int i=0;
-        for ( ; i<31; i++)
+        for ( ; i<32; i++)
           if (menu_menu[i].label())
             menu_menu[i].label(gettext(menu_menu[i].label()));
         menu_menu_i18n_done = 1;
@@ -1566,27 +1588,29 @@ void UI::add_tab(bool LOAD, bool NEW ) {
 void UI::button_style(int style) {
   if(style==0)
   {
-  open_button->image(open_image);
-  save_button->image(save_image);
-  new_button->image(new_image);
-  undo_button->image(undo_image);
-  find_button->image(search_image);
-  replace_button->image(replace_image);
-  cp_button->image(copy_image);
-  p_button->image(paste_image);
-  cut_button->image(cut_image);
+    open_button->image(open_image);
+    save_button->image(save_image);
+    new_button->image(new_image);
+    undo_button->image(undo_image);
+    find_button->image(search_image);
+    replace_button->image(replace_image);
+    cp_button->image(copy_image);
+    p_button->image(paste_image);
+    cut_button->image(cut_image);
+    print_button->image(print_image);
   }
   else
   {
-  open_button->image(color_open_image);
-  save_button->image(color_save_image);
-  new_button->image(color_new_image);
-  undo_button->image(color_undo_image);
-  find_button->image(color_search_image);
-  replace_button->image(color_replace_image);
-  cp_button->image(color_copy_image);
-  p_button->image(color_paste_image);
-  cut_button->image(color_cut_image);
+    open_button->image(color_open_image);
+    save_button->image(color_save_image);
+    new_button->image(color_new_image);
+    undo_button->image(color_undo_image);
+    find_button->image(color_search_image);
+    replace_button->image(color_replace_image);
+    cp_button->image(color_copy_image);
+    p_button->image(color_paste_image);
+    cut_button->image(color_cut_image);
+    print_button->image(color_print_image);
   }
   
   open_button->redraw();
@@ -1598,6 +1622,7 @@ void UI::button_style(int style) {
   cp_button->redraw();
   p_button->redraw();
   cut_button->redraw();
+  print_button->redraw();
 }
 
 void UI::change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line) {
@@ -2608,14 +2633,29 @@ std::string UI::prefline(std::string LINE,unsigned int COLOR) {
 }
 
 void UI::print_cb() {
+  Fl_Syntax_Text_Editor* E = current_editor();
+  
+  if(E == NULL)
+  {
+    return;
+  }
+  
+  print_widget(E);
+}
+
+void UI::print_widget(Fl_Widget* preview) {
   Fl_Printer *printer = new Fl_Printer();
+  
   if (printer->start_job(1) == 0)
   {
     printer->start_page();
-    //TODO
+  
+    printer->print_widget(preview);
+  
     printer->end_page();
     printer->end_job();
   }
+  
   delete printer;
 }
 

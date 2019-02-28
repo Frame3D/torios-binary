@@ -740,11 +740,11 @@ find2_cb(match, backward,term);}
   } {
     Fl_Window win {
       label flpad open
-      xywh {348 120 520 545} type Double color 47 hide
+      xywh {777 124 520 545} type Double color 47 hide
       code1 {o->size_range(o->w(), o->h(), 0, 0);}
       code2 {make_icon(o);} xclass flpad
     } {
-      Fl_Group buttons {
+      Fl_Group buttons {open
         xywh {0 25 520 30} box FLAT_BOX
       } {
         Fl_Button add_button {
@@ -794,21 +794,26 @@ find2_cb(match, backward,term);}
         }
         Fl_Button p_button {
           callback {paste_cb();}
-          tooltip {Paste current clipboard} xywh {250 27 25 25} box FLAT_BOX labelfont 1
+          tooltip {Paste current clipboard} xywh {265 27 25 25} box FLAT_BOX labelfont 1
           code0 {o->image(color_paste_image);}
-        }
-        Fl_Button settings_button {
-          callback {pref_window()->show();}
-          tooltip Settings xywh {430 27 25 25} box FLAT_BOX labelfont 1
-          code0 {o->image(settings_image);}
         }
         Fl_Button cut_button {
           callback {cut_cb();}
           tooltip {Paste current clipboard} xywh {280 27 25 25} box FLAT_BOX labelfont 1
           code0 {o->image(color_cut_image);}
         }
+        Fl_Button settings_button {
+          callback {pref_window()->show();}
+          tooltip Settings xywh {430 27 25 25} box FLAT_BOX labelfont 1
+          code0 {o->image(settings_image);}
+        }
+        Fl_Button print_button {
+          callback {print_cb();}
+          tooltip Print xywh {310 27 25 25} box FLAT_BOX labelfont 1
+          code0 {o->image(color_print_image);}
+        }
       }
-      Fl_Menu_Bar menu {open
+      Fl_Menu_Bar menu {
         xywh {0 0 520 25} box FLAT_BOX down_box FLAT_BOX color 39 selection_color 80 labelsize 16 labelcolor 7 align 260 textsize 16 textcolor 7
       } {
         Submenu file_menu {
@@ -839,6 +844,11 @@ find2_cb(match, backward,term);}
             label {Save &As...}
             callback {saveas_cb();}
             xywh {10 10 100 20} shortcut 0x50073
+          }
+          MenuItem {} {
+            label {&Print}
+            callback {print_cb();}
+            xywh {0 0 100 20}
           }
           MenuItem {} {
             label {&Exit}
@@ -960,8 +970,7 @@ Fl::focus(g->child(0));} open
       } {}
     }
   }
-  Function {pref_window()} {open
-  } {
+  Function {pref_window()} {} {
     Fl_Window pref_win {
       label Preferences open
       xywh {4 52 675 710} type Double color 46 hide
@@ -1238,30 +1247,33 @@ if(LOAD)
 
 refresh_all();} {}
   }
-  Function {button_style(int style=0)} {} {
+  Function {button_style(int style=0)} {open
+  } {
     code {if(style==0)
 {
-open_button->image(open_image);
-save_button->image(save_image);
-new_button->image(new_image);
-undo_button->image(undo_image);
-find_button->image(search_image);
-replace_button->image(replace_image);
-cp_button->image(copy_image);
-p_button->image(paste_image);
-cut_button->image(cut_image);
+  open_button->image(open_image);
+  save_button->image(save_image);
+  new_button->image(new_image);
+  undo_button->image(undo_image);
+  find_button->image(search_image);
+  replace_button->image(replace_image);
+  cp_button->image(copy_image);
+  p_button->image(paste_image);
+  cut_button->image(cut_image);
+  print_button->image(print_image);
 }
 else
 {
-open_button->image(color_open_image);
-save_button->image(color_save_image);
-new_button->image(color_new_image);
-undo_button->image(color_undo_image);
-find_button->image(color_search_image);
-replace_button->image(color_replace_image);
-cp_button->image(color_copy_image);
-p_button->image(color_paste_image);
-cut_button->image(color_cut_image);
+  open_button->image(color_open_image);
+  save_button->image(color_save_image);
+  new_button->image(color_new_image);
+  undo_button->image(color_undo_image);
+  find_button->image(color_search_image);
+  replace_button->image(color_replace_image);
+  cp_button->image(color_copy_image);
+  p_button->image(color_paste_image);
+  cut_button->image(color_cut_image);
+  print_button->image(color_print_image);
 }
 
 open_button->redraw();
@@ -1272,7 +1284,8 @@ find_button->redraw();
 replace_button->redraw();
 cp_button->redraw();
 p_button->redraw();
-cut_button->redraw();} {}
+cut_button->redraw();
+print_button->redraw();} {}
   }
   Function {change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line)} {} {
     code {FOREGROUND_TEXT=FG;
@@ -1499,7 +1512,8 @@ special->redraw();
 tExt->redraw();
 bg->redraw();} {}
   }
-  Function {copy_cb()} {} {
+  Function {copy_cb()} {open
+  } {
     code {Fl_Syntax_Text_Editor * textor = current_editor();
 if(textor==NULL)
   return;
@@ -1564,8 +1578,7 @@ if(textor==NULL)
   return;
 textor->buffer()->remove_selection();} {}
   }
-  Function {dnd_file(const char* items, bool NEW=true)} {open
-  } {
+  Function {dnd_file(const char* items, bool NEW=true)} {} {
     code {if(items==NULL)
   return;
 std::string tmp = items;
@@ -1609,8 +1622,7 @@ for( std::vector<std::string>::iterator itr = V.begin();
   }
 
   free(ch);
-}} {selected
-    }
+}} {}
   }
   Function {dnd_vec(std::string in)} {return_type {std::vector<std::string>}
   } {
@@ -2258,15 +2270,31 @@ out+=number;
 out+="\\n";
 return out;} {}
   }
-  Function {print_cb()} {} {
+  Function {print_cb()} {open
+  } {
+    code {Fl_Syntax_Text_Editor* E = current_editor();
+
+if(E == NULL)
+{
+  return;
+}
+
+print_widget(E);} {}
+  }
+  Function {print_widget(Fl_Widget* preview)} {open selected
+  } {
     code {Fl_Printer *printer = new Fl_Printer();
+
 if (printer->start_job(1) == 0)
 {
   printer->start_page();
-  //TODO
+
+  printer->print_widget(preview);
+
   printer->end_page();
   printer->end_job();
 }
+
 delete printer;} {}
   }
   Function {quit_cb()} {} {

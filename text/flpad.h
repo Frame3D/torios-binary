@@ -214,15 +214,20 @@ private:
   inline void cb_p_button_i(Fl_Button*, void*);
   static void cb_p_button(Fl_Button*, void*);
 public:
+  Fl_Button *cut_button;
+private:
+  inline void cb_cut_button_i(Fl_Button*, void*);
+  static void cb_cut_button(Fl_Button*, void*);
+public:
   Fl_Button *settings_button;
 private:
   inline void cb_settings_button_i(Fl_Button*, void*);
   static void cb_settings_button(Fl_Button*, void*);
 public:
-  Fl_Button *cut_button;
+  Fl_Button *print_button;
 private:
-  inline void cb_cut_button_i(Fl_Button*, void*);
-  static void cb_cut_button(Fl_Button*, void*);
+  inline void cb_print_button_i(Fl_Button*, void*);
+  static void cb_print_button(Fl_Button*, void*);
 public:
   Fl_Menu_Bar *menu;
   static unsigned char menu_menu_i18n_done;
@@ -239,6 +244,8 @@ private:
   static void cb_Save(Fl_Menu_*, void*);
   inline void cb_Save1_i(Fl_Menu_*, void*);
   static void cb_Save1(Fl_Menu_*, void*);
+  inline void cb_Print_i(Fl_Menu_*, void*);
+  static void cb_Print(Fl_Menu_*, void*);
   inline void cb_Exit_i(Fl_Menu_*, void*);
   static void cb_Exit(Fl_Menu_*, void*);
   inline void cb_Undo_i(Fl_Menu_*, void*);
@@ -425,6 +432,7 @@ public:
   bool pick_tab(std::string file);
   std::string prefline(std::string LINE,unsigned int COLOR);
   void print_cb();
+  void print_widget(Fl_Widget* preview);
   void quit_cb();
   void _recent_CB();
   void replace_cb();
