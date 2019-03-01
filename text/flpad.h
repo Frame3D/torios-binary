@@ -85,9 +85,12 @@ public:
   void refresh();
   void set_syntax();
   void set_type(std::string fname);
+  int size();
   std::string style_line(std::string thisLine);
   static void style_update(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL, void *cbArg = NULL);
   static void style_unfinished_cb(int, void*);
+  int tab_distance();
+  void tab_distance(int dist);
   void theme_editor(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size,int linenum );
   void update_styletable();
   void use_spaces();
@@ -95,9 +98,6 @@ public:
   void init_inotify(std::string file);
   int rm_inotify();
   bool check_inotify();
-  int tab_distance();
-  void tab_distance(int dist);
-  int size();
 };
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Text_Display.H>

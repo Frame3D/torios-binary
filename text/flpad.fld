@@ -207,7 +207,7 @@ if(rm_inotify())
   }
   decl {lexertk::helper::symbol_replacer symbol_replacer;} {public local
   }
-  Function {changed_cb(int, int nInserted, int nDeleted, int, const char*, void *v)} {return_type {static void}
+  Function {changed_cb(int, int nInserted, int nDeleted, int, const char*, void *v)} {open return_type {static void}
   } {
     code {Fl_Syntax_Text_Editor * o = (Fl_Syntax_Text_Editor *)v;
 std::string f = o->filename;
@@ -244,7 +244,8 @@ str.assign((std::istreambuf_iterator<char>(t)),
             std::istreambuf_iterator<char>());
 return str;} {}
   }
-  Function {get_styletable(Fl_Text_Display::Style_Table_Entry &styles,int which)} {} {
+  Function {get_styletable(Fl_Text_Display::Style_Table_Entry &styles,int which)} {open
+  } {
     code {int font = FONT_TEXT;
 int bold = font + 1;
 int ital = bold + 1;
@@ -388,9 +389,12 @@ redraw();} {}
   Function {set_syntax()} {} {
     code {set_type(filename);} {}
   }
-  Function {set_type(std::string fname)} {open
-  } {
+  Function {set_type(std::string fname)} {} {
     code {std::string dir=fname;
+
+if( (fname.empty()) || (fname.compare("")==0) )
+  return;
+
 unsigned int find = dir.rfind("/");
 
 //if there is no directory this isn't correct
@@ -407,8 +411,6 @@ if(find>dir.length())
   }
 }
 
-if( (fname.empty()) || (fname.compare("")==0) )
-  return;
 this->filename=fname;
 this->STYLE_HEADER = get_type(this->filename);
 //trace(STYLE_HEADER);
@@ -446,10 +448,43 @@ this->generator.set_types(this->TYPES);
 
 //trace("set syntax type for: "+fname+" to:"+STYLE_HEADER);} {}
   }
-  Function {style_line(std::string thisLine)} {return_type {std::string}
+  Function {size()} {return_type int
+  } {
+    code {const char* txt = textbuffer->text();
+
+if(txt == NULL)
+{
+  return 0;
+}
+
+return strlen(txt);} {}
+  }
+  Function {style_line(std::string thisLine)} {open return_type {std::string}
   } {
     code {if(!generator.process(thisLine))
-  trace("error processing text:"+thisLine);
+{
+  std::string ret;
+  for(unsigned int i = 0; i < thisLine.length(); i++)
+  {
+    char tmp = thisLine[i];
+    if(
+       (tmp != '\\n') ||
+       (tmp != '\\t') ||
+       (tmp != '\\r') ||
+       (tmp != ' ')
+      )
+    {
+      ret+='A';
+    }
+    else
+    {
+      ret+=tmp;
+    }
+    
+  }
+  return ret;
+  //trace("error processing text:"+thisLine);
+}
 else
 {
   std::string line = lexertk::helper::style_line(generator);
@@ -476,8 +511,15 @@ ED->modify_cb(pos, nInserted, nDeleted, unused, nada);} {}
   } {
     code {} {}
   }
-  Function {theme_editor(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size,int linenum )} {open
+  Function {tab_distance()} {return_type int
   } {
+    code {return textbuffer->tab_distance();} {}
+  }
+  Function {tab_distance(int dist)} {} {
+    code {textbuffer->tab_distance(dist);
+stylebuffer->tab_distance(dist);} {}
+  }
+  Function {theme_editor(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size,int linenum )} {} {
     code {textcolor(FG);
 cursor_color(FG);
 color(BG);
@@ -489,7 +531,8 @@ linenumber_size(size);
 ///renew highlighter
 update_styletable();
 modify_cb();
-tab_distance(TAB_DISTANCE);} {}
+tab_distance(TAB_DISTANCE);
+modify_cb();} {}
   }
   Function {update_styletable()} {} {
     code {Fl_Text_Display::Style_Table_Entry A; //  Plain
@@ -621,29 +664,9 @@ if( (ret !=0) && (FD_ISSET (inotify_fd, &rfds)) )
 }
 return false;} {}
   }
-  Function {tab_distance()} {open return_type int
-  } {
-    code {return textbuffer->tab_distance();} {}
-  }
-  Function {tab_distance(int dist)} {open
-  } {
-    code {textbuffer->tab_distance(dist);
-stylebuffer->tab_distance(dist);} {}
-  }
-  Function {size()} {open return_type int
-  } {
-    code {const char* txt = textbuffer->text();
-
-if(txt == NULL)
-{
-  return 0;
 }
 
-return strlen(txt);} {}
-  }
-}
-
-class UI {open selected
+class UI {open
 } {
   decl {bool RELEASE;} {public local
   }
@@ -670,8 +693,7 @@ RELEASE=false;} {}
       }
     }
   }
-  Function {details_window()} {open
-  } {
+  Function {details_window()} {} {
     Fl_Window {} {open
       xywh {383 174 195 195} type Double hide
     } {
@@ -799,12 +821,12 @@ find2_cb(match, backward,term);}
   } {
     Fl_Window win {
       label flpad open
-      xywh {777 124 520 545} type Double color 47 hide
+      xywh {777 124 520 545} type Double color 47
       code1 {o->size_range(o->w(), o->h(), 0, 0);}
-      code2 {make_icon(o);} xclass flpad
+      code2 {make_icon(o);} xclass flpad visible
     } {
       Fl_Group buttons {open
-        xywh {0 25 520 30} box FLAT_BOX
+        xywh {0 25 520 30} box FLAT_BOX color 48
       } {
         Fl_Button add_button {
           label {@+}
@@ -853,7 +875,7 @@ find2_cb(match, backward,term);}
         }
         Fl_Button p_button {
           callback {paste_cb();}
-          tooltip {Paste current clipboard} xywh {265 27 25 25} box FLAT_BOX labelfont 1
+          tooltip {Paste current clipboard} xywh {250 27 25 25} box FLAT_BOX labelfont 1
           code0 {o->image(color_paste_image);}
         }
         Fl_Button cut_button {
@@ -867,7 +889,7 @@ find2_cb(match, backward,term);}
           code0 {o->image(settings_image);}
         }
         Fl_Button print_button {
-          callback {print_cb();}
+          callback {print_cb();} selected
           tooltip Print xywh {310 27 25 25} box FLAT_BOX labelfont 1
           code0 {o->image(color_print_image);}
         }
@@ -1280,7 +1302,8 @@ else
 }
 return false;} {}
   }
-  Function {add_tab(bool LOAD=true, bool NEW = true)} {} {
+  Function {add_tab(bool LOAD=true, bool NEW = true)} {open
+  } {
     code {int y = menu->y()+tabs->y()+add_button->y();
 int h = tabs->h();
 int w = tabs->w();
@@ -1320,6 +1343,8 @@ tabs->value(o);
 
 if(LOAD)
   open_file(NEW);
+else
+  te->filename="";
 
 refresh_all();} {}
   }
@@ -1981,6 +2006,8 @@ if(inputFileStrem.is_open())
     {
       subString=line.substr(start,std::string::npos);
       TAB_DISTANCE=convert(subString);
+      if(TAB_DISTANCE<1)
+        TAB_DISTANCE = 1;
     }
   }
 }
@@ -2193,27 +2220,7 @@ if(E == NULL)
   return;
 }
 
-E->loading = 1;
-int insert = (ipos != -1);
-E->changed = insert;
-
-if (!insert)
-  E->filename="";
-int r = 0;
-
-if (!insert)
-{
-  r = E->textbuffer->loadfile(newfile.c_str());
-  //E->init_inotify(newfile.c_str());
-}
-else
-{
-  r = E->textbuffer->insertfile(newfile.c_str(), ipos);
-}
-
-E->refresh();
-E->textbuffer->call_modify_callbacks();
-
+int r = E->textbuffer->loadfile(newfile.c_str());
 if (r)
 {
   fl_alert("Error reading from file \\'%s\\':\\n%s.", newfile.c_str(), strerror(errno));
@@ -2223,14 +2230,16 @@ else
   E->filename=newfile;
   add_recent(newfile);
   get_recent();
-}
-
-E->set_syntax();
-E->loading = 0;
-set_title(tabs->value());
-std::string tmp = "Documents/"+E->filename;
-menu->add(tmp.c_str(),0,choose_doc,this,0);
-menu->redraw();} {}
+  E->refresh();
+  E->changed = 0;
+  E->textbuffer->call_modify_callbacks();
+  E->set_syntax();
+  E->loading = 0;
+  set_title(tabs->value());
+  std::string tmp = "Documents/"+E->filename;
+  menu->add(tmp.c_str(),0,choose_doc,this,0);
+  menu->redraw();
+}} {}
   }
   Function {make_icon(Fl_Window *o)} {} {
     code {Fl_Pixmap f(flpad_xpm);
@@ -2294,7 +2303,8 @@ buff->remove_selection();
 textor->changed = 0;
 buff->call_modify_callbacks();} {}
   }
-  Function {open_cb()} {} {
+  Function {open_cb()} {open
+  } {
     code {Fl_Syntax_Text_Editor * E = current_editor();
 if(E==NULL)
 {
@@ -2423,21 +2433,39 @@ if(E!=NULL)
 }
 exit(0);} {}
   }
-  Function {_recent_CB()} {} {
+  Function {_recent_CB()} {open
+  } {
     code {char item[500];
 
 if(menu->item_pathname(item, (sizeof(item)-1) )!=0)
+{
   return;
+}
 
-std::string str_item = (item);
-std::string tag="&File/&Recent/";
+std::string str_item      = (item);
+std::string tag           = "&File/&Recent/";
+bool newfile              = false;
+Fl_Syntax_Text_Editor * E = current_editor();
 
-unsigned int finder =str_item.find(tag);
-if(finder<str_item.length())
+if(E==NULL)
+{
+  newfile = true;
+}
+
+std::string f = E->filename;
+
+if(f.compare("") != 0)
+{
+  newfile=true;
+}
+
+unsigned int finder = str_item.find(tag);
+
+if(finder < str_item.length())
 {
   unsigned int sizer = tag.length();
-  std::string tmp=str_item.erase(0,sizer);
-  load_file(tmp,0);
+  std::string tmp    = str_item.erase(0,sizer);
+  load_file(tmp,0,newfile);
 }} {}
   }
   Function {replace_cb()} {} {
@@ -2445,12 +2473,12 @@ if(finder<str_item.length())
 if(E!=NULL)
   make_replace()->show();} {}
   }
-  Function {recent_CB(Fl_Widget*w, void*data)} {return_type {static void}
+  Function {recent_CB(Fl_Widget*w, void*data)} {open return_type {static void}
   } {
     code {UI *o=(UI *)data;
 o->_recent_CB();} {}
   }
-  Function {replace_all_strings(std::string str, const std::string& old, const std::string& new_s, int &counter)} {return_type {std::string}
+  Function {replace_all_strings(std::string str, const std::string& old, const std::string& new_s, int &counter)} {open return_type {std::string}
   } {
     code {if(!old.empty())
 {
@@ -2495,7 +2523,8 @@ if (found)
 else
   fl_alert("No occurrences of \\'%s\\' found!", find);} {}
   }
-  Function {replall_cb()} {} {
+  Function {replall_cb()} {open
+  } {
     code {Fl_Syntax_Text_Editor * E = current_editor();
 if(E==NULL)
   return;
@@ -2585,7 +2614,7 @@ newfile = fl_file_chooser("Save File As?", "*", textor->filename.c_str());
 if (newfile != NULL)
   save_file(newfile);} {}
   }
-  Function {save_preferences()} {return_type bool
+  Function {save_preferences()} {open return_type bool
   } {
     code {std::string out=prefline("FG",FOREGROUND_TEXT);
 out+=prefline("BG",BACKGROUND_TEXT);
@@ -2607,8 +2636,8 @@ out+=prefline("BR",BROKEN_TEXT);
 out+=prefline("IL",INDENT_NEW_LINES);
 out+=prefline("MC",MATCH_CASE);
 out+=prefline("BW",BACKWARD_SEARCH);
-out+=prefline("WW:",WORD_WRAP);
-out+=prefline("TB:",TAB_DISTANCE);
+out+=prefline("WW",WORD_WRAP);
+out+=prefline("TB",TAB_DISTANCE);
 std::ofstream dest;
 std::string fname=get_filename();
 dest.open(fname.c_str());
@@ -3068,7 +3097,7 @@ std::string value = color_from_name(color.c_str());
 return get_fl_color(value, default_value);} {}
 }
 
-Function {get_flpad_dir( std::string base_name)} {return_type {std::string}
+Function {get_flpad_dir( std::string base_name)} {open return_type {std::string}
 } {
   code {std::string tester = "/usr/share/flpad/";
 std::string res="";
@@ -3087,13 +3116,16 @@ else
   {
     res = tmp;
   }
-  trace("Could not find:"+tmp);
+  else
+  {
+    trace("Could not find:"+tmp);
+  }
 }
 
 return res;} {}
 }
 
-Function {get_flpad_home_dir( std::string base_name)} {return_type {std::string}
+Function {get_flpad_home_dir( std::string base_name)} {open return_type {std::string}
 } {
   code {//testing
 std::string home_tester;
@@ -3133,7 +3165,7 @@ else
 return home_tester;} {}
 }
 
-Function {get_syntax_file()} {return_type {std::string}
+Function {get_syntax_file()} {open return_type {std::string}
 } {
   code {std::string base_name = "styles.flpad";
 
@@ -3172,7 +3204,7 @@ if(SYNTAX_FILE.compare("")==0)
 return SYNTAX_FILE;} {}
 }
 
-Function {get_syntax_headers()} {return_type {std::vector<std::string>}
+Function {get_syntax_headers()} {open return_type {std::vector<std::string>}
 } {
   code {std::vector<std::string> V;
 std::string filename = get_syntax_file();
@@ -3201,7 +3233,7 @@ if(inputFileStrem.is_open())
 return V;} {}
 }
 
-Function {get_theme_file()} {return_type {std::string}
+Function {get_theme_file()} {open return_type {std::string}
 } {
   code {std::string base_name   = "themes.flpad";
 std::string home_tester = get_flpad_home_dir(base_name);
