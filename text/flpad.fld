@@ -26,6 +26,9 @@ decl {\#include <algorithm>} {public global
 decl {\#include <sstream>} {public global
 }
 
+decl {\#include <iterator>} {public global
+}
+
 decl {\#include <dirent.h>} {public global
 }
 
@@ -105,7 +108,7 @@ decl {unsigned int FOREGROUND_TEXT, BACKGROUND_TEXT, SELECTION_TEXT, COMMENT_TEX
   comment {Syntax highlighting colors} public global
 }
 
-decl {int FONT_TEXT, SIZE_TEXT, LINE_NUMBERS, BUTTON_COLOR, HIGHLIGHT_PLAIN, INDENT_NEW_LINES, WORD_WRAP;} {
+decl {int FONT_TEXT, SIZE_TEXT, LINE_NUMBERS, BUTTON_COLOR, HIGHLIGHT_PLAIN, INDENT_NEW_LINES, WORD_WRAP, TAB_DISTANCE;} {
   comment {configuration options} private local
 }
 
@@ -132,7 +135,6 @@ changed            = 0;
 loading            = 0;
 filename           = "";
 textbuffer         = new Fl_Text_Buffer();
-
 this->resize(x,y,w,h);
 this->buffer(textbuffer);
 
@@ -339,7 +341,15 @@ textbuffer->add_modify_callback(style_update, (void*) this);} {}
   e->buffer()->remove_selection();
 }} {}
   }
-  Function {modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL)} {open return_type void
+  Function {length()} {return_type int
+  } {
+    code {return textbuffer->length();} {}
+  }
+  Function {line_count()} {return_type int
+  } {
+    code {return count_lines(0,length(), false);} {}
+  }
+  Function {modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL)} {return_type void
   } {
     code {if(stylebuffer->selected()!=0)
 {
@@ -378,7 +388,8 @@ redraw();} {}
   Function {set_syntax()} {} {
     code {set_type(filename);} {}
   }
-  Function {set_type(std::string fname)} {} {
+  Function {set_type(std::string fname)} {open
+  } {
     code {std::string dir=fname;
 unsigned int find = dir.rfind("/");
 
@@ -465,7 +476,8 @@ ED->modify_cb(pos, nInserted, nDeleted, unused, nada);} {}
   } {
     code {} {}
   }
-  Function {theme_editor(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size,int linenum )} {} {
+  Function {theme_editor(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size,int linenum )} {open
+  } {
     code {textcolor(FG);
 cursor_color(FG);
 color(BG);
@@ -474,10 +486,10 @@ textsize(size);
 selection_color(selection);
 linenumber_width(linenum);
 linenumber_size(size);
-
 ///renew highlighter
 update_styletable();
-modify_cb();} {}
+modify_cb();
+tab_distance(TAB_DISTANCE);} {}
   }
   Function {update_styletable()} {} {
     code {Fl_Text_Display::Style_Table_Entry A; //  Plain
@@ -609,9 +621,29 @@ if( (ret !=0) && (FD_ISSET (inotify_fd, &rfds)) )
 }
 return false;} {}
   }
+  Function {tab_distance()} {open return_type int
+  } {
+    code {return textbuffer->tab_distance();} {}
+  }
+  Function {tab_distance(int dist)} {open
+  } {
+    code {textbuffer->tab_distance(dist);
+stylebuffer->tab_distance(dist);} {}
+  }
+  Function {size()} {open return_type int
+  } {
+    code {const char* txt = textbuffer->text();
+
+if(txt == NULL)
+{
+  return 0;
 }
 
-class UI {open
+return strlen(txt);} {}
+  }
+}
+
+class UI {open selected
 } {
   decl {bool RELEASE;} {public local
   }
@@ -635,6 +667,33 @@ RELEASE=false;} {}
         label Close
         callback {o->parent()->hide();}
         xywh {220 330 80 30} box FLAT_BOX color 80 labelcolor 7
+      }
+    }
+  }
+  Function {details_window()} {open
+  } {
+    Fl_Window {} {open
+      xywh {383 174 195 195} type Double hide
+    } {
+      Fl_Value_Output {} {
+        label {Word Count:}
+        xywh {100 10 85 25} box FLAT_BOX
+        code0 {o->value(wc());}
+      }
+      Fl_Button {} {
+        label OK
+        callback {o->parent()->hide();}
+        xywh {130 160 55 25} box FLAT_BOX color 62 selection_color 61 labelcolor 7
+      }
+      Fl_Value_Output {} {
+        label {Line Count:}
+        xywh {100 40 85 25} box FLAT_BOX
+        code0 {o->value(line_count());}
+      }
+      Fl_Value_Output {} {
+        label {Characters:}
+        xywh {100 65 85 25} box FLAT_BOX
+        code0 {o->value(char_count());}
       }
     }
   }
@@ -813,7 +872,7 @@ find2_cb(match, backward,term);}
           code0 {o->image(color_print_image);}
         }
       }
-      Fl_Menu_Bar menu {
+      Fl_Menu_Bar menu {open
         xywh {0 0 520 25} box FLAT_BOX down_box FLAT_BOX color 39 selection_color 80 labelsize 16 labelcolor 7 align 260 textsize 16 textcolor 7
       } {
         Submenu file_menu {
@@ -930,13 +989,18 @@ Fl_Text_Editor::kf_select_all(0,textor);}
           }
         }
         Submenu {} {
-          label {&Tools}
+          label {&Tools} open
           xywh {0 0 100 20}
         } {
           MenuItem {} {
             label {&Color Chooser}
             callback {color_tool();}
             xywh {0 0 100 20} shortcut 0x5006a
+          }
+          MenuItem {} {
+            label {&Document Statistics}
+            callback {details_window()->show();}
+            xywh {0 0 100 20}
           }
         }
         Submenu {} {
@@ -973,14 +1037,14 @@ Fl::focus(g->child(0));} open
   Function {pref_window()} {} {
     Fl_Window pref_win {
       label Preferences open
-      xywh {4 52 675 710} type Double color 46 hide
+      xywh {877 85 310 460} type Double color 46 hide
       code0 {make_icon(o);} xclass flpad
     } {
       Fl_Tabs pref_tabs {open
         xywh {0 0 310 420} box FLAT_BOX
       } {
         Fl_Group gen {
-          label General
+          label General open
           xywh {0 25 310 395} selection_color 43
         } {
           Fl_Browser font_b {
@@ -1006,10 +1070,10 @@ font_show->redraw();}
             code0 {o->value(font_b->value());}
           }
           Fl_Check_Button tool_color {
-            label {Toolbar Button Color}
+            label {Color Buttons}
             callback {int val=o->value();
 button_style(val);}
-            tooltip {Use color in the tool bar icons?} xywh {5 270 175 30} down_box GTK_DOWN_BOX value 1 selection_color 63 align 52
+            tooltip {Use color in the tool bar icons?} xywh {5 270 120 30} down_box GTK_DOWN_BOX value 1 selection_color 63 align 52
             code0 {o->value(BUTTON_COLOR);}
           }
           Fl_Button tExt {
@@ -1021,23 +1085,23 @@ button_style(val);}
           Fl_Slider f_s {
             label {Font Size}
             callback {fsout->value(o->value());}
-            tooltip {Size of the text} xywh {115 310 135 30} type Horizontal box GTK_DOWN_BOX color 38 align 1 minimum 2 maximum 128 step 1
+            tooltip {Size of the text} xywh {120 290 135 30} type Horizontal box GTK_DOWN_BOX color 38 align 1 minimum 2 maximum 128 step 1
             code0 {o->value( SIZE_TEXT );}
           }
           Fl_Value_Input fsout {
             callback {f_s->value(o->value());}
-            tooltip {Size of the text} xywh {260 310 30 30} box FLAT_BOX selection_color 80
+            tooltip {Size of the text} xywh {265 290 30 30} box FLAT_BOX selection_color 80
             code0 {o->value( SIZE_TEXT );}
           }
           Fl_Slider l_s {
             label {Line Number Size}
             callback {lsout->value(o->value());}
-            tooltip {0 hides line numbers} xywh {115 355 135 30} type Horizontal box GTK_DOWN_BOX color 38 align 1 maximum 128 step 1
+            tooltip {0 hides line numbers} xywh {120 335 135 30} type Horizontal box GTK_DOWN_BOX color 38 align 1 maximum 128 step 1
             code0 {o->value(LINE_NUMBERS);}
           }
           Fl_Value_Input lsout {
             callback {l_s->value(o->value());}
-            tooltip {0 hides line numbers} xywh {260 355 30 30} box FLAT_BOX selection_color 80
+            tooltip {0 hides line numbers} xywh {265 335 30 30} box FLAT_BOX selection_color 80
             code0 {o->value(LINE_NUMBERS);}
           }
           Fl_Button bg {
@@ -1045,6 +1109,17 @@ button_style(val);}
             callback {choose_a_color(o);}
             tooltip {Editor background color} xywh {25 380 55 30} box BORDER_BOX color 23 align 129
             code0 {o->color(BACKGROUND_TEXT);}
+          }
+          Fl_Slider t_s {
+            label {Tab Size}
+            callback {tout->value(o->value());}
+            xywh {120 385 135 30} type Horizontal box GTK_DOWN_BOX color 38 align 1 maximum 128 step 1
+            code0 {o->value(TAB_DISTANCE);}
+          }
+          Fl_Value_Input tout {
+            callback {t_s->value(o->value());}
+            tooltip {0 hides line numbers} xywh {265 385 30 30} box FLAT_BOX selection_color 80
+            code0 {o->value(TAB_DISTANCE);}
           }
         }
         Fl_Group syntax {
@@ -1146,6 +1221,7 @@ HIGHLIGHT_PLAIN  = plain_text->value();
 SPECIAL_TEXT     = special->color();
 BROKEN_TEXT      = broken->color();
 INDENT_NEW_LINES = indentor->value();
+TAB_DISTANCE     = t_s->value();
 if(!save_preferences())
 {
   trace("Failed to save preferences");
@@ -1287,7 +1363,8 @@ p_button->redraw();
 cut_button->redraw();
 print_button->redraw();} {}
   }
-  Function {change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line)} {} {
+  Function {change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line)} {open
+  } {
     code {FOREGROUND_TEXT=FG;
 BACKGROUND_TEXT=BG;
 SELECTION_TEXT=selection;
@@ -1335,6 +1412,17 @@ else
 }
 
 about_dialog->buffer(about_buffer);} {}
+  }
+  Function {char_count()} {return_type int
+  } {
+    code {Fl_Syntax_Text_Editor* E = current_editor();
+
+if(E==NULL)
+{
+  return 0;
+}
+
+return E->size();} {}
   }
   Function {check_save()} {return_type int
   } {
@@ -1551,7 +1639,8 @@ if(textor==NULL)
   return;
 Fl_Text_Editor::kf_cut(0,textor);} {}
   }
-  Function {default_theme()} {} {
+  Function {default_theme()} {open
+  } {
     code {FOREGROUND_TEXT = FL_FOREGROUND_COLOR;
 BACKGROUND_TEXT = FL_BACKGROUND2_COLOR;
 SELECTION_TEXT  = 80;
@@ -1559,7 +1648,7 @@ FONT_TEXT       = FL_COURIER;
 SIZE_TEXT       = 14;
 HIGHLIGHT_PLAIN = 0;
 LINE_NUMBERS    = 0;
-
+TAB_DISTANCE    = 4;
 //syntax
 COMMENT_TEXT    = 1077952512;
 STRING_TEXT     = 2625372160;
@@ -1766,7 +1855,8 @@ else
 fname+="/flpad/flpad.config";
 return fname;} {}
   }
-  Function {get_preferences()} {} {
+  Function {get_preferences()} {open
+  } {
     code {std::string fname=get_filename();
 if(fname.compare("")==0)
 {
@@ -1774,7 +1864,6 @@ if(fname.compare("")==0)
   return;
 }
 default_theme();
-
 std::string subString,line;
 std::ifstream inputFileStrem (fname.c_str(), std::ifstream::in);
 /** check if the input file stream is open */
@@ -1887,6 +1976,11 @@ if(inputFileStrem.is_open())
     {
       subString=line.substr(start,std::string::npos);
       WORD_WRAP=convert(subString);
+    }
+    if(line.find("TB:")<line.length())
+    {
+      subString=line.substr(start,std::string::npos);
+      TAB_DISTANCE=convert(subString);
     }
   }
 }
@@ -2071,7 +2165,19 @@ if(textor==NULL)
   return;
 Fl_Text_Editor::kf_insert(0,textor);} {}
   }
-  Function {load_file(std::string newfile, int ipos,bool NEW=true)} {} {
+  Function {line_count()} {open return_type int
+  } {
+    code {Fl_Syntax_Text_Editor* E = current_editor();
+
+if(E == NULL)
+{
+  return 0;
+}
+
+return E->line_count();} {}
+  }
+  Function {load_file(std::string newfile, int ipos,bool NEW=true)} {open
+  } {
     code {//todo 
 //if(pick_tab(newfile)){return;}
 if(NEW)
@@ -2279,23 +2385,34 @@ if(E == NULL)
   return;
 }
 
-print_widget(E);} {}
+print_text(E);} {}
   }
-  Function {print_widget(Fl_Widget* preview)} {open selected
-  } {
+  Function {print_text(Fl_Syntax_Text_Editor* editor)} {} {
     code {Fl_Printer *printer = new Fl_Printer();
-
+int font            = editor->textfont();
+int size            = editor->textsize();
+//Pages vector?
 if (printer->start_job(1) == 0)
 {
-  printer->start_page();
-
-  printer->print_widget(preview);
-
-  printer->end_page();
+  print_page(printer,font,size);
   printer->end_job();
 }
 
 delete printer;} {}
+  }
+  Function {print_page(Fl_Printer *printer, int font, int size)} {open
+  } {
+    code {int x = 0;
+int y = 0;
+int w,h;
+printer->start_page();
+printer->printable_rect(&w,&h);
+fl_color(FL_BLACK);
+fl_rect(x,y,w,h);
+fl_font(font, size);
+//TODO figure out how much text fits on a page....
+//fl_draw();
+printer->end_page();} {}
   }
   Function {quit_cb()} {} {
     code {Fl_Syntax_Text_Editor * E = current_editor();
@@ -2438,7 +2555,8 @@ int height = win->h() - (buttons->h() +buttons->x());
 o->size(width,height);
 o->redraw();} {}
   }
-  Function {refresh_all()} {} {
+  Function {refresh_all()} {open
+  } {
     code {change_theme(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);} {}
   }
   Function {save_cb(void)} {} {
@@ -2490,7 +2608,7 @@ out+=prefline("IL",INDENT_NEW_LINES);
 out+=prefline("MC",MATCH_CASE);
 out+=prefline("BW",BACKWARD_SEARCH);
 out+=prefline("WW:",WORD_WRAP);
-
+out+=prefline("TB:",TAB_DISTANCE);
 std::ofstream dest;
 std::string fname=get_filename();
 dest.open(fname.c_str());
@@ -2570,7 +2688,7 @@ if(full.compare("")!=0)
 //trace("Title="+title);
 win->copy_label(Ti.c_str());
 g->copy_label(title.c_str());
-g->copy_tooltip(fname.c_str());
+g->copy_tooltip("");//fname.c_str());
 g->redraw();
 tabs->redraw();} {}
   }
@@ -2597,6 +2715,28 @@ if(txt==NULL)
 if(textor==NULL)
   return;
 Fl_Text_Editor::kf_undo(0,textor);} {}
+  }
+  Function {wc()} {open return_type int
+  } {
+    code {Fl_Syntax_Text_Editor* E = current_editor();
+
+if(E == NULL)
+{
+  return 0;
+}
+Fl_Text_Buffer * buff = E->buffer();
+const char* txt = buff->text();
+std::string text = txt;
+return wc(text);} {}
+  }
+  Function {wc(std::string text)} {open return_type int
+  } {
+    code {std::string x = text;
+std::string s = text;
+std::replace_if( x.begin(), x.end(), std::ptr_fun <int, int> ( std::isspace ), ' ' );
+x.erase( 0, x.find_first_not_of( " " ) );
+if (x.empty()) return 0;
+return std::count( x.begin(), std::unique( x.begin(), x.end() ), ' ' ) + !std::isspace( *s.rbegin() );} {}
   }
   Function {wordwrap()} {} {
     code {Fl_Syntax_Text_Editor * E = current_editor();
@@ -3319,7 +3459,7 @@ Function {keywords(std::string header, bool ignore_case = false)} {return_type {
   code {return comma_line(header, "keywords", ignore_case);} {}
 }
 
-Function {main(int argc, char **argv)} {return_type int
+Function {main(int argc, char **argv)} {open return_type int
 } {
   code {//Set some default colors
 NORMAL_COLOR = FL_BLACK;

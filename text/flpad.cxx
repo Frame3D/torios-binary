@@ -9,7 +9,7 @@
 /**
  configuration options
 */
-static int FONT_TEXT, SIZE_TEXT, LINE_NUMBERS, BUTTON_COLOR, HIGHLIGHT_PLAIN, INDENT_NEW_LINES, WORD_WRAP; 
+static int FONT_TEXT, SIZE_TEXT, LINE_NUMBERS, BUTTON_COLOR, HIGHLIGHT_PLAIN, INDENT_NEW_LINES, WORD_WRAP, TAB_DISTANCE; 
 
 Fl_Syntax_Text_Editor::Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label ):Fl_Text_Editor(x,y,w,h,label) {
   IGNORE_SYNTAX_CASE = false;
@@ -21,7 +21,6 @@ Fl_Syntax_Text_Editor::Fl_Syntax_Text_Editor(int x, int y, int w, int h, const c
   loading            = 0;
   filename           = "";
   textbuffer         = new Fl_Text_Buffer();
-  
   this->resize(x,y,w,h);
   this->buffer(textbuffer);
   
@@ -200,6 +199,14 @@ void Fl_Syntax_Text_Editor::kill_selection(Fl_Text_Editor* e) {
   }
 }
 
+int Fl_Syntax_Text_Editor::length() {
+  return textbuffer->length();
+}
+
+int Fl_Syntax_Text_Editor::line_count() {
+  return count_lines(0,length(), false);
+}
+
 void Fl_Syntax_Text_Editor::modify_cb(int pos, int nInserted, int nDeleted, int unused, const char * nada) {
   if(stylebuffer->selected()!=0)
   {
@@ -337,10 +344,10 @@ void Fl_Syntax_Text_Editor::theme_editor(unsigned int FG,unsigned int BG, unsign
   selection_color(selection);
   linenumber_width(linenum);
   linenumber_size(size);
-  
   ///renew highlighter
   update_styletable();
   modify_cb();
+  tab_distance(TAB_DISTANCE);
 }
 
 void Fl_Syntax_Text_Editor::update_styletable() {
@@ -476,11 +483,38 @@ bool Fl_Syntax_Text_Editor::check_inotify() {
   return false;
 }
 
+int Fl_Syntax_Text_Editor::tab_distance() {
+  return textbuffer->tab_distance();
+}
+
+void Fl_Syntax_Text_Editor::tab_distance(int dist) {
+  textbuffer->tab_distance(dist);
+  stylebuffer->tab_distance(dist);
+}
+
+int Fl_Syntax_Text_Editor::size() {
+  const char* txt = textbuffer->text();
+  
+  if(txt == NULL)
+  {
+    return 0;
+  }
+  
+  return strlen(txt);
+}
+
 void UI::cb_Close_i(Fl_Button* o, void*) {
   o->parent()->hide();
 }
 void UI::cb_Close(Fl_Button* o, void* v) {
   ((UI*)(o->parent()->user_data()))->cb_Close_i(o,v);
+}
+
+void UI::cb_OK_i(Fl_Button* o, void*) {
+  o->parent()->hide();
+}
+void UI::cb_OK(Fl_Button* o, void* v) {
+  ((UI*)(o->parent()->user_data()))->cb_OK_i(o,v);
 }
 
 void UI::cb_finder_i(Fl_Input*, void*) {
@@ -785,6 +819,13 @@ void UI::cb_Color(Fl_Menu_* o, void* v) {
   ((UI*)(o->parent()->user_data()))->cb_Color_i(o,v);
 }
 
+void UI::cb_Document_i(Fl_Menu_*, void*) {
+  details_window()->show();
+}
+void UI::cb_Document(Fl_Menu_* o, void* v) {
+  ((UI*)(o->parent()->user_data()))->cb_Document_i(o,v);
+}
+
 void UI::cb_About_i(Fl_Menu_*, void*) {
   check_file("about");
 }
@@ -835,6 +876,7 @@ Fl_Menu_Item UI::menu_menu[] = {
  {0,0,0,0,0,0,0,0,0},
  {"&Tools", 0,  0, 0, 64, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {"&Color Chooser", 0x5006a,  (Fl_Callback*)UI::cb_Color, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+ {"&Document Statistics", 0,  (Fl_Callback*)UI::cb_Document, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {0,0,0,0,0,0,0,0,0},
  {"&Help", 0,  0, 0, 64, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
  {"&About", 0,  (Fl_Callback*)UI::cb_About, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
@@ -915,6 +957,20 @@ void UI::cb_bg_i(Fl_Button* o, void*) {
 }
 void UI::cb_bg(Fl_Button* o, void* v) {
   ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_bg_i(o,v);
+}
+
+void UI::cb_t_s_i(Fl_Slider* o, void*) {
+  tout->value(o->value());
+}
+void UI::cb_t_s(Fl_Slider* o, void* v) {
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_t_s_i(o,v);
+}
+
+void UI::cb_tout_i(Fl_Value_Input* o, void*) {
+  t_s->value(o->value());
+}
+void UI::cb_tout(Fl_Value_Input* o, void* v) {
+  ((UI*)(o->parent()->parent()->parent()->user_data()))->cb_tout_i(o,v);
 }
 
 void UI::cb_cm_i(Fl_Button* o, void*) {
@@ -1005,6 +1061,7 @@ HIGHLIGHT_PLAIN  = plain_text->value();
 SPECIAL_TEXT     = special->color();
 BROKEN_TEXT      = broken->color();
 INDENT_NEW_LINES = indentor->value();
+TAB_DISTANCE     = t_s->value();
 if(!save_preferences())
 {
   trace("Failed to save preferences");
@@ -1042,6 +1099,35 @@ Fl_Double_Window* UI::about_window() {
     about_win->end();
   } // Fl_Double_Window* about_win
   return about_win;
+}
+
+Fl_Double_Window* UI::details_window() {
+  Fl_Double_Window* w;
+  { Fl_Double_Window* o = new Fl_Double_Window(195, 195);
+    w = o; if (w) {/* empty */}
+    o->user_data((void*)(this));
+    { Fl_Value_Output* o = new Fl_Value_Output(100, 10, 85, 25, gettext("Word Count:"));
+      o->box(FL_FLAT_BOX);
+      o->value(wc());
+    } // Fl_Value_Output* o
+    { Fl_Button* o = new Fl_Button(130, 160, 55, 25, gettext("OK"));
+      o->box(FL_FLAT_BOX);
+      o->color((Fl_Color)62);
+      o->selection_color((Fl_Color)61);
+      o->labelcolor(FL_BACKGROUND2_COLOR);
+      o->callback((Fl_Callback*)cb_OK);
+    } // Fl_Button* o
+    { Fl_Value_Output* o = new Fl_Value_Output(100, 40, 85, 25, gettext("Line Count:"));
+      o->box(FL_FLAT_BOX);
+      o->value(line_count());
+    } // Fl_Value_Output* o
+    { Fl_Value_Output* o = new Fl_Value_Output(100, 65, 85, 25, gettext("Characters:"));
+      o->box(FL_FLAT_BOX);
+      o->value(char_count());
+    } // Fl_Value_Output* o
+    o->end();
+  } // Fl_Double_Window* o
+  return w;
 }
 
 void UI::make_popup(Fl_Widget *o) {
@@ -1255,7 +1341,7 @@ Fl_Double_Window* UI::make_window() {
       menu->align(Fl_Align(260));
       if (!menu_menu_i18n_done) {
         int i=0;
-        for ( ; i<32; i++)
+        for ( ; i<33; i++)
           if (menu_menu[i].label())
             menu_menu[i].label(gettext(menu_menu[i].label()));
         menu_menu_i18n_done = 1;
@@ -1280,7 +1366,7 @@ Fl_Double_Window* UI::make_window() {
 }
 
 Fl_Double_Window* UI::pref_window() {
-  { Fl_Double_Window* o = pref_win = new Fl_Double_Window(675, 710, gettext("Preferences"));
+  { Fl_Double_Window* o = pref_win = new Fl_Double_Window(310, 460, gettext("Preferences"));
     pref_win->color((Fl_Color)46);
     pref_win->user_data((void*)(this));
     { pref_tabs = new Fl_Tabs(0, 0, 310, 420);
@@ -1311,7 +1397,7 @@ Fl_Double_Window* UI::pref_window() {
           font_save->textcolor(FL_BACKGROUND2_COLOR);
           o->value(font_b->value());
         } // Fl_Value_Output* font_save
-        { Fl_Check_Button* o = tool_color = new Fl_Check_Button(5, 270, 175, 30, gettext("Toolbar Button Color"));
+        { Fl_Check_Button* o = tool_color = new Fl_Check_Button(5, 270, 120, 30, gettext("Color Buttons"));
           tool_color->tooltip(gettext("Use color in the tool bar icons?"));
           tool_color->down_box(FL_GTK_DOWN_BOX);
           tool_color->value(1);
@@ -1328,7 +1414,7 @@ Fl_Double_Window* UI::pref_window() {
           tExt->align(Fl_Align(FL_ALIGN_TOP));
           o->color(FOREGROUND_TEXT);
         } // Fl_Button* tExt
-        { Fl_Slider* o = f_s = new Fl_Slider(115, 310, 135, 30, gettext("Font Size"));
+        { Fl_Slider* o = f_s = new Fl_Slider(120, 290, 135, 30, gettext("Font Size"));
           f_s->tooltip(gettext("Size of the text"));
           f_s->type(1);
           f_s->box(FL_GTK_DOWN_BOX);
@@ -1340,14 +1426,14 @@ Fl_Double_Window* UI::pref_window() {
           f_s->align(Fl_Align(FL_ALIGN_TOP));
           o->value( SIZE_TEXT );
         } // Fl_Slider* f_s
-        { Fl_Value_Input* o = fsout = new Fl_Value_Input(260, 310, 30, 30);
+        { Fl_Value_Input* o = fsout = new Fl_Value_Input(265, 290, 30, 30);
           fsout->tooltip(gettext("Size of the text"));
           fsout->box(FL_FLAT_BOX);
           fsout->selection_color((Fl_Color)80);
           fsout->callback((Fl_Callback*)cb_fsout);
           o->value( SIZE_TEXT );
         } // Fl_Value_Input* fsout
-        { Fl_Slider* o = l_s = new Fl_Slider(115, 355, 135, 30, gettext("Line Number Size"));
+        { Fl_Slider* o = l_s = new Fl_Slider(120, 335, 135, 30, gettext("Line Number Size"));
           l_s->tooltip(gettext("0 hides line numbers"));
           l_s->type(1);
           l_s->box(FL_GTK_DOWN_BOX);
@@ -1358,7 +1444,7 @@ Fl_Double_Window* UI::pref_window() {
           l_s->align(Fl_Align(FL_ALIGN_TOP));
           o->value(LINE_NUMBERS);
         } // Fl_Slider* l_s
-        { Fl_Value_Input* o = lsout = new Fl_Value_Input(260, 355, 30, 30);
+        { Fl_Value_Input* o = lsout = new Fl_Value_Input(265, 335, 30, 30);
           lsout->tooltip(gettext("0 hides line numbers"));
           lsout->box(FL_FLAT_BOX);
           lsout->selection_color((Fl_Color)80);
@@ -1373,6 +1459,23 @@ Fl_Double_Window* UI::pref_window() {
           bg->align(Fl_Align(129));
           o->color(BACKGROUND_TEXT);
         } // Fl_Button* bg
+        { Fl_Slider* o = t_s = new Fl_Slider(120, 385, 135, 30, gettext("Tab Size"));
+          t_s->type(1);
+          t_s->box(FL_GTK_DOWN_BOX);
+          t_s->color((Fl_Color)38);
+          t_s->maximum(128);
+          t_s->step(1);
+          t_s->callback((Fl_Callback*)cb_t_s);
+          t_s->align(Fl_Align(FL_ALIGN_TOP));
+          o->value(TAB_DISTANCE);
+        } // Fl_Slider* t_s
+        { Fl_Value_Input* o = tout = new Fl_Value_Input(265, 385, 30, 30);
+          tout->tooltip(gettext("0 hides line numbers"));
+          tout->box(FL_FLAT_BOX);
+          tout->selection_color((Fl_Color)80);
+          tout->callback((Fl_Callback*)cb_tout);
+          o->value(TAB_DISTANCE);
+        } // Fl_Value_Input* tout
         gen->end();
       } // Fl_Group* gen
       { syntax = new Fl_Group(0, 25, 310, 395, gettext("Syntax Highlighting"));
@@ -1676,6 +1779,17 @@ void UI::check_file(std::string file,std::string title) {
   about_dialog->buffer(about_buffer);
 }
 
+int UI::char_count() {
+  Fl_Syntax_Text_Editor* E = current_editor();
+  
+  if(E==NULL)
+  {
+    return 0;
+  }
+  
+  return E->size();
+}
+
 int UI::check_save() {
   Fl_Syntax_Text_Editor * E = current_editor();
   if(E==NULL)
@@ -1903,7 +2017,7 @@ void UI::default_theme() {
   SIZE_TEXT       = 14;
   HIGHLIGHT_PLAIN = 0;
   LINE_NUMBERS    = 0;
-  
+  TAB_DISTANCE    = 4;
   //syntax
   COMMENT_TEXT    = 1077952512;
   STRING_TEXT     = 2625372160;
@@ -2124,7 +2238,6 @@ void UI::get_preferences() {
     return;
   }
   default_theme();
-  
   std::string subString,line;
   std::ifstream inputFileStrem (fname.c_str(), std::ifstream::in);
   /** check if the input file stream is open */
@@ -2237,6 +2350,11 @@ void UI::get_preferences() {
       {
         subString=line.substr(start,std::string::npos);
         WORD_WRAP=convert(subString);
+      }
+      if(line.find("TB:")<line.length())
+      {
+        subString=line.substr(start,std::string::npos);
+        TAB_DISTANCE=convert(subString);
       }
     }
   }
@@ -2424,6 +2542,17 @@ void UI::insert_cb() {
   if(textor==NULL)
     return;
   Fl_Text_Editor::kf_insert(0,textor);
+}
+
+int UI::line_count() {
+  Fl_Syntax_Text_Editor* E = current_editor();
+  
+  if(E == NULL)
+  {
+    return 0;
+  }
+  
+  return E->line_count();
 }
 
 void UI::load_file(std::string newfile, int ipos,bool NEW) {
@@ -2640,23 +2769,35 @@ void UI::print_cb() {
     return;
   }
   
-  print_widget(E);
+  print_text(E);
 }
 
-void UI::print_widget(Fl_Widget* preview) {
+void UI::print_text(Fl_Syntax_Text_Editor* editor) {
   Fl_Printer *printer = new Fl_Printer();
-  
+  int font            = editor->textfont();
+  int size            = editor->textsize();
+  //Pages vector?
   if (printer->start_job(1) == 0)
   {
-    printer->start_page();
-  
-    printer->print_widget(preview);
-  
-    printer->end_page();
+    print_page(printer,font,size);
     printer->end_job();
   }
   
   delete printer;
+}
+
+void UI::print_page(Fl_Printer *printer, int font, int size) {
+  int x = 0;
+  int y = 0;
+  int w,h;
+  printer->start_page();
+  printer->printable_rect(&w,&h);
+  fl_color(FL_BLACK);
+  fl_rect(x,y,w,h);
+  fl_font(font, size);
+  //TODO figure out how much text fits on a page....
+  //fl_draw();
+  printer->end_page();
 }
 
 void UI::quit_cb() {
@@ -2861,7 +3002,7 @@ bool UI::save_preferences() {
   out+=prefline("MC",MATCH_CASE);
   out+=prefline("BW",BACKWARD_SEARCH);
   out+=prefline("WW:",WORD_WRAP);
-  
+  out+=prefline("TB:",TAB_DISTANCE);
   std::ofstream dest;
   std::string fname=get_filename();
   dest.open(fname.c_str());
@@ -2943,7 +3084,7 @@ void UI::set_title(Fl_Widget* g) {
   //trace("Title="+title);
   win->copy_label(Ti.c_str());
   g->copy_label(title.c_str());
-  g->copy_tooltip(fname.c_str());
+  g->copy_tooltip("");//fname.c_str());
   g->redraw();
   tabs->redraw();
 }
@@ -2972,6 +3113,28 @@ void UI::undo_cb() {
   if(textor==NULL)
     return;
   Fl_Text_Editor::kf_undo(0,textor);
+}
+
+int UI::wc() {
+  Fl_Syntax_Text_Editor* E = current_editor();
+  
+  if(E == NULL)
+  {
+    return 0;
+  }
+  Fl_Text_Buffer * buff = E->buffer();
+  const char* txt = buff->text();
+  std::string text = txt;
+  return wc(text);
+}
+
+int UI::wc(std::string text) {
+  std::string x = text;
+  std::string s = text;
+  std::replace_if( x.begin(), x.end(), std::ptr_fun <int, int> ( std::isspace ), ' ' );
+  x.erase( 0, x.find_first_not_of( " " ) );
+  if (x.empty()) return 0;
+  return std::count( x.begin(), std::unique( x.begin(), x.end() ), ' ' ) + !std::isspace( *s.rbegin() );
 }
 
 void UI::wordwrap() {

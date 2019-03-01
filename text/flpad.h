@@ -12,6 +12,7 @@
 #include "../include/toolbar_icons.h"
 #include <algorithm>
 #include <sstream>
+#include <iterator>
 #include <dirent.h>
 #include <fstream>
 #include <iostream>
@@ -78,6 +79,8 @@ protected:
 public:
   void init_highlight();
   static void kill_selection(Fl_Text_Editor* e);
+  int length();
+  int line_count();
   void modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL);
   void refresh();
   void set_syntax();
@@ -92,10 +95,14 @@ public:
   void init_inotify(std::string file);
   int rm_inotify();
   bool check_inotify();
+  int tab_distance();
+  void tab_distance(int dist);
+  int size();
 };
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Text_Display.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Value_Output.H>
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Group.H>
@@ -103,7 +110,6 @@ public:
 #include <FL/Fl_Tabs.H>
 #include <FL/Fl_Browser.H>
 #include <FL/Fl_Output.H>
-#include <FL/Fl_Value_Output.H>
 #include <FL/Fl_Slider.H>
 #include <FL/Fl_Value_Input.H>
 #include <FL/Fl_Menu_Button.H>
@@ -119,6 +125,11 @@ public:
 private:
   inline void cb_Close_i(Fl_Button*, void*);
   static void cb_Close(Fl_Button*, void*);
+public:
+  Fl_Double_Window* details_window();
+private:
+  inline void cb_OK_i(Fl_Button*, void*);
+  static void cb_OK(Fl_Button*, void*);
 public:
   void make_popup(Fl_Widget *o);
   Fl_Double_Window* find_window();
@@ -274,6 +285,8 @@ private:
   static void cb_Go(Fl_Menu_*, void*);
   inline void cb_Color_i(Fl_Menu_*, void*);
   static void cb_Color(Fl_Menu_*, void*);
+  inline void cb_Document_i(Fl_Menu_*, void*);
+  static void cb_Document(Fl_Menu_*, void*);
   inline void cb_About_i(Fl_Menu_*, void*);
   static void cb_About(Fl_Menu_*, void*);
   inline void cb_Syntax_i(Fl_Menu_*, void*);
@@ -331,6 +344,16 @@ public:
 private:
   inline void cb_bg_i(Fl_Button*, void*);
   static void cb_bg(Fl_Button*, void*);
+public:
+  Fl_Slider *t_s;
+private:
+  inline void cb_t_s_i(Fl_Slider*, void*);
+  static void cb_t_s(Fl_Slider*, void*);
+public:
+  Fl_Value_Input *tout;
+private:
+  inline void cb_tout_i(Fl_Value_Input*, void*);
+  static void cb_tout(Fl_Value_Input*, void*);
 public:
   Fl_Group *syntax;
   Fl_Button *cm;
@@ -392,6 +415,7 @@ public:
   void button_style(int style=0);
   void change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line);
   void check_file(std::string file,std::string title="About");
+  int char_count();
   int check_save();
   unsigned int choose_a_color(Fl_Widget *o);
   static void choose_doc(Fl_Widget* o, void* v);
@@ -421,6 +445,7 @@ public:
   static void handle_menu(Fl_Widget *w, void *v);
   std::string input(std::string MSG, std::string text="", std::string ok="OK", std::string cancel="Cancel");
   void insert_cb();
+  int line_count();
   void load_file(std::string newfile, int ipos,bool NEW=true);
   void make_icon(Fl_Window *o);
   void none_theme();
@@ -432,7 +457,8 @@ public:
   bool pick_tab(std::string file);
   std::string prefline(std::string LINE,unsigned int COLOR);
   void print_cb();
-  void print_widget(Fl_Widget* preview);
+  void print_text(Fl_Syntax_Text_Editor* editor);
+  void print_page(Fl_Printer *printer, int font, int size);
   void quit_cb();
   void _recent_CB();
   void replace_cb();
@@ -451,6 +477,8 @@ public:
   void show_line_numbers(int width=0);
   static void theme_menu_cb(Fl_Widget* o, void* v);
   void undo_cb();
+  int wc();
+  int wc(std::string text);
   void wordwrap();
 };
 int ask(std::string MSG, std::string yes="Yes", std::string no="No", std::string other="");
