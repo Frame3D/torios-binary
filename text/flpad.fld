@@ -126,13 +126,14 @@ class Fl_Syntax_Text_Editor {open : {public Fl_Text_Editor}
   }
   decl {int inotify_wd;} {public local
   }
-  Function {Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0):Fl_Text_Editor(x,y,w,h,label)} {} {
+  Function {Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0):Fl_Text_Editor(x,y,w,h,label)} {open
+  } {
     code {IGNORE_SYNTAX_CASE = false;
 SPACES             = false;
 RELEASE            = false;
 DND_START          = false;
 WRAPPED            = false;
-changed            = 0;
+is_changed         = 0;
 loading            = 0;
 filename           = "";
 
@@ -212,7 +213,7 @@ if(rm_inotify())
   }
   decl {std::string search;} {public local
   }
-  decl {int changed;} {public global
+  decl {int is_changed;} {public global
   }
   decl {int loading;} {public global
   }
@@ -230,11 +231,11 @@ if(rm_inotify())
   } {
     code {Fl_Syntax_Text_Editor * o = (Fl_Syntax_Text_Editor *)v;
 std::string f = o->filename;
-o->changed = 0;
+o->is_changed = 0;
 
 if ((nInserted || nDeleted) && !o->loading)
 {
-  o->changed = 1;
+  o->is_changed = 1;//o->set_changed();
 }
 
 ((UI *)(o->parent()->user_data()))->set_title(o->parent());} {}
@@ -353,8 +354,7 @@ switch(which)
     break;
 }
 //trace(whichtype);
-styletable[which] = styles; //  set} {selected
-    }
+styletable[which] = styles; //  set} {}
   }
   Function {handle(int event)} {open protected return_type int
   } {
@@ -1022,13 +1022,18 @@ find2_cb(match, backward,term);}
   Function {make_window()} {open
   } {
     Fl_Window win {
-      label flpad open
+      label flpad
+      callback {if (!check_save())
+{
+  return;
+}
+exit(0);} open
       xywh {238 155 520 545} type Double color 47 hide
       code1 {o->size_range(o->w(), o->h(), 0, 0);}
       code2 {make_icon(o);} xclass flpad
     } {
       Fl_Group buttons {open
-        xywh {0 25 520 30} box FLAT_BOX color 48
+        xywh {0 25 520 30} box FLAT_BOX
       } {
         Fl_Button add_button {
           label {@+}
@@ -1457,7 +1462,7 @@ o->parent()->hide();}
       }
     }
   }
-  Function {add_recent(std::string filename)} {return_type bool
+  Function {add_recent(std::string filename)} {open return_type bool
   } {
     code {if(filename.compare("")==0)
 {
@@ -1668,7 +1673,7 @@ if(E==NULL)
 {
   return 1;
 }
-if (!E->changed)
+if (!E->changed())
 {
   return 1;
 }
@@ -1677,7 +1682,7 @@ int r = ask("The current file has not been saved.\\n" "Would you like to save it
 if (r == 1)
 {
   save_cb(); // Save the file...
-  return !E->changed;
+  return !E->changed();
 }
 
 return (r == 2) ? 1 : 0;} {}
@@ -1848,22 +1853,36 @@ if(textor==NULL)
   return;
 Fl_Text_Editor::kf_copy(0, textor);} {}
   }
-  Function {current_editor()} {return_type {Fl_Syntax_Text_Editor *}
+  Function {current_editor()} {open return_type {Fl_Syntax_Text_Editor *}
   } {
     code {if(tabs==NULL)
+{
   return NULL;
+}
 //std::cerr<<"TABS="<<tabs<<std::endl;
+
 if(tabs->value()==NULL)
+{
   return NULL;
+}
 //std::cerr<<"tabs->value() [Group holding Text Editor]="<<tabs->value()<<std::endl;
+
 if(tabs->children()<=0)
+{
   return NULL;
+}
+
 Fl_Group * curr = tabs->value()->as_group();
+
 if(curr==NULL)
+{
   return NULL;
+}
+
 //std::cout<<curr->children()<<std::endl;
-Fl_Syntax_Text_Editor * E=NULL;
-for ( int i = 0;i<=curr->children();i++)
+Fl_Syntax_Text_Editor * E = NULL;
+
+for ( int i = 0; i <= curr->children(); i++)
 {
   if(curr->child(i)!=NULL)
   {
@@ -1872,6 +1891,7 @@ for ( int i = 0;i<=curr->children();i++)
     return E;
   }
 }
+
 return E;} {}
   }
   Function {cut_cb()} {} {
@@ -2243,35 +2263,36 @@ else
   }
   Function {get_recent()} {return_type bool
   } {
-    code {std::string out=get_flpad_home_dir("recent");
-
+    code {std::string out = get_flpad_home_dir("recent");
+// no recent file exists yet
 if(!test_file(out))
 {
   return false;
 }
 
 std::vector<std::string> vect = file_to_vector(out);
-
+// nothing in the file yet
 if(vect.empty())
 {
   return false;
 }
-
+//find the recent menu
 int index = menu->find_index("&File/&Recent");
-
+// ok it exists... clear it
 if( index != -1 )
 {
   menu->clear_submenu(index);
 }
-
+//loop through each of the recent items
 for( std::vector<std::string>::iterator it = vect.begin();
 it!=vect.end();
 ++it)
 {
+//add it to the menu
   std::string item="&File/&Recent/"+*it;
   menu->add(item.c_str(),0,recent_CB,(void*)this);
 }
-
+//redraw the menu
 menu->redraw();
 return true;} {}
   }
@@ -2434,9 +2455,7 @@ return E->line_count();} {}
   }
   Function {load_file(std::string newfile, bool NEW=true)} {open
   } {
-    code {//todo 
-//if(pick_tab(newfile)){return;}
-if(NEW)
+    code {if(NEW)
 {
   add_tab(false);
 }
@@ -2449,7 +2468,6 @@ if(E == NULL)
   return;
 }
 
-E->changed = 0;
 int r = E->textbuffer->loadfile(newfile.c_str());
 
 if (r)
@@ -2462,13 +2480,14 @@ else
   add_recent(newfile);
   get_recent();
   E->refresh();
-  E->changed = 0;
-  E->textbuffer->call_modify_callbacks();
+  E->is_changed = 0;
+  E->clear_changed();
+//  E->textbuffer->call_modify_callbacks();
   E->set_syntax();
+  E->loading = 1;
+  E->clear_changed();
+  set_title(E->parent());
   E->loading = 0;
-  E->changed = 0;
-  set_title(tabs->value());
-
   std::string tmp = "Documents/" + E->filename;
 
   menu->add(tmp.c_str(), 0, choose_doc, this, 0);
@@ -2513,7 +2532,7 @@ theme_button->redraw();} {}
   } {
     code {Fl_Syntax_Text_Editor * textor = current_editor();
 
-if( (!check_save()) && (textor!=NULL) )
+if( (!check_save()) && (textor != NULL) )
 {
   return;
 }
@@ -2536,7 +2555,7 @@ Fl_Text_Buffer * buff = textor->buffer();
 
 buff->select(0, buff->length());
 buff->remove_selection();
-textor->changed = 0;
+textor->clear_changed();
 buff->call_modify_callbacks();
 
 if (!check_save())
@@ -2544,10 +2563,10 @@ if (!check_save())
   return;
 }
 
-textor->filename="";
+textor->filename = "";
 buff->select(0, buff->length());
 buff->remove_selection();
-textor->changed = 0;
+textor->clear_changed();
 buff->call_modify_callbacks();} {}
   }
   Function {open_cb()} {} {
@@ -2645,11 +2664,12 @@ if(E == NULL)
 
 E->print_text();} {}
   }
-  Function {quit_cb()} {} {
+  Function {quit_cb()} {open
+  } {
     code {Fl_Syntax_Text_Editor * E = current_editor();
 if(E!=NULL)
 {
-  if (E->changed && !check_save())
+  if (E->changed() && !check_save())
     return;
 }
 exit(0);} {}
@@ -2687,6 +2707,9 @@ if(finder < str_item.length())
   std::string tmp    = str_item.erase(0,sizer);
   load_file(tmp, newfile);
 }} {}
+  }
+  Function {refresh_all()} {} {
+    code {change_theme(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);} {}
   }
   Function {replace_cb()} {} {
     code {Fl_Syntax_Text_Editor * E = current_editor();
@@ -2809,9 +2832,6 @@ int height = win->h() - (buttons->h() +buttons->x());
 o->size(width,height);
 o->redraw();} {}
   }
-  Function {refresh_all()} {} {
-    code {change_theme(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);} {}
-  }
   Function {save_cb(void)} {} {
     code {Fl_Syntax_Text_Editor * E = current_editor();
 std::string fname="";
@@ -2873,34 +2893,51 @@ dest << out;
 dest.close();
 return true;} {}
   }
-  Function {save_file(std::string newfile)} {} {
+  Function {save_file(std::string newfile)} {open
+  } {
     code {Fl_Syntax_Text_Editor * textor = current_editor();
-if(textor==NULL)
+if(textor == NULL)
+{
   return;
+}
+
 Fl_Text_Buffer * buff = textor->buffer();
+
 if (buff->savefile(newfile.c_str()))
+{
   fl_alert("Error writing to file \\'%s\\':\\n%s.", newfile.c_str(), strerror(errno));
+}
 else
 {
   textor->filename=newfile;
-  textor->changed = 0;
+  textor->clear_changed();
   buff->call_modify_callbacks();
   set_title(textor->parent());
   ((Fl_Widget *)(textor->user_data()))->labelcolor(NORMAL_COLOR);
-}} {}
+}} {selected
+    }
   }
   Function {set_title(Fl_Widget* g)} {open
   } {
-    code {if(g==NULL)
+    code {//g is the group representing the tab we are setting the title to
+if(g==NULL)
+{
   return;
+}
+
 Fl_Group* gg = (Fl_Group*)g;
 std::string title;
 
+// this is the text editor widget in our specific tab
 Fl_Syntax_Text_Editor* textor = ((Fl_Syntax_Text_Editor*)gg->child(0));//current_editor();
-if(textor==NULL)
+
+if(textor == NULL)
+{
   return;
+}
+
 std::string fname = textor->filename;
-std::string full = fname;
+std::string full  = fname;
 
 //Is the file name empty???  set it to Untitled!!
 if (fname.compare("")==0)
@@ -2933,13 +2970,12 @@ else
 }
 textor->refresh();
 
-/*
+
 //Has this been changed at all??
-if (textor->changed)
+if (textor->changed())
 {
   title += " (modified)";
 }
-*/
 
 std::string Ti = title;
 

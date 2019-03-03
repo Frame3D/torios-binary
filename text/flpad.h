@@ -61,7 +61,7 @@ public:
   Fl_Text_Buffer * textbuffer; 
   std::string filename; 
   std::string search; 
-  int changed; 
+  int is_changed; 
   int loading; 
   std::vector<std::string> KEYWORDS, TYPES; 
 protected:
@@ -182,6 +182,10 @@ private:
 public:
   Fl_Double_Window* make_window();
   Fl_Double_Window *win;
+private:
+  inline void cb_win_i(Fl_Double_Window*, void*);
+  static void cb_win(Fl_Double_Window*, void*);
+public:
   Fl_Group *buttons;
   Fl_Button *add_button;
 private:
@@ -467,6 +471,7 @@ public:
   void print_cb();
   void quit_cb();
   void _recent_CB();
+  void refresh_all();
   void replace_cb();
   static void recent_CB(Fl_Widget*w, void*data);
   std::string replace_all_strings(std::string str, const std::string& old, const std::string& new_s, int &counter);
@@ -474,7 +479,6 @@ public:
   void replall_cb();
   void replace_start();
   void resize(Fl_Widget* o);
-  void refresh_all();
   void save_cb(void);
   void saveas_cb(void);
   bool save_preferences();

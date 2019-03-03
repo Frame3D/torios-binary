@@ -17,7 +17,7 @@ Fl_Syntax_Text_Editor::Fl_Syntax_Text_Editor(int x, int y, int w, int h, const c
   RELEASE            = false;
   DND_START          = false;
   WRAPPED            = false;
-  changed            = 0;
+  is_changed         = 0;
   loading            = 0;
   filename           = "";
   
@@ -84,11 +84,11 @@ Fl_Syntax_Text_Editor::~Fl_Syntax_Text_Editor() {
 void Fl_Syntax_Text_Editor::changed_cb(int, int nInserted, int nDeleted, int, const char*, void *v) {
   Fl_Syntax_Text_Editor * o = (Fl_Syntax_Text_Editor *)v;
   std::string f = o->filename;
-  o->changed = 0;
+  o->is_changed = 0;
   
   if ((nInserted || nDeleted) && !o->loading)
   {
-    o->changed = 1;
+    o->is_changed = 1;//o->set_changed();
   }
   
   ((UI *)(o->parent()->user_data()))->set_title(o->parent());
@@ -802,6 +802,17 @@ void UI::cb_replace_next(Fl_Button* o, void* v) {
   ((UI*)(o->parent()->user_data()))->cb_replace_next_i(o,v);
 }
 
+void UI::cb_win_i(Fl_Double_Window*, void*) {
+  if (!check_save())
+{
+  return;
+}
+exit(0);
+}
+void UI::cb_win(Fl_Double_Window* o, void* v) {
+  ((UI*)(o->user_data()))->cb_win_i(o,v);
+}
+
 void UI::cb_add_button_i(Fl_Button*, void*) {
   add_tab(false);
 }
@@ -1453,10 +1464,9 @@ Fl_Double_Window* UI::make_replace() {
 Fl_Double_Window* UI::make_window() {
   { Fl_Double_Window* o = win = new Fl_Double_Window(520, 545, gettext("flpad"));
     win->color(FL_DARK1);
-    win->user_data((void*)(this));
+    win->callback((Fl_Callback*)cb_win, (void*)(this));
     { buttons = new Fl_Group(0, 25, 520, 30);
       buttons->box(FL_FLAT_BOX);
-      buttons->color((Fl_Color)48);
       { add_button = new Fl_Button(492, 27, 25, 25, gettext("@+"));
         add_button->tooltip(gettext("Add a Tab"));
         add_button->box(FL_FLAT_BOX);
@@ -2032,7 +2042,7 @@ int UI::check_save() {
   {
     return 1;
   }
-  if (!E->changed)
+  if (!E->changed())
   {
     return 1;
   }
@@ -2041,7 +2051,7 @@ int UI::check_save() {
   if (r == 1)
   {
     save_cb(); // Save the file...
-    return !E->changed;
+    return !E->changed();
   }
   
   return (r == 2) ? 1 : 0;
@@ -2219,19 +2229,33 @@ void UI::copy_cb() {
 
 Fl_Syntax_Text_Editor * UI::current_editor() {
   if(tabs==NULL)
+  {
     return NULL;
+  }
   //std::cerr<<"TABS="<<tabs<<std::endl;
+  
   if(tabs->value()==NULL)
+  {
     return NULL;
+  }
   //std::cerr<<"tabs->value() [Group holding Text Editor]="<<tabs->value()<<std::endl;
+  
   if(tabs->children()<=0)
+  {
     return NULL;
+  }
+  
   Fl_Group * curr = tabs->value()->as_group();
+  
   if(curr==NULL)
+  {
     return NULL;
+  }
+  
   //std::cout<<curr->children()<<std::endl;
-  Fl_Syntax_Text_Editor * E=NULL;
-  for ( int i = 0;i<=curr->children();i++)
+  Fl_Syntax_Text_Editor * E = NULL;
+  
+  for ( int i = 0; i <= curr->children(); i++)
   {
     if(curr->child(i)!=NULL)
     {
@@ -2240,6 +2264,7 @@ Fl_Syntax_Text_Editor * UI::current_editor() {
       return E;
     }
   }
+  
   return E;
 }
 
@@ -2619,35 +2644,36 @@ void UI::get_preferences() {
 }
 
 bool UI::get_recent() {
-  std::string out=get_flpad_home_dir("recent");
-  
+  std::string out = get_flpad_home_dir("recent");
+  // no recent file exists yet
   if(!test_file(out))
   {
     return false;
   }
   
   std::vector<std::string> vect = file_to_vector(out);
-  
+  // nothing in the file yet
   if(vect.empty())
   {
     return false;
   }
-  
+  //find the recent menu
   int index = menu->find_index("&File/&Recent");
-  
+  // ok it exists... clear it
   if( index != -1 )
   {
     menu->clear_submenu(index);
   }
-  
+  //loop through each of the recent items
   for( std::vector<std::string>::iterator it = vect.begin();
   it!=vect.end();
   ++it)
   {
+  //add it to the menu
     std::string item="&File/&Recent/"+*it;
     menu->add(item.c_str(),0,recent_CB,(void*)this);
   }
-  
+  //redraw the menu
   menu->redraw();
   return true;
 }
@@ -2814,8 +2840,6 @@ int UI::line_count() {
 }
 
 void UI::load_file(std::string newfile, bool NEW) {
-  //todo 
-  //if(pick_tab(newfile)){return;}
   if(NEW)
   {
     add_tab(false);
@@ -2829,7 +2853,6 @@ void UI::load_file(std::string newfile, bool NEW) {
     return;
   }
   
-  E->changed = 0;
   int r = E->textbuffer->loadfile(newfile.c_str());
   
   if (r)
@@ -2842,13 +2865,14 @@ void UI::load_file(std::string newfile, bool NEW) {
     add_recent(newfile);
     get_recent();
     E->refresh();
-    E->changed = 0;
-    E->textbuffer->call_modify_callbacks();
+    E->is_changed = 0;
+    E->clear_changed();
+  //  E->textbuffer->call_modify_callbacks();
     E->set_syntax();
+    E->loading = 1;
+    E->clear_changed();
+    set_title(E->parent());
     E->loading = 0;
-    E->changed = 0;
-    set_title(tabs->value());
-  
     std::string tmp = "Documents/" + E->filename;
   
     menu->add(tmp.c_str(), 0, choose_doc, this, 0);
@@ -2896,7 +2920,7 @@ void UI::make_theme_menu() {
 void UI::new_cb() {
   Fl_Syntax_Text_Editor * textor = current_editor();
   
-  if( (!check_save()) && (textor!=NULL) )
+  if( (!check_save()) && (textor != NULL) )
   {
     return;
   }
@@ -2919,7 +2943,7 @@ void UI::new_cb() {
   
   buff->select(0, buff->length());
   buff->remove_selection();
-  textor->changed = 0;
+  textor->clear_changed();
   buff->call_modify_callbacks();
   
   if (!check_save())
@@ -2927,10 +2951,10 @@ void UI::new_cb() {
     return;
   }
   
-  textor->filename="";
+  textor->filename = "";
   buff->select(0, buff->length());
   buff->remove_selection();
-  textor->changed = 0;
+  textor->clear_changed();
   buff->call_modify_callbacks();
 }
 
@@ -3035,7 +3059,7 @@ void UI::quit_cb() {
   Fl_Syntax_Text_Editor * E = current_editor();
   if(E!=NULL)
   {
-    if (E->changed && !check_save())
+    if (E->changed() && !check_save())
       return;
   }
   exit(0);
@@ -3074,6 +3098,10 @@ void UI::_recent_CB() {
     std::string tmp    = str_item.erase(0,sizer);
     load_file(tmp, newfile);
   }
+}
+
+void UI::refresh_all() {
+  change_theme(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);
 }
 
 void UI::replace_cb() {
@@ -3201,10 +3229,6 @@ void UI::resize(Fl_Widget* o) {
   o->redraw();
 }
 
-void UI::refresh_all() {
-  change_theme(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);
-}
-
 void UI::save_cb(void) {
   Fl_Syntax_Text_Editor * E = current_editor();
   std::string fname="";
@@ -3270,15 +3294,21 @@ bool UI::save_preferences() {
 
 void UI::save_file(std::string newfile) {
   Fl_Syntax_Text_Editor * textor = current_editor();
-  if(textor==NULL)
+  if(textor == NULL)
+  {
     return;
+  }
+  
   Fl_Text_Buffer * buff = textor->buffer();
+  
   if (buff->savefile(newfile.c_str()))
+  {
     fl_alert("Error writing to file \'%s\':\n%s.", newfile.c_str(), strerror(errno));
+  }
   else
   {
     textor->filename=newfile;
-    textor->changed = 0;
+    textor->clear_changed();
     buff->call_modify_callbacks();
     set_title(textor->parent());
     ((Fl_Widget *)(textor->user_data()))->labelcolor(NORMAL_COLOR);
@@ -3286,16 +3316,25 @@ void UI::save_file(std::string newfile) {
 }
 
 void UI::set_title(Fl_Widget* g) {
+  //g is the group representing the tab we are setting the title to
   if(g==NULL)
+  {
     return;
+  }
+  
   Fl_Group* gg = (Fl_Group*)g;
   std::string title;
   
+  // this is the text editor widget in our specific tab
   Fl_Syntax_Text_Editor* textor = ((Fl_Syntax_Text_Editor*)gg->child(0));//current_editor();
-  if(textor==NULL)
+  
+  if(textor == NULL)
+  {
     return;
+  }
+  
   std::string fname = textor->filename;
-  std::string full = fname;
+  std::string full  = fname;
   
   //Is the file name empty???  set it to Untitled!!
   if (fname.compare("")==0)
@@ -3328,13 +3367,12 @@ void UI::set_title(Fl_Widget* g) {
   }
   textor->refresh();
   
-  /*
+  
   //Has this been changed at all??
-  if (textor->changed)
+  if (textor->changed())
   {
     title += " (modified)";
   }
-  */
   
   std::string Ti = title;
   
