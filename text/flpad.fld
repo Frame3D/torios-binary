@@ -120,12 +120,13 @@ decl {std::string SYNTAX_FILE;} {public global
 
 class Fl_Syntax_Text_Editor {open : {public Fl_Text_Editor}
 } {
+  decl {Fl_Printer *printer} {public global
+  }
   decl {int inotify_fd;} {public local
   }
   decl {int inotify_wd;} {public local
   }
-  Function {Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0):Fl_Text_Editor(x,y,w,h,label)} {open
-  } {
+  Function {Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0):Fl_Text_Editor(x,y,w,h,label)} {} {
     code {IGNORE_SYNTAX_CASE = false;
 SPACES             = false;
 RELEASE            = false;
@@ -134,42 +135,60 @@ WRAPPED            = false;
 changed            = 0;
 loading            = 0;
 filename           = "";
+
+//the buffer to hold just the file's text
 textbuffer         = new Fl_Text_Buffer();
 this->resize(x,y,w,h);
+//set textbuffer to be the buffer in this widget
 this->buffer(textbuffer);
 
+// create a basic style text
 char *style = new char[textbuffer->length() + 1];
 char *text = textbuffer->text();
-
+//set it to plain .a.k.a. 'A'
 memset(style, 'A', textbuffer->length());
+
+// this is the buffer for the syntax highlighting
 stylebuffer = new Fl_Text_Buffer(textbuffer->length());
 style[textbuffer->length()] = '\\0';
-
+//get the actual syntax highlighter setup
 init_highlight();
-
+//set the highlighter text in the style buffer
 stylebuffer->text(style);
 
+//don't need these anymore
 delete[] style;
 free(text);
 
+//make it flat so it looks nicer
 box(FL_FLAT_BOX);
 
-theme_editor(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);
+//make this editor have the right font, line numbers, and colors
+theme_editor(
+             FOREGROUND_TEXT,
+             BACKGROUND_TEXT,
+             SELECTION_TEXT,
+             FONT_TEXT,
+             SIZE_TEXT,
+             LINE_NUMBERS
+            );
 
+//whenever the buffer is modified run this function
 textbuffer->add_modify_callback(changed_cb,(void *)this);
-/*if(!take_focus())
-{
-  trace("Failed to take focus for Text Editor");
-}
-*/
-
-
+//setup the printer for this widget
+printer = new Fl_Printer();
+//make it so typing happens here (instead of the tab or something un-helpful)
 Fl::focus(this);} {}
   }
   Function {~Fl_Syntax_Text_Editor()} {} {
     code {buffer(0);
 textbuffer->remove_modify_callback(style_update, this);
 textbuffer->remove_modify_callback(changed_cb, this);
+
+delete printer;
+delete textbuffer;
+delete stylebuffer;
+
 if(rm_inotify())
 {
   trace("problem removing inotify watch");
@@ -211,48 +230,88 @@ if(rm_inotify())
   } {
     code {Fl_Syntax_Text_Editor * o = (Fl_Syntax_Text_Editor *)v;
 std::string f = o->filename;
+o->changed = 0;
+
 if ((nInserted || nDeleted) && !o->loading)
 {
   o->changed = 1;
 }
+
 ((UI *)(o->parent()->user_data()))->set_title(o->parent());} {}
   }
-  Function {enter_kf(int, Fl_Text_Editor *e)} {open return_type {static int}
+  Function {enter_kf(int, Fl_Text_Editor *e)} {return_type {static int}
   } {
-    code {kill_selection(e);
+    code {//Basically I copied the original code from the text editor source
+kill_selection(e);
+
+//I changed this to my widget
 Fl_Syntax_Text_Editor* E = (Fl_Syntax_Text_Editor*)e;
+
+//I use the space counter function
 std::string SPACES = E->count_spaces();
-std::string t = "\\n";
-t+=SPACES;
+// instead of just adding a newline like in the original, I also add the spaces
+std::string t  = "\\n";
+            t += SPACES;
+//put it in
 e->insert(t.c_str());
+//put the cursor right there
 e->show_insert_position();
+//make it changed
 e->set_changed();
-if (e->when()&FL_WHEN_CHANGED) e->do_callback();
+//do the callback if needed
+if (e->when()&FL_WHEN_CHANGED)
+{
+  e->do_callback();
+}
+//return 'it worked' this is like the boolean 'true' here
 return 1;} {}
   }
-  Function {file_string()} {open return_type {std::string}
+  Function {file_string()} {return_type {std::string}
   } {
-    code {if(filename.compare("")==0){return "";}
+    code {// turn a file into a string
+
+//no file sent in... return emptyness
+if( (filename.compare("")==0) || (!test_file(filename)) )
+{
+   return "";
+}
+
+//make our input file stream, and put the file into it
 std::ifstream t(filename);
+//make our return string
 std::string str;
 
-t.seekg(0, std::ios::end);   
+//set position to end
+t.seekg(0, std::ios::end);
+//make the string a nice size
 str.reserve(t.tellg());
+//set position back to start
 t.seekg(0, std::ios::beg);
-
+//now use the iterators to assign the entire file to the string
 str.assign((std::istreambuf_iterator<char>(t)),
             std::istreambuf_iterator<char>());
+//voila ca cest tres bein!
 return str;} {}
   }
   Function {get_styletable(Fl_Text_Display::Style_Table_Entry &styles,int which)} {open
   } {
-    code {int font = FONT_TEXT;
+    code {// this function does all the repetative styletable work,
+// and keeps it organized in one place
+
+//get the current font
+int font = FONT_TEXT;
+//usually (unless they chose a bold/italic font) bold is next one up
 int bold = font + 1;
+// usually (unless they chose a bold/italic font) italic is next one up
 int ital = bold + 1;
+
+//this is in case I need to debug
 std::string whichtype="Plain";
+
 switch(which)
 {
   case 0:
+  // the format:  COLOR        font   NORMAL SIZE
     styles={ FOREGROUND_TEXT, font, FL_NORMAL_SIZE }; // A - Plain
     whichtype="Plain";
     break;
@@ -286,12 +345,16 @@ switch(which)
     break;
   case 8:
     styles={ SPECIAL_TEXT, font, FL_NORMAL_SIZE }; // I - special
+    whichtype="special";
     break;
   case 9:
     styles={ BROKEN_TEXT, font, FL_NORMAL_SIZE }; // J - Broken :(
+    whichtype="broken";
     break;
 }
-styletable[which] = styles; //  set} {}
+//trace(whichtype);
+styletable[which] = styles; //  set} {selected
+    }
   }
   Function {handle(int event)} {open protected return_type int
   } {
@@ -350,16 +413,18 @@ textbuffer->add_modify_callback(style_update, (void*) this);} {}
   } {
     code {return count_lines(0,length(), false);} {}
   }
-  Function {modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL)} {return_type void
+  Function {modify_cb(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL)} {open return_type void
   } {
-    code {if(stylebuffer->selected()!=0)
+    code {//if it is a selection change just return
+if(stylebuffer->selected() != 0)
 {
    stylebuffer->unselect();
    return;
 }
 
 std::string thisLine;
-if ( (HIGHLIGHT_PLAIN==0)&& (STYLE_HEADER.compare("")==0) )
+
+if ( (HIGHLIGHT_PLAIN==0) && (STYLE_HEADER.compare("")==0) )
 {
   char *style = new char[textbuffer->length() + 1];
   memset(style, 'A', textbuffer->length());
@@ -369,18 +434,28 @@ if ( (HIGHLIGHT_PLAIN==0)&& (STYLE_HEADER.compare("")==0) )
 else
 {
   char* buf = this->textbuffer->text();
+
   if(buf == NULL)
+  {
     return;
+  }
+
   std::string out(buf);
   std::string res = style_line(out);
   char* RES = const_cast <char*> (res.c_str());
+
   if (RES == NULL)
+  {
     return;
+  }
+
   stylebuffer->text(RES);
 }
+
 redisplay_range(0,textbuffer->length());} {}
   }
-  Function {refresh()} {} {
+  Function {refresh()} {open
+  } {
     code {set_syntax();
 modify_cb(0,0,0,0,NULL);
 redisplay_range(0,textbuffer->length());
@@ -474,27 +549,27 @@ return strlen(txt);} {}
        (tmp != ' ')
       )
     {
-      ret+='A';
+      ret += 'A';
     }
     else
     {
-      ret+=tmp;
+      ret += tmp;
     }
     
   }
   return ret;
-  //trace("error processing text:"+thisLine);
 }
 else
 {
   std::string line = lexertk::helper::style_line(generator);
   if(line.compare("")==0)
   {
-    //trace("adding newline!");
-    line="\\n";
+    line = "\\n";
   }
   return line;
 }
+
+// this should never happen....
 return "A";} {}
   }
   Function {style_update(int pos=0, int nInserted=0, int nDeleted=0, int unused=0, const char * nada=NULL, void *cbArg = NULL)} {return_type {static void}
@@ -519,7 +594,8 @@ ED->modify_cb(pos, nInserted, nDeleted, unused, nada);} {}
     code {textbuffer->tab_distance(dist);
 stylebuffer->tab_distance(dist);} {}
   }
-  Function {theme_editor(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size,int linenum )} {} {
+  Function {theme_editor(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size,int linenum )} {open
+  } {
     code {textcolor(FG);
 cursor_color(FG);
 color(BG);
@@ -528,10 +604,14 @@ textsize(size);
 selection_color(selection);
 linenumber_width(linenum);
 linenumber_size(size);
-///renew highlighter
+
+///renew syntax highlighting
 update_styletable();
+//make the syntax highlighter colors
 modify_cb();
+//make the tab distance the correct one
 tab_distance(TAB_DISTANCE);
+//redo the syntax highlighting to make sure tabs are correct
 modify_cb();} {}
   }
   Function {update_styletable()} {} {
@@ -569,6 +649,9 @@ use_spaces();} {}
   }
   Function {use_spaces()} {} {
     code {remove_key_binding(FL_Enter,FL_TEXT_EDITOR_ANY_STATE);
+
+// this will either use default enter function
+// OR it will use the function tat adds the right amount of spaces for indention
 if(SPACES)
 {
 //use my function
@@ -664,6 +747,119 @@ if( (ret !=0) && (FD_ISSET (inotify_fd, &rfds)) )
 }
 return false;} {}
   }
+  Function {pages()} {open return_type int
+  } {
+    code {wrap_mode(Fl_Text_Display::WRAP_AT_BOUNDS, 0);
+WRAPPED = !WRAPPED;
+int f = textsize();
+int l = line_count();
+int tot = f * l;
+word_wrap();
+
+if ( tot < 1)
+{
+  return 0;
+}
+int w, h;
+printer->printable_rect(&w, &h);
+
+
+if (tot < h)
+  return 1;
+
+int total = tot / h;
+std::cout<<"total pages:"<<total<<std::endl;
+return total;} {}
+  }
+  Function {print_text()} {open
+  } {
+    code {int font            = textfont();
+int size            = textsize();
+int start, end;
+int w,h;
+printer->printable_rect(&w,&h);
+UI* ui = ((UI*)(parent()->parent()->parent()->user_data()));
+std::string labl = gettext("Printing Page \#: ");
+if (printer->start_job(0, &start, &end) == 0)
+{
+  if(end == start)
+  {
+    print_page(w, h, font, size, start);
+    return;
+  }
+//show progress
+  start -= 1;
+  int inc = 100 / (end/start);
+  ui->progress_window()->show();
+  int p_val = 0;
+  ui->progress->value(p_val);
+  std::cout<<"start:"<<start<<" end:"<<end<<std::endl;
+  for (int i = start; i < end; i++)
+  {
+    std::cout<<"printing:"<<i<<std::endl;
+    print_page(w, h, font, size, i);
+    p_val += inc;
+    std::string num = labl + convert(i);
+    ui->progress->value(p_val);
+    ui->progress->copy_label(num.c_str());
+  }
+
+  ui->progress_window()->hide();
+  std::cout<<"done"<<std::endl;
+  printer->end_job();
+}} {}
+  }
+  Function {print_page(int w, int h, int font, int size, int page_num)} {open
+  } {
+    code {std::cout<<"printing:"<<page_num<<" w="<<w<<" h="<<h<<std::endl;
+int x = 0;
+int y = 0;
+
+printer->start_page();
+
+fl_color(FL_BLACK);
+fl_rect(x,y,w,h);
+fl_font(font, size);
+fl_draw( page(page_num).c_str(), x, y, w, h, FL_ALIGN_WRAP );
+
+printer->end_page();} {}
+  }
+  Function {word_wrap()} {open
+  } {
+    code {if(WRAPPED)
+{
+  WRAPPED=false;
+  wrap_mode(Fl_Text_Display::WRAP_NONE, 0);
+  WORD_WRAP=0;
+}
+else
+{
+  WRAPPED=true;
+  wrap_mode(Fl_Text_Display::WRAP_AT_BOUNDS, 0);
+  WORD_WRAP=1;
+}} {}
+  }
+  Function {page(int num)} {open return_type {std::string}
+  } {
+    code {int lines = lines_per_page();
+int start = lines * num;
+
+int end = start + lines;
+
+const char* text = textbuffer->text_range(start, end);
+std::cout<<"page:"<<num<<" start:"<<start<<" text:"<<text<<std::endl;
+if(text == NULL)
+{
+  return "";
+}
+
+std::string t = text;
+return t;} {}
+  }
+  Function {lines_per_page()} {open return_type int
+  } {
+    code {return (line_count() / pages());} {}
+  }
 }
 
 class UI {open
@@ -693,7 +889,8 @@ RELEASE=false;} {}
       }
     }
   }
-  Function {details_window()} {} {
+  Function {details_window()} {open
+  } {
     Fl_Window {} {open
       xywh {383 174 195 195} type Double hide
     } {
@@ -716,6 +913,11 @@ RELEASE=false;} {}
         label {Characters:}
         xywh {100 65 85 25} box FLAT_BOX
         code0 {o->value(char_count());}
+      }
+      Fl_Value_Output {} {
+        label {Pages:}
+        xywh {100 90 85 25} box FLAT_BOX
+        code0 {o->value(page_count());}
       }
     }
   }
@@ -821,9 +1023,9 @@ find2_cb(match, backward,term);}
   } {
     Fl_Window win {
       label flpad open
-      xywh {777 124 520 545} type Double color 47
+      xywh {238 155 520 545} type Double color 47 hide
       code1 {o->size_range(o->w(), o->h(), 0, 0);}
-      code2 {make_icon(o);} xclass flpad visible
+      code2 {make_icon(o);} xclass flpad
     } {
       Fl_Group buttons {open
         xywh {0 25 520 30} box FLAT_BOX color 48
@@ -889,7 +1091,7 @@ find2_cb(match, backward,term);}
           code0 {o->image(settings_image);}
         }
         Fl_Button print_button {
-          callback {print_cb();} selected
+          callback {print_cb();}
           tooltip Print xywh {310 27 25 25} box FLAT_BOX labelfont 1
           code0 {o->image(color_print_image);}
         }
@@ -1255,7 +1457,7 @@ o->parent()->hide();}
       }
     }
   }
-  Function {add_recent(std::string filename)} {open return_type bool
+  Function {add_recent(std::string filename)} {return_type bool
   } {
     code {if(filename.compare("")==0)
 {
@@ -1304,15 +1506,18 @@ return false;} {}
   }
   Function {add_tab(bool LOAD=true, bool NEW = true)} {open
   } {
-    code {int y = menu->y()+tabs->y()+add_button->y();
+    code {int y = menu->y() + tabs->y() + add_button->y();
 int h = tabs->h();
 int w = tabs->w();
 int x = tabs->x();
+
 tabs->client_area(x,y,w,h);
+
 Fl_Group* o = new Fl_Group(x, y, w, h);
 o->copy_label("Untitled");
 
 Fl_Syntax_Text_Editor* te = new Fl_Syntax_Text_Editor(x,y,w,h);
+
 te->user_data(o);
 
 if(INDENT_NEW_LINES>0)
@@ -1342,14 +1547,17 @@ tabs->redraw();
 tabs->value(o);
 
 if(LOAD)
+{
   open_file(NEW);
+}
 else
+{
   te->filename="";
+}
 
 refresh_all();} {}
   }
-  Function {button_style(int style=0)} {open
-  } {
+  Function {button_style(int style=0)} {} {
     code {if(style==0)
 {
   open_button->image(open_image);
@@ -1388,20 +1596,24 @@ p_button->redraw();
 cut_button->redraw();
 print_button->redraw();} {}
   }
-  Function {change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line)} {open
-  } {
-    code {FOREGROUND_TEXT=FG;
-BACKGROUND_TEXT=BG;
-SELECTION_TEXT=selection;
-FONT_TEXT=font;
-SIZE_TEXT=size;
-LINE_NUMBERS=line;
+  Function {change_theme(unsigned int FG,unsigned int BG, unsigned int selection, int font, int size, int line)} {} {
+    code {FOREGROUND_TEXT = FG;
+BACKGROUND_TEXT = BG;
+SELECTION_TEXT  = selection;
+FONT_TEXT       = font;
+SIZE_TEXT       = size;
+LINE_NUMBERS    = line;
+
 if(tabs==NULL)
+{
   return;
-for(int i = 0; i < tabs->children();i++)
+}
+
+for(int i = 0; i < tabs->children(); i++)
 {
   Fl_Group* tab = tabs->child(i)->as_group();
   Fl_Syntax_Text_Editor * e = (Fl_Syntax_Text_Editor *)tab->child(0);
+
   e->theme_editor(FG,BG,selection,font,size,line);
 }} {}
   }
@@ -1449,7 +1661,7 @@ if(E==NULL)
 
 return E->size();} {}
   }
-  Function {check_save()} {return_type int
+  Function {check_save()} {open return_type int
   } {
     code {Fl_Syntax_Text_Editor * E = current_editor();
 if(E==NULL)
@@ -1457,12 +1669,17 @@ if(E==NULL)
   return 1;
 }
 if (!E->changed)
+{
   return 1;
+}
+
 int r = ask("The current file has not been saved.\\n" "Would you like to save it now?", "Save", "Cancel","Discard");
-if (r == 1) {
+if (r == 1)
+{
   save_cb(); // Save the file...
   return !E->changed;
 }
+
 return (r == 2) ? 1 : 0;} {}
   }
   Function {choose_a_color(Fl_Widget *o)} {return_type {unsigned int}
@@ -1625,8 +1842,7 @@ special->redraw();
 tExt->redraw();
 bg->redraw();} {}
   }
-  Function {copy_cb()} {open
-  } {
+  Function {copy_cb()} {} {
     code {Fl_Syntax_Text_Editor * textor = current_editor();
 if(textor==NULL)
   return;
@@ -1664,8 +1880,7 @@ if(textor==NULL)
   return;
 Fl_Text_Editor::kf_cut(0,textor);} {}
   }
-  Function {default_theme()} {open
-  } {
+  Function {default_theme()} {} {
     code {FOREGROUND_TEXT = FL_FOREGROUND_COLOR;
 BACKGROUND_TEXT = FL_BACKGROUND2_COLOR;
 SELECTION_TEXT  = 80;
@@ -1694,42 +1909,53 @@ textor->buffer()->remove_selection();} {}
   }
   Function {dnd_file(const char* items, bool NEW=true)} {} {
     code {if(items==NULL)
+{
   return;
+}
+
 std::string tmp = items;
+
 std::vector<std::string> V = dnd_vec(tmp);
-for( std::vector<std::string>::iterator itr = V.begin();
-                                        itr!=V.end();
-                                      ++itr)
+std::vector<std::string>::iterator itr;
+
+for( itr = V.begin();
+     itr!=V.end();
+   ++itr)
 {
   std::string s = *itr;
   std::string txt = *itr;
 
   unsigned int URI = s.find("file:///");
-  if(URI==0)
+
+  if(URI == 0)
   {
     s = s.substr(7,std::string::npos);
   }
+
   URI = s.find("\\n");
-  if(URI<s.length())
+
+  if(URI < s.length())
   {
-    s=s.substr(0,URI);
+    s = s.substr(0,URI);
   }
+
   char *ch = strdup(s.c_str());
   fl_decode_uri(ch);
-  s=ch;
+  s = ch;
 
   if(test_file(s))
   {
-    load_file(s,-1,NEW);
+    load_file(s,NEW);
   }
   else
   {
     Fl_Syntax_Text_Editor * E = current_editor();
 
-    if(E==NULL)
+    if(E == NULL)
     {
       return;
     }
+
     Fl_Text_Buffer * buff = E->buffer();
     int pos = E->insert_position();
     buff->insert(pos, txt.c_str());
@@ -1880,8 +2106,7 @@ else
 fname+="/flpad/flpad.config";
 return fname;} {}
   }
-  Function {get_preferences()} {open
-  } {
+  Function {get_preferences()} {} {
     code {std::string fname=get_filename();
 if(fname.compare("")==0)
 {
@@ -2016,7 +2241,7 @@ else
   trace(fname+" does not exist yet");
 }} {}
   }
-  Function {get_recent()} {open return_type bool
+  Function {get_recent()} {return_type bool
   } {
     code {std::string out=get_flpad_home_dir("recent");
 
@@ -2131,9 +2356,13 @@ return Fl::handle_(event,o);} {}
   Function {handle_menu(Fl_Widget *w, void *v)} {return_type {static void}
   } {
     code {if(!w || !v)
+{
   return;
-Fl_Syntax_Text_Editor* T = ((Fl_Syntax_Text_Editor*)w->user_data());
+}
+
+Fl_Syntax_Text_Editor* T = ((Fl_Syntax_Text_Editor*) w->user_data());
 UI* ui = ((UI*)T->user_data());
+
 switch(static_cast<int>(reinterpret_cast<long>(v)))
 {
   case 1: //COPY
@@ -2192,7 +2421,7 @@ if(textor==NULL)
   return;
 Fl_Text_Editor::kf_insert(0,textor);} {}
   }
-  Function {line_count()} {open return_type int
+  Function {line_count()} {return_type int
   } {
     code {Fl_Syntax_Text_Editor* E = current_editor();
 
@@ -2203,7 +2432,7 @@ if(E == NULL)
 
 return E->line_count();} {}
   }
-  Function {load_file(std::string newfile, int ipos,bool NEW=true)} {open
+  Function {load_file(std::string newfile, bool NEW=true)} {open
   } {
     code {//todo 
 //if(pick_tab(newfile)){return;}
@@ -2220,7 +2449,9 @@ if(E == NULL)
   return;
 }
 
+E->changed = 0;
 int r = E->textbuffer->loadfile(newfile.c_str());
+
 if (r)
 {
   fl_alert("Error reading from file \\'%s\\':\\n%s.", newfile.c_str(), strerror(errno));
@@ -2235,9 +2466,12 @@ else
   E->textbuffer->call_modify_callbacks();
   E->set_syntax();
   E->loading = 0;
+  E->changed = 0;
   set_title(tabs->value());
-  std::string tmp = "Documents/"+E->filename;
-  menu->add(tmp.c_str(),0,choose_doc,this,0);
+
+  std::string tmp = "Documents/" + E->filename;
+
+  menu->add(tmp.c_str(), 0, choose_doc, this, 0);
   menu->redraw();
 }} {}
   }
@@ -2275,36 +2509,48 @@ for( std::vector<std::string>::iterator itr = V.begin();
 }
 theme_button->redraw();} {}
   }
-  Function {new_cb()} {} {
+  Function {new_cb()} {open
+  } {
     code {Fl_Syntax_Text_Editor * textor = current_editor();
+
 if( (!check_save()) && (textor!=NULL) )
+{
   return;
+}
+
 if (textor==NULL)
 {
   add_tab();
   return;
 }
+
 if(textor->filename.compare("Untitled")!=0)
 {
   add_tab(true,false);
   return;
 }
+
 textor->filename="";
+
 Fl_Text_Buffer * buff = textor->buffer();
+
 buff->select(0, buff->length());
 buff->remove_selection();
 textor->changed = 0;
 buff->call_modify_callbacks();
+
 if (!check_save())
+{
   return;
+}
+
 textor->filename="";
 buff->select(0, buff->length());
 buff->remove_selection();
 textor->changed = 0;
 buff->call_modify_callbacks();} {}
   }
-  Function {open_cb()} {open
-  } {
+  Function {open_cb()} {} {
     code {Fl_Syntax_Text_Editor * E = current_editor();
 if(E==NULL)
 {
@@ -2322,17 +2568,19 @@ else
   Function {open_file(bool NEW=true)} {open
   } {
     code {Fl_Syntax_Text_Editor * E = current_editor();
-//std::string newf="";
-std::string init="";
-if(E!=NULL)
+
+std::string init = "";
+
+if(E != NULL)
 {
-  init= E->filename;
+  init = E->filename;
 }
+
 std::string newfile = file_chooser("*", init.c_str(), "Open File?");
 
-if(newfile.compare("")!=0)
+if(newfile.compare("") != 0)
 {
-  load_file(newfile.c_str(), -1,NEW);
+  load_file(newfile.c_str(), NEW);
 }} {}
   }
   Function {paste_cb()} {} {
@@ -2395,34 +2643,7 @@ if(E == NULL)
   return;
 }
 
-print_text(E);} {}
-  }
-  Function {print_text(Fl_Syntax_Text_Editor* editor)} {} {
-    code {Fl_Printer *printer = new Fl_Printer();
-int font            = editor->textfont();
-int size            = editor->textsize();
-//Pages vector?
-if (printer->start_job(1) == 0)
-{
-  print_page(printer,font,size);
-  printer->end_job();
-}
-
-delete printer;} {}
-  }
-  Function {print_page(Fl_Printer *printer, int font, int size)} {open
-  } {
-    code {int x = 0;
-int y = 0;
-int w,h;
-printer->start_page();
-printer->printable_rect(&w,&h);
-fl_color(FL_BLACK);
-fl_rect(x,y,w,h);
-fl_font(font, size);
-//TODO figure out how much text fits on a page....
-//fl_draw();
-printer->end_page();} {}
+E->print_text();} {}
   }
   Function {quit_cb()} {} {
     code {Fl_Syntax_Text_Editor * E = current_editor();
@@ -2433,8 +2654,7 @@ if(E!=NULL)
 }
 exit(0);} {}
   }
-  Function {_recent_CB()} {open
-  } {
+  Function {_recent_CB()} {} {
     code {char item[500];
 
 if(menu->item_pathname(item, (sizeof(item)-1) )!=0)
@@ -2465,31 +2685,36 @@ if(finder < str_item.length())
 {
   unsigned int sizer = tag.length();
   std::string tmp    = str_item.erase(0,sizer);
-  load_file(tmp,0,newfile);
+  load_file(tmp, newfile);
 }} {}
   }
   Function {replace_cb()} {} {
     code {Fl_Syntax_Text_Editor * E = current_editor();
-if(E!=NULL)
-  make_replace()->show();} {}
+
+if(E != NULL)
+{
+  make_replace()->show();
+}} {}
   }
-  Function {recent_CB(Fl_Widget*w, void*data)} {open return_type {static void}
+  Function {recent_CB(Fl_Widget*w, void*data)} {return_type {static void}
   } {
     code {UI *o=(UI *)data;
 o->_recent_CB();} {}
   }
-  Function {replace_all_strings(std::string str, const std::string& old, const std::string& new_s, int &counter)} {open return_type {std::string}
+  Function {replace_all_strings(std::string str, const std::string& old, const std::string& new_s, int &counter)} {return_type {std::string}
   } {
     code {if(!old.empty())
 {
-  size_t pos = str.find(old);
+  size_t  pos = str.find(old);
   while ((pos = str.find(old, pos)) != std::string::npos)
   {
     counter++;
-    str=str.replace(pos, old.length(), new_s);
+
+    str  = str.replace(pos, old.length(), new_s);
     pos += new_s.length();
   }
 }
+
 return str;} {}
   }
   Function {replace2_cb()} {} {
@@ -2584,8 +2809,7 @@ int height = win->h() - (buttons->h() +buttons->x());
 o->size(width,height);
 o->redraw();} {}
   }
-  Function {refresh_all()} {open
-  } {
+  Function {refresh_all()} {} {
     code {change_theme(FOREGROUND_TEXT,BACKGROUND_TEXT,SELECTION_TEXT,FONT_TEXT,SIZE_TEXT,LINE_NUMBERS);} {}
   }
   Function {save_cb(void)} {} {
@@ -2665,7 +2889,8 @@ else
   ((Fl_Widget *)(textor->user_data()))->labelcolor(NORMAL_COLOR);
 }} {}
   }
-  Function {set_title(Fl_Widget* g)} {} {
+  Function {set_title(Fl_Widget* g)} {open
+  } {
     code {if(g==NULL)
   return;
 Fl_Group* gg = (Fl_Group*)g;
@@ -2680,33 +2905,42 @@ std::string full = fname;
 //Is the file name empty???  set it to Untitled!!
 if (fname.compare("")==0)
 {
-  title="Untitled";
+  title = "Untitled";
 }
 else
 {
 // get JUST the filename (remove the path... similare to fl_filename_name()
   unsigned int slash = fname.rfind('/');
+
   \#ifdef WIN32
-  if (slash>fname.length())
-    slash =fname.rfind('\\\\');
+  if (slash > fname.length())
+  {
+    slash = fname.rfind('\\\\');
+  }
   \#endif
-  if (slash <fname.length())
+
+  if (slash < fname.length())
   {
     //FILENAME ONLY
-    title=fname.substr(slash+1,std::string::npos);
+    title = fname.substr(slash+1,std::string::npos);
     //PATH to file ONLY
-    full = fname.substr(0,slash);
+    full  = fname.substr(0,slash);
   }
   else
-    title=fname;
-    
+  {
+    title = fname;
+  }
 }
 textor->refresh();
+
+/*
 //Has this been changed at all??
 if (textor->changed)
 {
-  title+=" (modified)";
+  title += " (modified)";
 }
+*/
+
 std::string Ti = title;
 
 if(full.compare("")!=0)
@@ -2767,25 +3001,36 @@ x.erase( 0, x.find_first_not_of( " " ) );
 if (x.empty()) return 0;
 return std::count( x.begin(), std::unique( x.begin(), x.end() ), ' ' ) + !std::isspace( *s.rbegin() );} {}
   }
-  Function {wordwrap()} {} {
+  Function {wordwrap()} {open
+  } {
     code {Fl_Syntax_Text_Editor * E = current_editor();
 std::string fname="";
 if(E==NULL)
 {
   return;
 }
-if(E->WRAPPED)
+E->word_wrap();} {}
+  }
+  Function {page_count()} {open return_type int
+  } {
+    code {Fl_Syntax_Text_Editor* E = current_editor();
+
+if(E == NULL)
 {
-  E->WRAPPED=false;
-  E->wrap_mode(Fl_Text_Display::WRAP_NONE, 0);
-  WORD_WRAP=0;
+  return 0;
 }
-else
-{
-  E->WRAPPED=true;
-  E->wrap_mode(Fl_Text_Display::WRAP_AT_BOUNDS, 0);
-  WORD_WRAP=1;
-}} {}
+return E->pages();} {}
+  }
+  Function {progress_window()} {open
+  } {
+    Fl_Window {} {
+      label {Printer Progress} open
+      xywh {297 305 440 140} type Double hide
+    } {
+      Fl_Progress progress {
+        xywh {40 80 355 30} box FLAT_BOX color 38 selection_color 71
+      }
+    }
   }
 }
 
@@ -2906,6 +3151,15 @@ if(ignore_case)
 }
 //return a vector from the string delimited by commas
 return make_vec(LINE,",");} {}
+}
+
+Function {convert(int num)} {open return_type {std::string}
+} {
+  code {std::string number;
+std::stringstream out;
+out << num;
+number = out.str();
+return number;} {}
 }
 
 Function {convert(std::string num, int default_value=0)} {return_type {unsigned int}

@@ -47,6 +47,7 @@ std::string SYNTAX_FILE;
 
 class Fl_Syntax_Text_Editor : public Fl_Text_Editor {
 public:
+  Fl_Printer *printer; 
   int inotify_fd; 
   int inotify_wd; 
   Fl_Syntax_Text_Editor(int x, int y, int w, int h, const char* label = 0);
@@ -98,6 +99,12 @@ public:
   void init_inotify(std::string file);
   int rm_inotify();
   bool check_inotify();
+  int pages();
+  void print_text();
+  void print_page(int w, int h, int font, int size, int page_num);
+  void word_wrap();
+  std::string page(int num);
+  int lines_per_page();
 };
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Text_Display.H>
@@ -113,6 +120,7 @@ public:
 #include <FL/Fl_Slider.H>
 #include <FL/Fl_Value_Input.H>
 #include <FL/Fl_Menu_Button.H>
+#include <FL/Fl_Progress.H>
 
 class UI {
 public:
@@ -446,7 +454,7 @@ public:
   std::string input(std::string MSG, std::string text="", std::string ok="OK", std::string cancel="Cancel");
   void insert_cb();
   int line_count();
-  void load_file(std::string newfile, int ipos,bool NEW=true);
+  void load_file(std::string newfile, bool NEW=true);
   void make_icon(Fl_Window *o);
   void none_theme();
   void make_theme_menu();
@@ -457,8 +465,6 @@ public:
   bool pick_tab(std::string file);
   std::string prefline(std::string LINE,unsigned int COLOR);
   void print_cb();
-  void print_text(Fl_Syntax_Text_Editor* editor);
-  void print_page(Fl_Printer *printer, int font, int size);
   void quit_cb();
   void _recent_CB();
   void replace_cb();
@@ -480,12 +486,16 @@ public:
   int wc();
   int wc(std::string text);
   void wordwrap();
+  int page_count();
+  Fl_Double_Window* progress_window();
+  Fl_Progress *progress;
 };
 int ask(std::string MSG, std::string yes="Yes", std::string no="No", std::string other="");
 void ask_cb(Fl_Widget *o, long val);
 std::string color_from_name(const char* colorName);
 std::string color_to_string(const double *rgb);
 std::vector<std::string> comma_line(std::string lang,std::string field, bool ignore_case = false);
+std::string convert(int num);
 unsigned int convert(std::string num, int default_value=0);
 std::vector<std::string> dir_vector(std::string DIRECTORY);
 std::string get(std::string header, std::string line);
