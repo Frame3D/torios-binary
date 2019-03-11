@@ -1,0 +1,156 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0304
+i18n_type 1
+i18n_include <libintl.h>
+i18n_function gettext
+header_name {.h}
+code_name {.cxx}
+decl {\#include <Fl/Fl_Preferences.H>} {public global
+}
+
+decl {\#include "../include/functions.h"} {public global
+}
+
+decl {\#include "../include/Fl_Functions.h"} {public global
+}
+
+decl {\#include "../include/Fl_Calendar.H"} {public global
+}
+
+decl {\#include <iostream>} {public global
+}
+
+class UI {open
+} {
+  Function {date_window()} {open
+  } {
+    Fl_Window date_win {
+      label Calendar open selected
+      xywh {786 241 276 255} type Double
+      code0 {under_mouse(o);} visible
+    } {
+      Fl_Group cal {open
+        xywh {10 7 256 208} color 55
+        class Fl_Calendar
+      } {}
+      Fl_Button {} {
+        label OK
+        callback {std::cout<< cal->get_date_string() << std::endl;
+exit(0);}
+        xywh {220 225 45 25} box FLAT_BOX color 62 selection_color 61 labelfont 1 labelcolor 7
+      }
+      Fl_Button {} {
+        callback {settings_window()->show();}
+        image {../include/xpm/settings.xpm} xywh {175 225 35 25} box FLAT_BOX color 23 selection_color 22
+        code0 {get_pref();}
+      }
+    }
+  }
+  Function {settings_window()} {open
+  } {
+    Fl_Window {} {
+      label Settings open
+      xywh {354 245 230 215} type Double hide
+    } {
+      Fl_Button {} {
+        label Background
+        callback {cal->bg_color(choose_a_color(o));
+cal->update();}
+        xywh {160 25 60 30} box FLAT_BOX color 23 align 4
+        code0 {o->color(cal->bg_color());}
+      }
+      Fl_Button {} {
+        label Highlight
+        callback {cal->bg_color_2(choose_a_color(o));
+cal->update();}
+        xywh {160 65 60 30} box FLAT_BOX color 23 align 4
+        code0 {o->color(cal->bg_color_2());}
+      }
+      Fl_Button {} {
+        label Label
+        callback {cal->label_color(choose_a_color(o));
+cal->update();}
+        xywh {160 105 60 30} box FLAT_BOX color 23 align 4
+        code0 {o->color(cal->label_color());}
+      }
+      Fl_Slider ls_slide {
+        label {Label Size}
+        callback {ls_out->value(o->value());
+cal->label_size(o->value());
+cal->update();}
+        xywh {95 145 85 30} type Horizontal box GTK_DOWN_BOX color 38 align 4 minimum 1 maximum 60 step 1
+        code0 {o->value(cal->label_size());}
+      }
+      Fl_Value_Input ls_out {
+        callback {ls_slide->value(o->value());
+cal->label_size(o->value());
+cal->update();}
+        xywh {185 145 35 30} box FLAT_BOX selection_color 80
+        code0 {o->value(cal->label_size());}
+      }
+      Fl_Button {} {
+        label SAVE
+        callback {save_pref();
+o->parent()->hide();}
+        xywh {155 185 66 25} box FLAT_BOX color 62 selection_color 61 labelfont 1 labelcolor 7
+      }
+    }
+  }
+  Function {get_pref()} {open
+  } {
+    code {Fl_Preferences prefs( Fl_Preferences::USER, "flcalendar", "torios" );
+Fl_Preferences settings(prefs, "Settings");
+
+int bg, bg2, label, label_size;
+
+settings.get("bg",         bg,         cal->bg_color());
+settings.get("bg2",        bg2,        cal->bg_color_2());
+settings.get("label",      label,      cal->label_color());
+settings.get("label_size", label_size, cal->label_size());
+//settings.get("box",        box,        cal->box_type());
+cal->bg_color(bg);
+cal->bg_color_2(bg2);
+cal->label_color(label);
+cal->label_size(label_size);
+cal->update();} {}
+  }
+  Function {save_pref()} {open
+  } {
+    code {Fl_Preferences prefs( Fl_Preferences::USER, "flcalendar", "torios" );
+Fl_Preferences settings(prefs, "Settings");
+
+settings.set("bg",         cal->bg_color());
+settings.set("bg2",        cal->bg_color_2());
+settings.set("label",      cal->label_color());
+settings.set("label_size", cal->label_size());
+//settings.set("box",        cal->box_type());} {}
+  }
+}
+
+Function {} {open
+} {
+  code {UI* ui = new UI();
+
+try
+{
+  if (argc > 1)
+  {
+    for (int i=1; i<argc; i++)
+    {
+      std::string arg = argv[i];
+    }
+  }
+  ui->date_window()->show();
+  return Fl::run();
+}
+catch (const std::exception& e)
+{
+  std::cerr << "Unhandled exception:\\\\n" << e.what() << std::endl;
+  return EXIT_FAILURE;
+}
+catch (...)
+{
+  std::cerr << "Unknown exception!" << std::endl;
+  return EXIT_FAILURE;
+}} {}
+}

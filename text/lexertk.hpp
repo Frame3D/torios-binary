@@ -62,6 +62,7 @@ Copyright 2019  Israel Dahl
 #include <string>
 #include <vector>
 #include <iostream>
+#include <type_traits>
 
 namespace lexertk
 {
@@ -662,12 +663,20 @@ namespace lexertk
       }
       inline void set_special(std::string open, std::string close)
       {
+        if(open.empty() && close.empty())
+        {
+          return;
+        }
         OPEN_SPECIAL=open;
         CLOSE_SPECIAL=close;
       }
 
       inline void set_comments(std::string open, std::string close, std::string single)
       {
+        if(open.empty() && close.empty() && single.empty())
+        {
+          return;
+        }
         OPEN=open;
         CLOSE=close;
         SINGLE=single;
@@ -675,6 +684,10 @@ namespace lexertk
 
       inline void set_defines(const char* define)
       {
+        if(define==NULL)
+        {
+          define="";
+        }
         DEFINES=define;
       }
 
@@ -1503,9 +1516,10 @@ namespace lexertk
         return out;
       }
 
-      inline std::string style_line(lexertk::generator& generator)
+      inline std::string style_line(lexertk::generator generator)
       {
          std::string out;
+         //lexertk::generator g = std::remove_pointer<lexertk::generator*> (generator);
          for (std::size_t i = 0; i < generator.size(); ++i)
          {
            lexertk::token t = generator[i];

@@ -50,6 +50,10 @@
 #include "xpm/flcalc.xpm"
 #endif
 
+//Calendar
+#ifdef flcalendar_h
+#include "xpm/flcalendar.xpm"
+#endif
 
 //Same for color or BW
 static Fl_Pixmap close_image(close_xpm);

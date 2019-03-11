@@ -1,0 +1,15 @@
+[Desktop Entry]
+Version=1.0
+Name=flCalendar
+Name[en_US]=flCalendar
+Name[en_GB]=flCalendar
+Name[en]=flCalendar
+Name[pt_PT]=flCalendar
+GenericName=Calendar
+Comment=Calendar
+Exec=flcalendar
+Terminal=false
+Icon=office-calendar
+Type=Application
+Categories=Utility;
+

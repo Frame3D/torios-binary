@@ -1692,9 +1692,11 @@ Fl_Double_Window* UI::pref_window() {
           o->color(BACKGROUND_TEXT);
         } // Fl_Button* bg
         { Fl_Slider* o = t_s = new Fl_Slider(120, 385, 135, 30, gettext("Tab Size"));
+          t_s->tooltip(gettext("Size of Tabbed spaces (hitting the TAB key)"));
           t_s->type(1);
           t_s->box(FL_GTK_DOWN_BOX);
           t_s->color((Fl_Color)38);
+          t_s->minimum(1);
           t_s->maximum(128);
           t_s->step(1);
           t_s->callback((Fl_Callback*)cb_t_s);
@@ -1702,9 +1704,12 @@ Fl_Double_Window* UI::pref_window() {
           o->value(TAB_DISTANCE);
         } // Fl_Slider* t_s
         { Fl_Value_Input* o = tout = new Fl_Value_Input(265, 385, 30, 30);
-          tout->tooltip(gettext("0 hides line numbers"));
+          tout->tooltip(gettext("Size of Tabbed spaces (hitting the TAB key)"));
           tout->box(FL_FLAT_BOX);
           tout->selection_color((Fl_Color)80);
+          tout->minimum(1);
+          tout->maximum(128);
+          tout->step(1);
           tout->callback((Fl_Callback*)cb_tout);
           o->value(TAB_DISTANCE);
         } // Fl_Value_Input* tout
@@ -3472,107 +3477,6 @@ Fl_Double_Window* UI::progress_window() {
   return w;
 }
 
-int ask(std::string MSG, std::string yes, std::string no, std::string other) {
-  int w = 450;
-  int h = 90;
-  Fl_Double_Window* ask_win = new Fl_Double_Window(w, h);
-  Fl_Box* o = new Fl_Box(5, 5, 5, 5);
-  o->copy_label(MSG.c_str());
-  o->redraw();
-  Fl_Button* o1 = new Fl_Button(170, 55, 65, 30, yes.c_str());
-  o1->box(FL_FLAT_BOX);
-  o1->color((Fl_Color)62);
-  o1->labelcolor(FL_BACKGROUND2_COLOR);
-  o1->callback(ask_cb,1);
-  Fl_Button* o2 = new Fl_Button(100, 55, 65, 30, no.c_str());
-  o2->box(FL_FLAT_BOX);
-  o2->color((Fl_Color)80);
-  o2->labelcolor(FL_BACKGROUND2_COLOR);
-  o2->callback(ask_cb,0);
-  if(other.compare("")!=0)
-  {
-    Fl_Button* o3 = new Fl_Button(30, 55, 65, 30, other.c_str());
-    o3->box(FL_FLAT_BOX);
-    o3->color((Fl_Color)94);
-    o3->labelcolor(FL_BACKGROUND2_COLOR);
-    o3->callback(ask_cb,2);
-  }
-  else
-  {
-    o1->position(5,o1->y());
-    o2->position(10+o1->w(),o1->y());
-    
-  }
-  ask_win->end();
-  ask_win->show();
-  o->measure_label(w,h);
-  o->size(w+10,h);
-  if(other.compare("")!=0)
-  {
-    if(w<ask_win->w())
-       w=ask_win->w()+10;
-    else
-      w+=10;
-    if(h<ask_win->h())
-      h=ask_win->h();
-    else
-      h +=10;
-  }
-  else
-  {
-    int W = o2->x()+o2->w()+5;
-    if(w<W)
-       w=W;
-    else if (w < W +10)
-      w=W+10;
-    else
-      w+=10;
-    if(h<ask_win->h())
-      h=ask_win->h();
-    else
-      h +=10;
-  }
-  ask_win->size(w,h);
-  while (ask_win->shown()) Fl::wait();
-  return ret_val;
-}
-
-void ask_cb(Fl_Widget *o, long val) {
-  ret_val = (int) val;
-  o->parent()->hide();
-}
-
-/**
- Paul Sladen, 2014-08-13, Public Domain
- XLookupColor() -> RGB colour value example, per request on
- http://irclogs.ubuntu.com/2014/08/13/%23ubuntu-devel.html#t19:52
- grep MistyRose /usr/share/X11/rgb.txt | awk '{printf("%02x%02x%02x\n",$1,$2,$3);}'
- http://manpages.ubuntu.com/manpages/man3/XQueryColor.3.html
- gcc xlookupcolour.c -o xlookupcolour -lX11 && ./xlookupcolour red yellow blue
- modified for use in this program by Israel <israeldahl@gmail.com>
- Thanks Sladen for the quick help!!!!
-*/
-std::string color_from_name(const char* colorName) {
-  Display *dpy = XOpenDisplay(NULL);
-  int scr = XDefaultScreen(dpy);
-  Colormap map = DefaultColormap(dpy, scr);
-  XColor rgb, nearest_rgb;
-  XLookupColor(dpy, map, colorName, &rgb, &nearest_rgb);
-  int red = (int)rgb.red>>8;
-  int green = (int)rgb.green>>8;
-  int blue = (int)rgb.blue>>8;
-  char tmp[8];
-  std::snprintf(tmp, sizeof(tmp), "#%02x%02x%02x", red, green, blue);
-  std::string output = tmp;
-  return output;
-}
-
-std::string color_to_string(const double *rgb) {
-  char tmp[8];
-  std::snprintf(tmp, sizeof(tmp), "#%02x%02x%02x", int(rgb[0]), int(rgb[1]), int(rgb[2]));
-  return tmp;
-}
-
 std::vector<std::string> comma_line(std::string lang,std::string field, bool ignore_case ) {
   //get the line from the file
   std::string LINE=get(lang,field);
@@ -3585,55 +3489,7 @@ std::vector<std::string> comma_line(std::string lang,std::string field, bool ign
     LINE=lower+","+upper;
   }
   //return a vector from the string delimited by commas
-  return make_vec(LINE,",");
-}
-
-std::string convert(int num) {
-  std::string number;
-  std::stringstream out;
-  out << num;
-  number = out.str();
-  return number;
-}
-
-unsigned int convert(std::string num, int default_value) {
-  unsigned int NUM = default_value;
-  if(num.find("#")==0)
-  {
-    return get_fl_color(num,default_value);
-  }
-  try{NUM=std::stoul(num);}
-  catch(const std::invalid_argument e){return default_value;}
-  catch(const std::out_of_range e){return default_value;}
-  return NUM;
-}
-
-std::vector<std::string> dir_vector(std::string DIRECTORY) {
-  //trace("dir_vector:"+DIRECTORY);
-  std::vector<std::string> myVector;
-  if(!fl_filename_isdir(DIRECTORY.c_str()))
-    return myVector;
-  DIR *mydir=NULL;
-  struct dirent *entryPointer=NULL;
-  mydir=opendir(DIRECTORY.c_str());
-  if(DIRECTORY.rfind('/')!=DIRECTORY.length()-1){DIRECTORY+="/";}
-  if(mydir!=NULL)
-  {
-    while ((entryPointer=readdir(mydir))!=NULL)
-    {
-      if((entryPointer->d_type == DT_REG)&&(entryPointer->d_name[0]!='.'))
-      {
-        std::string fullpath=entryPointer->d_name;
-        //trace(fullpath);
-        myVector.push_back(fullpath);
-      }
-    }
-  }
-  std::vector<std::string>::iterator it;
-  std::sort (myVector.begin(), myVector.end());
-  it = std::unique (myVector.begin(), myVector.end());
-  myVector.resize( std::distance(myVector.begin(),it) );
-  return myVector;
+  return delim_vec(LINE,",");
 }
 
 std::string get(std::string header, std::string line) {
@@ -3688,95 +3544,6 @@ std::string get(std::string header, std::string line) {
     }
   }
   return "";
-}
-
-std::string file_chooser(std::string types, std::string where, std::string label) {
-  if(label.compare("")==0)
-  {
-    label = "Choose";
-  }
-  
-  if(where.compare("")==0)
-  {
-    const char* home = getenv("HOME");
-    if(home != NULL)
-    {
-      where = home;
-    }
-  }
-  
-  if(types.compare("")==0)
-  {
-    types = "*";
-  }
-  
-  const char* f = where.c_str();
-  const char* m = label.c_str();
-  const char* p = types.c_str();
-  
-  Fl_Native_File_Chooser fnfc;
-  fnfc.title(m);
-  fnfc.type(Fl_Native_File_Chooser::BROWSE_FILE);
-  fnfc.options(Fl_Native_File_Chooser::PREVIEW);
-  fnfc.filter(p);
-  fnfc.directory(f); // default directory to use
-  
-  // Show native chooser
-  switch ( fnfc.show() )
-  {
-    case -1: break; // ERROR
-    case  1: break; // CANCEL
-    default:
-      const char *result = fnfc.filename();
-  
-      if(result != NULL)
-      {
-        std::string String = result;
-        return String;
-      }
-      break; // FILE CHOSEN
-  }
-  
-  return "";
-}
-
-std::vector<std::string> file_to_vector(std::string filename) {
-  std::vector<std::string> fullString;
-  if(filename.compare("")==0){return fullString;}
-  if(!test_file(filename)){trace("No file sent in: "+filename);}
-  std::string thisLine;
-  std::ifstream inputFileStream(filename.c_str(), std::ifstream::in);
-  
-  if(inputFileStream.is_open())
-  {
-    while (getline(inputFileStream,thisLine))
-    {
-      fullString.push_back(thisLine);
-    }
-  }
-  
-  return fullString;
-}
-
-unsigned int get_fl_color(std::string color, unsigned int default_value) {
-  if(color.compare("")==0){return default_value;}
-  std::string::size_type validator = color.find('#');
-  
-  if(validator==0)
-  {
-    std::string c1 = color.substr (1,6);
-    c1="0x"+c1+"00";
-  
-    try
-    {
-      unsigned int flColor = strtoul(c1.c_str(),0,16);
-      return flColor;
-    }
-    catch(const std::invalid_argument e){return default_value;}
-    catch(const std::out_of_range e){return default_value;}
-  }
-  std::string value = color_from_name(color.c_str());
-  return get_fl_color(value, default_value);
 }
 
 std::string get_flpad_dir( std::string base_name) {
@@ -4138,24 +3905,12 @@ int get_theme(std::string theme, std::string item, int default_value) {
         if(this_line.find(line)<eq)
         {
           this_line=this_line.substr(eq+1,std::string::npos);
-          return convert(this_line,default_value);
+          return convert_color(this_line,default_value);
         }
       }
     }
   }
   return 0;
-}
-
-bool is_space(const char x) {
-  return std::isspace(x);
-}
-
-std::vector<std::string> join_string_vectors(std::vector<std::string> vectorA,std::vector<std::string> vectorB) {
-  std::vector<std::string> bothVectors;
-  bothVectors.reserve(vectorA.size()+vectorB.size());
-  bothVectors.insert(bothVectors.end(),vectorA.begin(),vectorA.end());
-  bothVectors.insert(bothVectors.end(),vectorB.begin(),vectorB.end());
-  return bothVectors;
 }
 
 std::vector <std::string> keywords(std::string header, bool ignore_case ) {
@@ -4205,114 +3960,7 @@ int main(int argc, char **argv) {
 }
 
 std::vector<std::string> make_vec(std::string string_to_become_vector,std::string delimiter) {
-  std::vector<std::string> Vector;
-  std::string original,preComma,postComma;
-  original=string_to_become_vector;
-  unsigned int found,finder;
-  finder=original.length();
-  if(original.find(delimiter)>original.length())
-  {
-    Vector.push_back(original);
-    return Vector;
-  }
-  for(found=original.find(delimiter);found<finder;found=original.find(delimiter))
-  {
-    preComma=original;
-    postComma=original;
-    preComma=preComma.erase(found,std::string::npos);
-    if(preComma.compare("")!=0)
-    {
-      preComma.erase( std::remove_if( preComma.begin(), preComma.end(), is_space)
-                      ,preComma.end());
-      //trace(preComma);
-      Vector.push_back(preComma);
-    }
-    postComma=postComma.erase(0,found+1);
-    original=postComma;
-    finder=original.length();
-  }
-  if(postComma.compare("")!=0){Vector.push_back(postComma);}
-  return Vector;
-}
-
-int mkdir_p(std::string dirToMake) {
-  if(test_dir(dirToMake.c_str()))
-  {
-    return 0;
-  }
-  
-  std::string temporaryDir = dirToMake;
-  unsigned int last        = dirToMake.rfind('/');
-  
-  if( (last + 1) != dirToMake.length() )
-  {
-    dirToMake += "/";
-  }
-  
-  unsigned int found=dirToMake.find_first_of('/');
-  
-  while(found < dirToMake.length())
-  {
-    found++;
-  
-    temporaryDir        = dirToMake;
-    std::string testing = temporaryDir.erase(found,std::string::npos);
-    found               = dirToMake.find_first_of('/',found);
-  
-    if(!test_dir(testing.c_str()))
-    {
-      if(mkdir(testing.c_str(), 0700) > 0)
-      {
-        return 1;
-      }
-      else
-      {
-        return 0;
-      }
-    }
-  }
-  return 0;
-}
-
-bool save_string_to_file(std::string MSG,std::string filename) {
-  if(MSG.compare("")==0)
-  {
-    return false;
-  }
-  
-  if(filename.compare("")==0)
-  {
-    return false;
-  }
-  
-  unsigned int last=filename.rfind('/');
-  
-  if( (last + 1) == filename.length())
-  {
-    return false;
-  }
-  
-  if(last < filename.length())
-  {
-    std::string dircheck=filename;
-    dircheck=dircheck.erase(last,std::string::npos);
-  }
-  else
-  {
-    return false;
-  }
-  
-  std::ofstream dest;
-  dest.open(filename.c_str());
-  
-  if(!dest.is_open())
-  {
-    return false;
-  }
-  
-  dest << MSG;
-  dest.close();
-  return true;
+  return delim_vec(string_to_become_vector,delimiter);
 }
 
 std::string syntax_type_from_filename(std::string fname) {
@@ -4355,98 +4003,6 @@ std::string syntax_type_from_filename(std::string fname) {
     }
   }
   return "";
-}
-
-void trace(std::string MSG, int n ) {
-  //return;
-  std::cout<<MSG;
-  if(n!=0)
-    std::cout<<"-->"<<n;
-  std::cout<<std::endl;
-}
-
-bool test_dir(std::string dirToTest) {
-  if(dirToTest.compare("")==0)
-  {
-    return false;
-  }
-  
-  DIR *dir = NULL;
-  dir      = opendir(dirToTest.c_str());
-  
-  if (dir != NULL)
-  {
-    closedir(dir);
-    return true;
-  }
-  
-  return false;
-}
-
-bool test_file(std::string file) {
-  //if empty it doesn't exist
-  if(file.compare("")==0)
-  {
-    return false;
-  }
-  
-  std::string dir   = file;
-  unsigned int find = dir.rfind("/");
-  
-  //if there is no directory this isn't correct
-  if(find > dir.length())
-  {
-    // try the PWD if we can
-    const char* PWD = getenv("PWD");
-  
-    if(PWD == NULL)
-    {
-      return false;
-    }
-  
-    dir  = PWD;
-    dir += "/";
-    file = dir+file;
-  }
-  else
-  {
-    // get the directory
-    dir = dir.substr(0,find);
-  }
-  
-  //open the directory
-  DIR *mydir                  = NULL;
-  struct dirent *entryPointer = NULL;
-  mydir                       = opendir(dir.c_str());
-  
-  //make sure there is a slash at the end
-  if( dir.rfind('/') != (dir.length()-1) )
-  {
-    dir += "/";
-  }
-  
-  if(mydir != NULL)
-  {
-    while ((entryPointer=readdir(mydir)) != NULL)
-    {
-      if(entryPointer->d_type == DT_REG)
-      {
-        //get a pointer to the file in this directory
-        std::string fullpath = entryPointer->d_name;
-                    fullpath = dir + fullpath;
-        //is it the same as what we sent in?
-        if(fullpath.compare(file)==0)
-        {
-          //close the directory
-          closedir(mydir);
-          return true;
-        }
-      }
-    }
-    //close the directory... apparently this didn't work :(
-    closedir(mydir);
-  }
-  return false;
 }
 
 std::vector <std::string> types(std::string header, bool ignore_case ) {

@@ -10,6 +10,8 @@
 // created as part of the ToriOS project
 #include "lexertk.hpp"
 #include "../include/toolbar_icons.h"
+#include "../include/functions.h"
+#include "../include/Fl_Functions.h"
 #include <algorithm>
 #include <sstream>
 #include <iterator>
@@ -18,8 +20,6 @@
 #include <iostream>
 #include <streambuf>
 #include <FL/Fl_Color_Chooser.H>
-#include <FL/Fl_Native_File_Chooser.H>
-#include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Printer.H>
 #include <FL/fl_ask.H>
@@ -35,7 +35,6 @@
 #include <string>
 #include <sys/inotify.h>
 #include <unistd.h>
-int ret_val; 
 std::string return_value; 
 unsigned int EDIT_COLOR, NORMAL_COLOR, MATCH_CASE, BACKWARD_SEARCH; 
 /**
@@ -494,18 +493,8 @@ public:
   Fl_Double_Window* progress_window();
   Fl_Progress *progress;
 };
-int ask(std::string MSG, std::string yes="Yes", std::string no="No", std::string other="");
-void ask_cb(Fl_Widget *o, long val);
-std::string color_from_name(const char* colorName);
-std::string color_to_string(const double *rgb);
 std::vector<std::string> comma_line(std::string lang,std::string field, bool ignore_case = false);
-std::string convert(int num);
-unsigned int convert(std::string num, int default_value=0);
-std::vector<std::string> dir_vector(std::string DIRECTORY);
 std::string get(std::string header, std::string line);
-std::string file_chooser(std::string types="*", std::string where="", std::string label="Open File?");
-std::vector<std::string> file_to_vector(std::string filename);
-unsigned int get_fl_color(std::string color, unsigned int default_value=0);
 std::string get_flpad_dir( std::string base_name);
 std::string get_flpad_home_dir( std::string base_name);
 std::string get_syntax_file();
@@ -514,16 +503,9 @@ std::string get_theme_file();
 std::string get_type(std::string fname);
 std::vector<std::string> get_themes();
 int get_theme(std::string theme, std::string item, int default_value=0);
-bool is_space(const char x);
-std::vector<std::string> join_string_vectors(std::vector<std::string> vectorA,std::vector<std::string> vectorB);
 std::vector <std::string> keywords(std::string header, bool ignore_case = false);
 int main(int argc, char **argv);
 std::vector<std::string> make_vec(std::string string_to_become_vector,std::string delimiter=" ");
-int mkdir_p(std::string dirToMake);
-bool save_string_to_file(std::string MSG,std::string filename);
 std::string syntax_type_from_filename(std::string fname);
-void trace(std::string MSG, int n = 0);
-bool test_dir(std::string dirToTest);
-bool test_file(std::string file);
 std::vector <std::string> types(std::string header, bool ignore_case = false);
 #endif

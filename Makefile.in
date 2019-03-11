@@ -17,10 +17,11 @@ $(TARGET):
 	$(MAKE) -C image/
 	$(MAKE) -C calc/
 	$(MAKE) -C welcome/
+	$(MAKE) -C calendar/
 
 .PHONY: clean
 clean:
-	rm -f $(obj) askpass/flaskpass about/flabout  pm-dialogs/flpower Makefile askpass/Makefile pm-dialogs/Makefile about/Makefile run/flrun run/Makefile apt/Makefile apt/flapt $(FLPAD_DIR)flpad $(FLPAD_DIR)Makefile screenie/Makefile screenie/flscreenie image/flimage image/Makefile calc/Makefile calc/flcalc welcome/Makefile welcome/flwelcome
+	rm -f $(obj) askpass/flaskpass about/flabout  pm-dialogs/flpower Makefile askpass/Makefile pm-dialogs/Makefile about/Makefile run/flrun run/Makefile apt/Makefile apt/flapt $(FLPAD_DIR)flpad $(FLPAD_DIR)Makefile screenie/Makefile screenie/flscreenie image/flimage image/Makefile calc/Makefile calc/flcalc welcome/Makefile welcome/flwelcome calendar/flcalendar
 
 .PHONY: install
 install: $(TARGET)
@@ -36,7 +37,7 @@ install: $(TARGET)
 	cp image/flimage $(DESTDIR)$(PREFIX)/bin/flimage
 	cp calc/flcalc $(DESTDIR)$(PREFIX)/bin/flcalc
 	cp welcome/flwelcome $(DESTDIR)$(PREFIX)/bin/flwelcome
-
+	cp calendar/flcalendar $(DESTDIR)$(PREFIX)/bin/flcalendar
 #DESKTOP FILES
 	mkdir -p $(DESTDIR)$(PREFIX)/share/applications
 	cp desktop/flimage.desktop $(DESTDIR)$(PREFIX)/share/applications/flimage.desktop
@@ -44,6 +45,7 @@ install: $(TARGET)
 	cp desktop/flscreenie.desktop $(DESTDIR)$(PREFIX)/share/applications/flscreenie.desktop
 	cp desktop/flcalc.desktop $(DESTDIR)$(PREFIX)/share/applications/flcalc.desktop
 	cp desktop/flwelcome.desktop $(DESTDIR)$(PREFIX)/share/applications/flwelcome.desktop
+	cp desktop/flcalendar.desktop $(DESTDIR)$(PREFIX)/share/applications/flcalendar.desktop
 #CONFIG
 	mkdir -p $(DESTDIR)$(PREFIX)/share/flpad/
 	cp $(FLPAD_DIR)$(STYLES_CONFIG) $(DESTDIR)$(PREFIX)/share/flpad/$(STYLES_CONFIG)
@@ -66,6 +68,7 @@ uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/flimage
 	rm -f $(DESTDIR)$(PREFIX)/bin/flcalc
 	rm -f $(DESTDIR)$(PREFIX)/bin/flwelcome
+	rm -f $(DESTDIR)$(PREFIX)/bin/flcalendar
 
 #Desktop Files
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/flcalc.desktop
@@ -73,5 +76,7 @@ uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/flimage.desktop
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/flpad.desktop
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/flwelcome.desktop
+	rm -f $(DESTDIR)$(PREFIX)/share/applications/flcalendar.desktop
+
 #Config
 	rm -Rf $(DESTDIR)$(PREFIX)/share/flpad/
