@@ -17,6 +17,48 @@
 
 int ret_val; 
 
+void populateBrowserWithString(Fl_Browser *o, std::string STRING)
+{
+   if(STRING.compare("")==0)
+   {
+       return;
+   }
+
+   std::string sep     = "\n";
+   unsigned int finder = STRING.find(sep);
+   unsigned int length = STRING.length();
+   /** If no '\n' is found just add the string and return*/
+
+   if(finder > length)
+   {
+       //("No Newline found");
+       o->add(STRING.c_str());
+       return;
+   }
+
+   /** while there is a new line keep adding*/
+   while(finder < length)
+   {
+       finder           = STRING.find(sep);
+       length           = STRING.length();
+       std::string tmp1 = STRING;
+     /** make sure if no newline is at the end it wont crash*/
+       if(finder < (length + 1) )
+       {
+          std::string tmp2 = tmp1.erase(finder,std::string::npos);
+          o->add(tmp2.c_str());
+          tmp1   = STRING;
+          finder = tmp1.find(sep);
+          STRING = tmp1.substr( (finder + 1), std::string::npos);
+       }
+   }
+
+   if(STRING.length() > 0)
+   {
+       o->add(STRING.c_str()); 
+   }
+}
+
 void font_populate(Fl_Browser *o)
 {
   Fl_Font a;

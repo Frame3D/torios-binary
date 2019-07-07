@@ -3,18 +3,167 @@
 
 #include <string>
 #include <sstream>
-#include <fstream>
+#include <fstream> //ifstream
 #include <iostream>
 #include <vector>
+#include <cstdlib>
 #include <algorithm>
-#include <dirent.h>
+
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h> //dir
+#include <fcntl.h> //readlink
+#include <unistd.h> //readlink
+
+#include <signal.h>
+
 #include <X11/Xlib.h>
 #include <FL/Fl_File_Chooser.H>
 
+std::string get_symlinkpath(std::string symlink)
+{
+    struct stat statinfo;
+
+    if((lstat(symlink.c_str(), &statinfo)>0))
+    {
+        return symlink;
+    }
+
+    if (
+         (!S_ISLNK (statinfo.st_mode) && statinfo.st_nlink > 1) ||
+         (S_ISLNK (statinfo.st_mode))
+       )
+    {
+        std::vector<char> buf(400);
+        size_t len;
+
+        do
+        {
+            buf.resize(buf.size() + 100);
+            len = ::readlink(symlink.c_str(), &(buf[0]), buf.size());
+        }
+        while(buf.size() == len);
+
+        if (len > 0)
+        {
+            buf[len] = '\0';
+            return (std::string(&(buf[0])));
+        }
+    }
+    else
+    {
+        return symlink;
+    }
+
+    return symlink;
+}
+
+std::string get_directory_from_filename(std::string input)
+{
+    std::string filename = input;
+    unsigned int finder  = filename.rfind("/");
+
+    if(finder < filename.length())
+    {
+        filename = filename.erase(finder+1,std::string::npos);
+    }
+    else
+    {
+        return "";
+    }
+    /**return empty if there is no directory*/
+
+    return filename;
+}
+
+std::string term_out(std::string terminal_Command_You_Want_Output_From)
+{
+    if(terminal_Command_You_Want_Output_From.compare("") == 0)
+    {
+        return "";
+    }
+
+    /** set a locale so this works well */
+    const char* LANG = getenv("LANG");
+    std::string LOCALE;
+
+    if(LANG == NULL)
+    {
+        LANG = getenv("LANGUAGE");
+
+        if(LANG != NULL)
+        {
+        std::string tmp   = LANG;
+        unsigned int find = tmp.find(".UTF-8");
+
+        if(find > tmp.length())
+        {
+            tmp += ".UTF-8";
+        }
+
+        LOCALE = tmp;
+
+        }
+    }
+    else
+    {
+        LOCALE = LANG;
+    }
+
+    if(LOCALE.compare("") != 0)
+    {
+        setlocale(LC_ALL, LOCALE.c_str());
+    }
+
+    std::string result   = "";
+    const int max_buffer = 1024;
+    char buffer[max_buffer];
+
+    FILE *command_p = popen(terminal_Command_You_Want_Output_From.c_str(), "r");
+
+    if (command_p)
+    {
+        while( fgets(buffer, sizeof(buffer), command_p) !=NULL)
+        {
+            result.append(buffer);
+        }
+
+        pclose(command_p);
+    }
+    else
+    {
+       return "";
+    }
+
+    if (result.compare("") == 0)
+    {
+        return "";
+    }
+
+    int end = result.length();
+
+    if((end-1) == 0)
+    {
+        return "";
+    }
+
+    if((end) == 0)
+    {
+        return "";
+    }
+
+    return result.erase(end-1,1);
+}
+
+std::string terminal_output(std::string terminal_Command_You_Want_Output_From)
+{
+    return term_out(terminal_Command_You_Want_Output_From);
+}
+
 std::string char_to_string(char c)
 {
-  std::string res(c,1);
-  return res;
+    std::string res(c,1);
+    return res;
 }
 
 bool is_space(const char x){return std::isspace(x);}
@@ -227,13 +376,24 @@ unsigned int get_fl_color(std::string color, unsigned int default_value=0)
 unsigned int convert_color(std::string num, int default_value=0)
 {
     unsigned int NUM = default_value;
-    if(num.find("#")==0)
+
+    if(num.find("#") == 0)
     {
-        return get_fl_color(num,default_value);
+        return get_fl_color(num, default_value);
     }
-    try{NUM=std::stoul(num);}
-    catch(const std::invalid_argument e){return default_value;}
-    catch(const std::out_of_range e){return default_value;}
+
+    try
+    {
+        NUM = std::stoul(num);
+    }
+    catch(const std::invalid_argument e)
+    {
+        return default_value;
+    }
+    catch(const std::out_of_range e)
+    {
+        return default_value;
+    }
     return NUM;
 }
 
@@ -451,5 +611,100 @@ int mkdir_p(std::string dirToMake)
         }
     }
     return 0;
+}
+
+bool test_exec(std::string execToTest)
+{
+    if(execToTest.compare("") == 0)
+    {
+        return false;
+    }
+
+/** the list of directories it might check*/
+/** /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games*/
+    std::string stringEXEC;
+    std:: string testPATH, testExec;
+    bool result = false;
+    const char* path =getenv("PATH");
+    std::vector<std::string> paths = delim_vec(path,":");
+    std::vector<std::string>::iterator it;
+
+    for (it = paths.begin(); it != paths.end(); it++)
+    {
+        stringEXEC = execToTest;
+        testPATH   = *it;
+        stringEXEC = testPATH + "/" + stringEXEC;
+
+        if(test_file(stringEXEC.c_str()))
+        {
+            return true;
+        }
+    }
+
+    return result;
+}
+std::string get_shell_for_C()
+{
+    std::string shell = term_out("which bash");
+
+    if(!test_exec(shell))
+    {
+        shell = term_out("which sh");
+        if(!test_exec(shell))
+        {
+            return "";
+        }
+        else
+        {
+            shell = shell + " -c '";
+        }
+    }
+    else
+    {
+        shell = shell + " -c '";
+    }
+
+    return shell;
+}
+
+int run(std::string program)
+{
+    std::string shell = get_shell_for_C();
+
+    if(shell.compare("") != 0)
+    {
+        shell += program;
+        shell += "'";
+    }
+    else
+    {
+        shell = program;
+    }
+
+    trace("run_program::"+shell);
+    return system(shell.c_str());
+}
+
+std::string file_to_string(std::string filename)
+{
+    if(filename.compare("")==0){return "";}
+    /** make sure it is actually a file */
+    if(!test_file(filename))
+    {
+        return "";
+        trace("No file sent in: "+filename);
+    }
+    std::string thisLine;
+    std::string fullString;
+    std::ifstream inputFileStream(filename.c_str(), std::ifstream::in);
+    if(inputFileStream.is_open())
+    {
+        while (getline(inputFileStream,thisLine))
+        {
+            if(fullString.compare("")==0){fullString=thisLine;}
+            else{fullString=fullString+"\n"+thisLine;}
+        }
+    }
+    return fullString;
 }
 #endif

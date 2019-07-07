@@ -3,6 +3,7 @@
 #ifndef flrun_h
 #define flrun_h
 #include <FL/Fl.H>
+#include "../include/functions.h"
 #include "../include/single.h"
 #include <stdexcept>
 #include <string>
@@ -35,10 +36,6 @@
 
 class UI {
 public:
-  std::string current_path(int whichPath);
-  std::string get_directory_from_filename(std::string filename);
-  std::string get_shell_for_C();
-  unsigned int items_in_path();
   Fl_Double_Window* make_window();
   Fl_Input *run_input;
 private:
@@ -46,13 +43,7 @@ private:
   static void cb_run_input(Fl_Input*, void*);
   inline void cb_OK_i(Fl_Button*, void*);
   static void cb_OK(Fl_Button*, void*);
-public:
-  int run(std::string program);
-  std::string term_out(std::string terminal_Command_You_Want_Output_From);
-  bool test_exec(std::string execToTest);
-  bool test_file(std::string fileWithFullPATH);
 };
 int main(int argc, char *argv[]);
-void trace(std::string msg);
 int usage(char* name);
 #endif

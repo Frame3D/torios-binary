@@ -3,6 +3,8 @@
 #ifndef flwelcome_h
 #define flwelcome_h
 #include <FL/Fl.H>
+#include "../include/Fl_Functions.h"
+#include "../include/functions.h"
 #include <FL/Fl_Text_Buffer.H>
 #include <FL/Fl_Text_Display.H>
 #include <FL/fl_ask.H>
@@ -24,7 +26,8 @@ public:
   Fl_Text_Buffer *terminalbuffer; 
   Terminal(int X,int Y,int W,int H,const char* L=0) ;
   void append(char* p);
-  int terminal_output(std::string terminal_Command_You_Want_Output_From);
+  void output(std::string command);
+  void append(std::string text);
 };
 Terminal *terminal; 
 #include <FL/Fl_Double_Window.H>
@@ -36,11 +39,6 @@ Terminal *terminal;
 class UI {
   int DIST; 
 public:
-  std::string current_path(int whichPath);
-  std::string file_to_string(std::string filename);
-  std::string get_directory_from_filename(std::string filename);
-  std::string get_shell_for_C();
-  std::string get_symlinkpath(std::string symlink);
   void install(std::string pkg);
   void info(std::string pkg);
   Fl_Double_Window* install_list_window();
@@ -54,7 +52,6 @@ private:
   inline void cb_Information_i(Fl_Button*, void*);
   static void cb_Information(Fl_Button*, void*);
 public:
-  unsigned int items_in_path();
   Fl_Double_Window* make_window();
   Fl_Double_Window *about;
 private:
@@ -87,10 +84,6 @@ private:
   inline void cb_ToriOS2_i(Fl_Button*, void*);
   static void cb_ToriOS2(Fl_Button*, void*);
 public:
-  void populateBrowserWithString(Fl_Browser *o, std::string STRING);
-  int run(std::string program);
-  bool test_exec(std::string execToTest);
-  bool test_file(std::string fileWithFullPATH);
   std::string toriosversion();
   void make_install_list(std::string LIST);
   bool isDebian();
@@ -107,9 +100,7 @@ private:
   inline void cb_Close2_i(Fl_Button*, void*);
   static void cb_Close2(Fl_Button*, void*);
 public:
-  std::string term_out(std::string terminal_Command_You_Want_Output_From);
   void show_command(std::string command);
 };
 int main(int argc, char*argv[]);
-void trace(std::string msg);
 #endif

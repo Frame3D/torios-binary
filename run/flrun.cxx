@@ -25,60 +25,6 @@ void UI::cb_OK(Fl_Button* o, void* v) {
   ((UI*)(o->parent()->user_data()))->cb_OK_i(o,v);
 }
 
-std::string UI::current_path(int whichPath) {
-  unsigned int lastPath = 0;
-  std::string result;
-  if (whichPath >=1){lastPath = whichPath - 1;}
-  else {lastPath = 0;}
-  const char* path =getenv("PATH");
-  std::string stringPATH;
-  if(path == NULL){stringPATH = "/usr/bin";}
-  else{stringPATH = path;}
-  std::string::size_type firstPosition = stringPATH.find(':');
-  if(firstPosition>stringPATH.length()){return stringPATH.c_str();}   
-  std::string::size_type position = firstPosition;
-  for (int i=1;i<=whichPath;i++){position = stringPATH.find(':',position+1);}
-  for (unsigned int j=1;j<=lastPath;j++){firstPosition = stringPATH.find(':',firstPosition+1);}
-  result = stringPATH.substr (firstPosition+1,((position-firstPosition)-1));
-  return result;
-}
-
-std::string UI::get_directory_from_filename(std::string filename) {
-  unsigned int finder=filename.rfind("/");
-  if(finder<filename.length())
-  {
-    filename=filename.erase(finder,std::string::npos);
-  }
-  else{return "";} /**return empty if there is no directory*/
-  return filename;
-}
-
-std::string UI::get_shell_for_C() {
-  std::string shell=term_out("which bash");
-  if(shell.compare("")==0){
-    if(!test_exec(shell)){
-    shell=term_out("which sh");
-    if(!test_exec(shell)){return "";}
-    //TODO make this work for others
-    }
-  }
-  shell=shell+" -c '";
-  return shell;
-}
-
-unsigned int UI::items_in_path() {
-  const char* path =getenv("PATH");
-  std::string::size_type pathPosition =0;
-  if(path==NULL){return 1;}
-  std::string stringPATH = path;
-  unsigned int howmany;
-  for(howmany=1;(pathPosition!=std::string::npos);howmany++)
-  {
-    pathPosition=stringPATH.find(':', pathPosition+1);
-  }
-  return howmany;
-}
-
 Fl_Double_Window* UI::make_window() {
   Fl_Double_Window* w;
   { Fl_Double_Window* o = new Fl_Double_Window(290, 35, gettext("Run"));
@@ -101,102 +47,6 @@ Fl_Double_Window* UI::make_window() {
   return w;
 }
 
-int UI::run(std::string program) {
-  std::string shell=get_shell_for_C();
-  if(shell.compare("")!=0)
-  {
-    shell+=program;
-    shell+="' &";
-  }
-  else{shell=program;}
-  trace("run_program::"+shell);
-  return system(shell.c_str());
-}
-
-std::string UI::term_out(std::string terminal_Command_You_Want_Output_From) {
-  if(terminal_Command_You_Want_Output_From.compare("")==0){return "";}
-  /** set a locale so this works well */
-  const char* LANG=getenv("LANG");
-  std::string LOCALE;
-  if(LANG==NULL)
-  {
-    LANG=getenv("LANGUAGE");
-    if(LANG!=NULL){
-    std::string tmp=LANG;
-    unsigned int find=tmp.find(".UTF-8");
-    if(find>tmp.length()){tmp+=".UTF-8";}
-    LOCALE=tmp;
-    }
-  }
-  else
-  {
-    LOCALE=LANG;
-  }
-  if(LOCALE.compare("")!=0){setlocale(LC_ALL, LOCALE.c_str());}
-  std::string result="";
-  const int max_buffer = 1024;
-  char buffer[max_buffer];
-  FILE *command_p = popen(terminal_Command_You_Want_Output_From.c_str(), "r");
-  if (command_p)
-  {
-    while( fgets(buffer, sizeof(buffer), command_p) !=NULL){result.append(buffer);}
-    pclose(command_p);
-  }
-  else{ return "";}
-  if (result.compare("")==0){return "";}
-  int end = result.length();
-  if((end-1) == 0){return "";}
-  if((end) == 0){return "";}
-  return result.erase(end-1,1);
-}
-
-bool UI::test_exec(std::string execToTest) {
-  if(execToTest.compare("")==0){return false;}
-  /** the list of directories it might check*/
-  /** /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games*/
-  std::string stringEXEC;
-  std:: string testPATH, testExec;
-  bool result = false;
-  unsigned int numofpaths = items_in_path();
-  for (unsigned int i = 1; i <= numofpaths; i++)
-  {
-    stringEXEC = execToTest;
-    testPATH = current_path(i);
-    stringEXEC = testPATH + "/" + stringEXEC;
-    if(test_file(stringEXEC.c_str())){return true;}
-  }
-  return result;
-}
-
-bool UI::test_file(std::string fileWithFullPATH) {
-  if(fileWithFullPATH.compare("")==0){return false;}
-  std::string dir=get_directory_from_filename(fileWithFullPATH);
-  if(dir.compare("")==0){return false;}
-  DIR *mydir=NULL;
-  struct dirent *entryPointer=NULL;
-  mydir=opendir(dir.c_str());
-  if(mydir!=NULL)
-  {
-    while ((entryPointer=readdir(mydir))!=NULL)
-    {
-      if(entryPointer->d_type == DT_REG)
-      {
-        std::string fullpath=entryPointer->d_name;
-        if(dir.rfind('/')!=dir.length()-1){dir+="/";}
-        fullpath=dir+fullpath;
-        if(fullpath.compare(fileWithFullPATH)==0)
-        {
-          closedir(mydir);
-          return true;
-        }
-      }
-    }
-    closedir(mydir);
-  }
-  else{trace("could not open directory to search for "+fileWithFullPATH);}
-  return false;
-}
-
 int main(int argc, char *argv[]) {
   SingletonProcess singleton(6789);
   if (!singleton())
@@ -207,10 +57,6 @@ int main(int argc, char *argv[]) {
   UI *ui = new UI();
   ui->make_window()->show();
   return Fl::run();
-}
-
-void trace(std::string msg) {
-  //std::cout<<msg<<std::endl;
 }
 
 int usage(char* name) {

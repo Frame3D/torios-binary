@@ -3,6 +3,7 @@
 #ifndef flpower_h
 #define flpower_h
 #include <FL/Fl.H>
+#include "../include/functions.h"
 #include "../include/single.h"
 #include "../include/toolbar_icons.h"
 #include <FL/Fl_JPEG_Image.H>
@@ -60,23 +61,13 @@ public:
   Fl_Box *icon;
   Fl_Box *label;
   void decide();
-  std::string get_directory_from_filename(std::string filename);
-  std::string get_shell_for_C();
   int hibernate();
-  unsigned int items_in_path();
   int leave();
-  int run(std::string program);
   void setup(int TYPE,bool YES);
   int shutdown();
   int restart();
   int suspend();
-  bool test_dir(std::string dirToTest);
-  bool test_exec(std::string execToTest);
-  bool test_file(std::string fileWithFullPATH);
-  std::string term_out(std::string terminal_Command_You_Want_Output_From);
-  std::string current_path(int iter);
 };
 int main(int argc, char *argv[]);
-void trace(std::string msg);
 int usage(char* name);
 #endif

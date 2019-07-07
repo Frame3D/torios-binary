@@ -5,6 +5,9 @@ i18n_include <libintl.h>
 i18n_function gettext
 header_name {.h}
 code_name {.cxx}
+decl {\#include "../include/functions.h"} {public global
+}
+
 decl {\#include "../include/single.h"} {public global
 }
 
@@ -52,7 +55,7 @@ decl {\#include <stdexcept>
 \#include <signal.h>} {public global
 }
 
-class UI {open
+class UI {open selected
 } {
   decl {unsigned int type;} {protected local
   }
@@ -79,11 +82,11 @@ LOGOUT_TEXT    = gettext("Log Out");
   } {
     Fl_Window win {
       label Power open
-      xywh {683 317 183 110} type Double resizable visible
+      xywh {440 209 183 110} type Double hide resizable
     } {
       Fl_Button {} {
         label OK
-        callback {decide();} selected
+        callback {decide();}
         xywh {95 70 65 30} box FLAT_BOX color 62 selection_color 60 labelcolor 7
       }
       Fl_Button {} {
@@ -123,29 +126,6 @@ LOGOUT_TEXT    = gettext("Log Out");
     exit(0);
 }} {}
   }
-  Function {get_directory_from_filename(std::string filename)} {return_type {std::string}
-  } {
-    code {unsigned int finder=filename.rfind("/");
-if(finder<filename.length())
-{
-  filename=filename.erase(finder,std::string::npos);
-}
-else{return "";} /**return empty if there is no directory*/
-return filename;} {}
-  }
-  Function {get_shell_for_C()} {return_type {std::string}
-  } {
-    code {std::string shell=term_out("which bash");
-if(shell.compare("")==0){
-  if(!test_exec(shell)){
-  shell=term_out("which sh");
-  if(!test_exec(shell)){return "";}
-  //TODO make this work for others
-  }
-}
-shell=shell+" -c '";
-return shell;} {}
-  }
   Function {hibernate()} {return_type int
   } {
     code {std::string test=term_out("which systemctl");
@@ -162,19 +142,6 @@ if(test.compare("")!=0)
 }
 return -1;} {}
   }
-  Function {items_in_path()} {return_type {unsigned int}
-  } {
-    code {const char* path =getenv("PATH");
-std::string::size_type pathPosition =0;
-if(path==NULL){return 1;}
-std::string stringPATH = path;
-unsigned int howmany;
-for(howmany=1;(pathPosition!=std::string::npos);howmany++)
-{
-  pathPosition=stringPATH.find(':', pathPosition+1);
-}
-return howmany;} {}
-  }
   Function {leave()} {return_type int
   } {
     code {std::string LOGOUT = "loginctl terminate-session $XDG_SESSION_ID";
@@ -188,18 +155,6 @@ return howmany;} {}
   }
 }*/
 return run(LOGOUT);} {}
-  }
-  Function {run(std::string program)} {return_type int
-  } {
-    code {std::string shell=get_shell_for_C();
-if(shell.compare("")!=0)
-{
-  shell+=program;
-  shell+="'";
-}
-else{shell=program;}
-trace("run_program::"+shell);
-return system(shell.c_str());} {}
   }
   Function {setup(int TYPE,bool YES)} {open
   } {
@@ -289,123 +244,6 @@ if(test.compare("")!=0)
 }
 return -1;} {}
   }
-  Function {test_dir(std::string dirToTest)} {return_type bool
-  } {
-    code {if(dirToTest.compare("")==0){return false;}
-DIR *dir = NULL;
-dir = opendir(dirToTest.c_str());
-if (dir!=NULL)
-{
-  closedir(dir);
-  return true;
-}
-return false;} {}
-  }
-  Function {test_exec(std::string execToTest)} {return_type bool
-  } {
-    code {if(execToTest.compare("")==0){return false;}
-/** the list of directories it might check*/
-/** /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games*/
-std::string stringEXEC;
-std:: string testPATH, testExec;
-bool result = false;
-unsigned int numofpaths = items_in_path();
-for (unsigned int i = 1; i <= numofpaths; i++)
-{
-  stringEXEC = execToTest;
-  testPATH = current_path(i);
-  stringEXEC = testPATH + "/" + stringEXEC;
-  if(test_file(stringEXEC.c_str())){return true;}
-}
-return result;} {}
-  }
-  Function {test_file(std::string fileWithFullPATH)} {return_type bool
-  } {
-    code {if(fileWithFullPATH.compare("")==0){return false;}
-std::string dir=get_directory_from_filename(fileWithFullPATH);
-if(dir.compare("")==0){return false;}
-DIR *mydir=NULL;
-struct dirent *entryPointer=NULL;
-mydir=opendir(dir.c_str());
-if(mydir!=NULL)
-{
-  while ((entryPointer=readdir(mydir))!=NULL)
-  {
-    if(entryPointer->d_type == DT_REG)
-    {
-      std::string fullpath=entryPointer->d_name;
-      if(dir.rfind('/')!=dir.length()-1){dir+="/";}
-      fullpath=dir+fullpath;
-      if(fullpath.compare(fileWithFullPATH)==0)
-      {
-        closedir(mydir);
-        return true;
-      }
-    }
-  }
-  closedir(mydir);
-}
-else{trace("could not open directory to search for "+fileWithFullPATH);}
-return false;} {}
-  }
-  Function {term_out(std::string terminal_Command_You_Want_Output_From)} {return_type {std::string}
-  } {
-    code {if(terminal_Command_You_Want_Output_From.compare("")==0){return "";}
-/** set a locale so this works well */
-const char* LANG=getenv("LANG");
-std::string LOCALE;
-if(LANG==NULL)
-{
-  LANG=getenv("LANGUAGE");
-  if(LANG!=NULL){
-  std::string tmp=LANG;
-  unsigned int find=tmp.find(".UTF-8");
-  if(find>tmp.length()){tmp+=".UTF-8";}
-  LOCALE=tmp;
-  }
-}
-else
-{
-  LOCALE=LANG;
-}
-if(LOCALE.compare("")!=0){setlocale(LC_ALL, LOCALE.c_str());}
-std::string result="";
-const int max_buffer = 1024;
-char buffer[max_buffer];
-FILE *command_p = popen(terminal_Command_You_Want_Output_From.c_str(), "r");
-if (command_p)
-{
-  while( fgets(buffer, sizeof(buffer), command_p) !=NULL){result.append(buffer);}
-  pclose(command_p);
-}
-else{ return "";}
-if (result.compare("")==0){return "";}
-int end = result.length();
-if((end-1) == 0){return "";}
-if((end) == 0){return "";}
-return result.erase(end-1,1);} {}
-  }
-  Function {current_path(int iter)} {open return_type {std::string}
-  } {
-    code {const char* path =getenv("PATH");
-if(path==NULL){return "";}
-std::string stringPATH = path;
-std::string tmp = stringPATH;
-unsigned int find=0;
-unsigned int itera=0;
-std::string howmany;
-for(std::string::size_type pathPosition =0;(pathPosition!=std::string::npos);pathPosition=stringPATH.find(':', pathPosition+1))
-{
-  tmp = stringPATH.substr(pathPosition+1,std::string::npos);
-  find=tmp.find(':');
-  if(find<tmp.length())
-  {  
-     howmany = tmp;
-     howmany = howmany.substr(0,find);
-  }
-}
-return howmany;} {}
-  }
 }
 
 Function {main(int argc, char *argv[])} {open return_type int
@@ -469,10 +307,6 @@ catch (...)
   return EXIT_FAILURE;
 }
 return -1;} {}
-}
-
-Function {trace(std::string msg)} {} {
-  code {//std::cout<<msg<<std::endl;} {}
 }
 
 Function {usage(char* name)} {return_type int

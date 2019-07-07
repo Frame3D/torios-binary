@@ -82,29 +82,6 @@ void UI::decide() {
   }
 }
 
-std::string UI::get_directory_from_filename(std::string filename) {
-  unsigned int finder=filename.rfind("/");
-  if(finder<filename.length())
-  {
-    filename=filename.erase(finder,std::string::npos);
-  }
-  else{return "";} /**return empty if there is no directory*/
-  return filename;
-}
-
-std::string UI::get_shell_for_C() {
-  std::string shell=term_out("which bash");
-  if(shell.compare("")==0){
-    if(!test_exec(shell)){
-    shell=term_out("which sh");
-    if(!test_exec(shell)){return "";}
-    //TODO make this work for others
-    }
-  }
-  shell=shell+" -c '";
-  return shell;
-}
-
 int UI::hibernate() {
   std::string test=term_out("which systemctl");
   if(test.compare("")!=0)
@@ -121,19 +98,6 @@ int UI::hibernate() {
   return -1;
 }
 
-unsigned int UI::items_in_path() {
-  const char* path =getenv("PATH");
-  std::string::size_type pathPosition =0;
-  if(path==NULL){return 1;}
-  std::string stringPATH = path;
-  unsigned int howmany;
-  for(howmany=1;(pathPosition!=std::string::npos);howmany++)
-  {
-    pathPosition=stringPATH.find(':', pathPosition+1);
-  }
-  return howmany;
-}
-
 int UI::leave() {
   std::string LOGOUT = "loginctl terminate-session $XDG_SESSION_ID";
   /*if(test_file("/etc/default/nodm"))
@@ -146,18 +110,6 @@ int UI::leave() {
     }
   }*/
   return run(LOGOUT);
-}
-
-int UI::run(std::string program) {
-  std::string shell=get_shell_for_C();
-  if(shell.compare("")!=0)
-  {
-    shell+=program;
-    shell+="'";
-  }
-  else{shell=program;}
-  trace("run_program::"+shell);
-  return system(shell.c_str());
 }
 
 void UI::setup(int TYPE,bool YES) {
@@ -248,123 +200,6 @@ int UI::suspend() {
   return -1;
 }
 
-bool UI::test_dir(std::string dirToTest) {
-  if(dirToTest.compare("")==0){return false;}
-  DIR *dir = NULL;
-  dir = opendir(dirToTest.c_str());
-  if (dir!=NULL)
-  {
-    closedir(dir);
-    return true;
-  }
-  return false;
-}
-
-bool UI::test_exec(std::string execToTest) {
-  if(execToTest.compare("")==0){return false;}
-  /** the list of directories it might check*/
-  /** /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games*/
-  std::string stringEXEC;
-  std:: string testPATH, testExec;
-  bool result = false;
-  unsigned int numofpaths = items_in_path();
-  for (unsigned int i = 1; i <= numofpaths; i++)
-  {
-    stringEXEC = execToTest;
-    testPATH = current_path(i);
-    stringEXEC = testPATH + "/" + stringEXEC;
-    if(test_file(stringEXEC.c_str())){return true;}
-  }
-  return result;
-}
-
-bool UI::test_file(std::string fileWithFullPATH) {
-  if(fileWithFullPATH.compare("")==0){return false;}
-  std::string dir=get_directory_from_filename(fileWithFullPATH);
-  if(dir.compare("")==0){return false;}
-  DIR *mydir=NULL;
-  struct dirent *entryPointer=NULL;
-  mydir=opendir(dir.c_str());
-  if(mydir!=NULL)
-  {
-    while ((entryPointer=readdir(mydir))!=NULL)
-    {
-      if(entryPointer->d_type == DT_REG)
-      {
-        std::string fullpath=entryPointer->d_name;
-        if(dir.rfind('/')!=dir.length()-1){dir+="/";}
-        fullpath=dir+fullpath;
-        if(fullpath.compare(fileWithFullPATH)==0)
-        {
-          closedir(mydir);
-          return true;
-        }
-      }
-    }
-    closedir(mydir);
-  }
-  else{trace("could not open directory to search for "+fileWithFullPATH);}
-  return false;
-}
-
-std::string UI::term_out(std::string terminal_Command_You_Want_Output_From) {
-  if(terminal_Command_You_Want_Output_From.compare("")==0){return "";}
-  /** set a locale so this works well */
-  const char* LANG=getenv("LANG");
-  std::string LOCALE;
-  if(LANG==NULL)
-  {
-    LANG=getenv("LANGUAGE");
-    if(LANG!=NULL){
-    std::string tmp=LANG;
-    unsigned int find=tmp.find(".UTF-8");
-    if(find>tmp.length()){tmp+=".UTF-8";}
-    LOCALE=tmp;
-    }
-  }
-  else
-  {
-    LOCALE=LANG;
-  }
-  if(LOCALE.compare("")!=0){setlocale(LC_ALL, LOCALE.c_str());}
-  std::string result="";
-  const int max_buffer = 1024;
-  char buffer[max_buffer];
-  FILE *command_p = popen(terminal_Command_You_Want_Output_From.c_str(), "r");
-  if (command_p)
-  {
-    while( fgets(buffer, sizeof(buffer), command_p) !=NULL){result.append(buffer);}
-    pclose(command_p);
-  }
-  else{ return "";}
-  if (result.compare("")==0){return "";}
-  int end = result.length();
-  if((end-1) == 0){return "";}
-  if((end) == 0){return "";}
-  return result.erase(end-1,1);
-}
-
-std::string UI::current_path(int iter) {
-  const char* path =getenv("PATH");
-  if(path==NULL){return "";}
-  std::string stringPATH = path;
-  std::string tmp = stringPATH;
-  unsigned int find=0;
-  unsigned int itera=0;
-  std::string howmany;
-  for(std::string::size_type pathPosition =0;(pathPosition!=std::string::npos);pathPosition=stringPATH.find(':', pathPosition+1))
-  {
-    tmp = stringPATH.substr(pathPosition+1,std::string::npos);
-    find=tmp.find(':');
-    if(find<tmp.length())
-    {  
-       howmany = tmp;
-       howmany = howmany.substr(0,find);
-    }
-  }
-  return howmany;
-}
-
 int main(int argc, char *argv[]) {
   std::string command;
   Fl::visual(FL_RGB);
@@ -425,10 +260,6 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
   return -1;
-}
-
-void trace(std::string msg) {
-  //std::cout<<msg<<std::endl;
 }
 
 int usage(char* name) {
